@@ -308,7 +308,7 @@ export default function Home() {
         windowHeight: element.scrollHeight,
         onclone: (doc) => {
           const style = doc.createElement('style');
-          style.textContent = ':root{--color-teal-500:#00baa7;--color-teal-600:#009588;--color-teal-700:#00776e;--color-stone-100:#f5f5f4;--color-stone-200:#e7e5e4;--color-stone-400:#a6a09b;--color-stone-500:#79716b;--color-stone-800:#292524;--color-white:#fff;}';
+          style.textContent = ':root{--color-teal-500:#00baa7;--color-teal-600:#009588;--color-teal-700:#00776e;--color-stone-100:#f5f5f4;--color-stone-200:#e7e5e4;--color-stone-400:#a6a09b;--color-stone-500:#79716b;--color-stone-800:#292524;--color-white:#fff;}.logo-placeholder{display:none !important;}';
           doc.head.appendChild(style);
         },
       });
