@@ -15,23 +15,143 @@ const DEFAULT_SETTINGS: Settings = {
   brandName: 'Factura',
 };
 
+type SessionPayload = {
+  emisor?: Emisor | null;
+  clients?: Client[];
+  recentClients?: Client[];
+  invoices?: InvoiceRecord[];
+  settings?: Settings;
+  logo?: string | null;
+};
+
+const SESSION_ENDPOINT = '/api/session';
+
+const setJSON = (key: string, value: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage errors (quota, blocked storage).
+  }
+};
+
+const getJSON = <T>(key: string, fallback: T): T => {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const setRaw = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage errors (quota, blocked storage).
+  }
+};
+
+const removeKey = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore storage errors (quota, blocked storage).
+  }
+};
+
+const persistSession = (payload: Partial<SessionPayload>) => {
+  if (typeof window === 'undefined') return;
+
+  fetch(SESSION_ENDPOINT, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => {
+    // Ignore network errors to keep UI responsive.
+  });
+};
+
+const deleteSession = () => {
+  if (typeof window === 'undefined') return;
+
+  fetch(SESSION_ENDPOINT, { method: 'DELETE' }).catch(() => {
+    // Ignore network errors to keep UI responsive.
+  });
+};
+
 export const storage = {
+  syncSession: async (): Promise<SessionPayload | null> => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const response = await fetch(SESSION_ENDPOINT, { cache: 'no-store' });
+      if (!response.ok) return null;
+      const data = (await response.json()) as SessionPayload;
+
+      if ('emisor' in data) {
+        if (data.emisor) {
+          setJSON(KEYS.EMISOR, data.emisor);
+        } else {
+          removeKey(KEYS.EMISOR);
+        }
+      }
+      if ('clients' in data) {
+        if (data.clients) {
+          setJSON(KEYS.CLIENTS, data.clients);
+        } else {
+          removeKey(KEYS.CLIENTS);
+        }
+      }
+      if ('recentClients' in data) {
+        if (data.recentClients) {
+          setJSON(KEYS.RECENT_CLIENTS, data.recentClients);
+        } else {
+          removeKey(KEYS.RECENT_CLIENTS);
+        }
+      }
+      if ('invoices' in data) {
+        if (data.invoices) {
+          setJSON(KEYS.INVOICES, data.invoices);
+        } else {
+          removeKey(KEYS.INVOICES);
+        }
+      }
+      if ('settings' in data) {
+        if (data.settings) {
+          setJSON(KEYS.SETTINGS, data.settings);
+        } else {
+          removeKey(KEYS.SETTINGS);
+        }
+      }
+      if ('logo' in data) {
+        if (data.logo) {
+          setRaw(KEYS.LOGO, data.logo);
+        } else {
+          removeKey(KEYS.LOGO);
+        }
+      }
+
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
   // Emisor
   getEmisor: (): Emisor | null => {
     if (typeof window === 'undefined') return null;
-    const data = localStorage.getItem(KEYS.EMISOR);
-    return data ? JSON.parse(data) : null;
+    return getJSON<Emisor | null>(KEYS.EMISOR, null);
   },
   
   saveEmisor: (emisor: Emisor): void => {
-    localStorage.setItem(KEYS.EMISOR, JSON.stringify(emisor));
+    setJSON(KEYS.EMISOR, emisor);
+    persistSession({ emisor });
   },
 
   // Clients
   getClients: (): Client[] => {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(KEYS.CLIENTS);
-    return data ? JSON.parse(data) : [];
+    return getJSON<Client[]>(KEYS.CLIENTS, []);
   },
   
   saveClient: (client: Client): void => {
@@ -44,24 +164,27 @@ export const storage = {
       clients.push(client);
     }
     
-    localStorage.setItem(KEYS.CLIENTS, JSON.stringify(clients));
+    setJSON(KEYS.CLIENTS, clients);
+    persistSession({ clients });
   },
 
   getRecentClients: (): Client[] => {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(KEYS.RECENT_CLIENTS);
-    return data ? JSON.parse(data) : [];
+    return getJSON<Client[]>(KEYS.RECENT_CLIENTS, []);
   },
 
   saveRecentClient: (client: Client, limit = 8): void => {
     const recent = storage.getRecentClients();
     const next = [client, ...recent.filter(c => c.nif !== client.nif)];
-    localStorage.setItem(KEYS.RECENT_CLIENTS, JSON.stringify(next.slice(0, limit)));
+    const trimmed = next.slice(0, limit);
+    setJSON(KEYS.RECENT_CLIENTS, trimmed);
+    persistSession({ recentClients: trimmed });
   },
   
   deleteClient: (nif: string): void => {
     const clients = storage.getClients().filter(c => c.nif !== nif);
-    localStorage.setItem(KEYS.CLIENTS, JSON.stringify(clients));
+    setJSON(KEYS.CLIENTS, clients);
+    persistSession({ clients });
   },
 
   // Settings
@@ -78,7 +201,8 @@ export const storage = {
   },
   
   saveSettings: (settings: Settings): void => {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+    setJSON(KEYS.SETTINGS, settings);
+    persistSession({ settings });
   },
   
   incrementInvoiceNumber: (): void => {
@@ -89,8 +213,7 @@ export const storage = {
 
   getInvoices: (): InvoiceRecord[] => {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(KEYS.INVOICES);
-    return data ? JSON.parse(data) : [];
+    return getJSON<InvoiceRecord[]>(KEYS.INVOICES, []);
   },
 
   saveInvoice: (invoice: InvoiceRecord): void => {
@@ -107,7 +230,8 @@ export const storage = {
       invoices.unshift(invoice);
     }
 
-    localStorage.setItem(KEYS.INVOICES, JSON.stringify(invoices));
+    setJSON(KEYS.INVOICES, invoices);
+    persistSession({ invoices });
   },
 
   getInvoicesByClient: (nif: string): InvoiceRecord[] => {
@@ -119,20 +243,27 @@ export const storage = {
   // Logo
   getLogo: (): string | null => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(KEYS.LOGO);
+    try {
+      return localStorage.getItem(KEYS.LOGO);
+    } catch {
+      return null;
+    }
   },
   
   saveLogo: (base64: string): void => {
-    localStorage.setItem(KEYS.LOGO, base64);
+    setRaw(KEYS.LOGO, base64);
+    persistSession({ logo: base64 });
   },
   
   deleteLogo: (): void => {
-    localStorage.removeItem(KEYS.LOGO);
+    removeKey(KEYS.LOGO);
+    persistSession({ logo: null });
   },
 
   // Clear all
   clearAll: (): void => {
-    Object.values(KEYS).forEach(key => localStorage.removeItem(key));
+    Object.values(KEYS).forEach(key => removeKey(key));
+    deleteSession();
   },
 };
 

@@ -52,29 +52,43 @@ export default function Home() {
 
   // Load saved data on mount
   useEffect(() => {
-    setMounted(true);
-    const savedEmisor = storage.getEmisor();
-    const savedSettings = storage.getSettings();
-    const savedLogo = storage.getLogo();
-    const recentClients = storage.getRecentClients();
+    let active = true;
 
-    const today = new Date().toISOString().split('T')[0];
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 30);
+    const loadSession = async () => {
+      setMounted(true);
+      await storage.syncSession();
 
-    setSettings(savedSettings);
-    setSavedClients(recentClients);
-    setLogo(savedLogo);
+      const savedEmisor = storage.getEmisor();
+      const savedSettings = storage.getSettings();
+      const savedLogo = storage.getLogo();
+      const recentClients = storage.getRecentClients();
 
-    setInvoiceData(prev => ({
-      ...prev,
-      number: generateInvoiceNumber(savedSettings),
-      date: today,
-      dueDate: dueDate.toISOString().split('T')[0],
-      emisor: savedEmisor || emptyEmisor,
-    }));
+      const today = new Date().toISOString().split('T')[0];
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30);
 
-    refreshHistory();
+      if (!active) return;
+
+      setSettings(savedSettings);
+      setSavedClients(recentClients);
+      setLogo(savedLogo);
+
+      setInvoiceData(prev => ({
+        ...prev,
+        number: generateInvoiceNumber(savedSettings),
+        date: today,
+        dueDate: dueDate.toISOString().split('T')[0],
+        emisor: savedEmisor || emptyEmisor,
+      }));
+
+      refreshHistory();
+    };
+
+    void loadSession();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -550,7 +564,7 @@ export default function Home() {
             <h1 className="font-serif text-xl sm:text-2xl leading-tight">Facturador</h1>
             <span className="text-[10px] sm:text-xs text-stone-400 uppercase tracking-wider">Autónomos España</span>
           </div>
-          <div className="relative flex sm:hidden shrink-0 ml-24" ref={mobileMenuRef}>
+          <div className="relative flex sm:hidden shrink-0 ml-2" ref={mobileMenuRef}>
             <button
               onClick={() => setShowMobileMenu((prev) => !prev)}
               className="btn btn-secondary min-w-[44px]"
