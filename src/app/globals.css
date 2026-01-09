@@ -781,5 +781,13 @@ body {
     z-index: 40;
     background: #FAFAF9;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transform: translateY(0);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
+  }
+
+  header.sticky-header.is-hidden {
+    transform: translateY(-110%);
+    box-shadow: none;
   }
 }

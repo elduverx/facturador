@@ -24,6 +24,8 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'emisor' | 'cliente' | 'historial'>('emisor');
   const [showSettings, setShowSettings] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [hideHeader, setHideHeader] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [savedClients, setSavedClients] = useState<Client[]>([]);
   const [historyClients, setHistoryClients] = useState<Client[]>([]);
@@ -45,6 +47,8 @@ export default function Home() {
 
   const invoiceRef = useRef<HTMLDivElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
 
   // Load saved data on mount
   useEffect(() => {
@@ -80,6 +84,61 @@ export default function Home() {
     }
     setHistoryInvoices(storage.getInvoicesByClient(selectedHistoryClient.nif));
   }, [selectedHistoryClient]);
+
+  useEffect(() => {
+    if (!showMobileMenu) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (!mobileMenuRef.current) return;
+      if (!mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMobileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showMobileMenu]);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      if (ticking) return;
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const delta = currentY - lastScrollY.current;
+
+        if (currentY < 20) {
+          setHideHeader(false);
+        } else if (delta > 8 && currentY > 80) {
+          setHideHeader(true);
+        } else if (delta < -8) {
+          setHideHeader(false);
+        }
+
+        lastScrollY.current = currentY;
+        ticking = false;
+      });
+    };
+
+    lastScrollY.current = window.scrollY;
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const updateEmisor = (field: keyof Emisor, value: string) => {
     setInvoiceData(prev => ({
@@ -480,25 +539,100 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto px-4 pt-4 pb-3 sm:p-6 lg:p-8">
       {/* Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 lg:mb-12 pb-4 sm:pb-6 border-b border-stone-200 sticky-header gap-4 sm:gap-0">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <header className={`flex flex-row justify-between items-center mb-6 sm:mb-8 lg:mb-12 pb-4 sm:pb-6 border-b border-stone-200 sticky-header gap-3 sm:gap-4 ${hideHeader ? 'is-hidden' : ''}`}>
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-500 to-teal-700 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl">
             F
           </div>
-          <div>
-            <h1 className="font-serif text-xl sm:text-2xl">Facturador</h1>
+          <div className="min-w-0">
+            <h1 className="font-serif text-xl sm:text-2xl leading-tight">Facturador</h1>
             <span className="text-[10px] sm:text-xs text-stone-400 uppercase tracking-wider">Autónomos España</span>
           </div>
+          <div className="relative flex sm:hidden shrink-0 ml-24" ref={mobileMenuRef}>
+            <button
+              onClick={() => setShowMobileMenu((prev) => !prev)}
+              className="btn btn-secondary min-w-[44px]"
+              aria-label="Menu"
+              aria-expanded={showMobileMenu}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            {showMobileMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-stone-200 bg-white shadow-lg p-2 flex flex-col gap-2 z-50">
+                <button
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    generatePDF();
+                  }}
+                  className="btn btn-primary w-full justify-start"
+                >
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    sendByWhatsApp();
+                  }}
+                  className="btn btn-secondary w-full justify-start"
+                >
+                  Enviar por WhatsApp
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    sendByEmail();
+                  }}
+                  className="btn btn-secondary w-full justify-start"
+                >
+                  Enviar por Email
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    setShowSettings(true);
+                  }}
+                  className="btn btn-secondary w-full justify-start"
+                >
+                  Configuracion
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="hidden sm:flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+          <button onClick={generatePDF} className="btn btn-primary flex-1 sm:flex-initial min-w-[44px]" title="Descargar PDF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="sm:w-[18px] sm:h-[18px]">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span className="hidden sm:inline">Descargar PDF</span>
+          </button>
+          <button onClick={sendByWhatsApp} className="btn btn-secondary flex-1 sm:flex-initial min-w-[44px]" title="Compartir por WhatsApp">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="sm:w-[18px] sm:h-[18px]">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <span className="hidden sm:inline">WhatsApp</span>
+          </button>
+          <button onClick={sendByEmail} className="btn btn-secondary flex-1 sm:flex-initial min-w-[44px]" title="Enviar por email">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="sm:w-[18px] sm:h-[18px]">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span className="hidden sm:inline">Email</span>
+          </button>
           <button onClick={() => setShowSettings(true)} className="btn btn-secondary flex-1 sm:flex-initial min-w-[44px]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="sm:w-[18px] sm:h-[18px]">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span className="hidden sm:inline">Configuración</span>
+            <span className="hidden sm:inline">Configuracion</span>
           </button>
         </div>
       </header>
@@ -997,7 +1131,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+      <div className="mt-4 flex flex-col gap-2 sm:hidden">
         <button onClick={generatePDF} className="btn btn-primary w-full sm:w-auto">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
