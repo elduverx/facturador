@@ -1,7 +1,7 @@
 {
-  "name": "Facturador",
-  "short_name": "Facturador",
-  "description": "Facturador para autonomos en Espana",
+  "name": "Consultorio de Extranjeria",
+  "short_name": "Consultorio",
+  "description": "Reserva de citas - Consultorio de Abogadas de Extranjeria",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

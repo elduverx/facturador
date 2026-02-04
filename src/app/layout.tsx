@@ -3,14 +3,14 @@ import './globals.css';
 import { PWARegister } from '@/components/PWARegister';
 
 export const metadata: Metadata = {
-  title: 'Facturador - Autonomos Espana',
-  description: 'Crea facturas legales para autonomos en Espana (RD 1619/2012)',
+  title: 'Abogados PV - Reserva de Citas',
+  description: 'Reserva tu cita con abogadas especializadas en derecho de extranjeria e inmigracion',
   manifest: '/manifest.json',
   themeColor: '#0D9488',
-  applicationName: 'Facturador',
+  applicationName: 'Consultorio',
   appleWebApp: {
     capable: true,
-    title: 'Facturador',
+    title: 'Consultorio',
     statusBarStyle: 'default',
   },
   icons: {
