@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { AppointmentData } from '@/types/booking';
 import { STATUS_LABELS, STATUS_COLORS, formatDateShort } from '@/lib/constants';
 import { normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
+import { DocumentAnalyzer } from '@/components/admin/DocumentAnalyzer';
+import { ClientDocumentsPanel } from '@/components/admin/ClientDocumentsPanel';
 
 interface ClientInfo {
   name: string;
@@ -19,6 +21,7 @@ interface ClientNote {
   content: string;
   status: string;
   tags: string[];
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,6 +57,7 @@ export default function ClientesPage() {
   const [noteInput, setNoteInput] = useState('');
   const [noteStatus, setNoteStatus] = useState('PENDING');
   const [noteTags, setNoteTags] = useState('');
+  const [noteIsPublic, setNoteIsPublic] = useState(false);
   const [noteError, setNoteError] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteMessage, setNoteMessage] = useState('');
@@ -61,6 +65,7 @@ export default function ClientesPage() {
   const [editingNoteValue, setEditingNoteValue] = useState('');
   const [editingNoteStatus, setEditingNoteStatus] = useState('PENDING');
   const [editingNoteTags, setEditingNoteTags] = useState('');
+  const [editingNoteIsPublic, setEditingNoteIsPublic] = useState(false);
 
   const selectedClientData = clients.find((c) => c.email === selectedClient);
 
@@ -89,12 +94,14 @@ export default function ClientesPage() {
     setNoteInput('');
     setNoteStatus('PENDING');
     setNoteTags('');
+    setNoteIsPublic(false);
     setNoteError('');
     setNoteMessage('');
     setEditingNoteId(null);
     setEditingNoteValue('');
     setEditingNoteStatus('PENDING');
     setEditingNoteTags('');
+    setEditingNoteIsPublic(false);
   }, [selectedClientData]);
 
   const loadClients = async () => {
@@ -248,12 +255,14 @@ export default function ClientesPage() {
           content,
           status: noteStatus,
           tags: parseTags(noteTags),
+          isPublic: noteIsPublic,
         }),
       });
       if (!res.ok) throw new Error();
       setNoteInput('');
       setNoteTags('');
       setNoteStatus('PENDING');
+      setNoteIsPublic(false);
       await loadClientNotes(selectedClient);
       setNoteMessage('Nota guardada.');
       setTimeout(() => setNoteMessage(''), 3000);
@@ -275,6 +284,7 @@ export default function ClientesPage() {
     setEditingNoteValue(note.content);
     setEditingNoteStatus(note.status || 'PENDING');
     setEditingNoteTags((note.tags || []).join(', '));
+    setEditingNoteIsPublic(note.isPublic || false);
     setNoteMessage('');
     setNoteError('');
   };
@@ -296,6 +306,7 @@ export default function ClientesPage() {
           content,
           status: editingNoteStatus,
           tags: parseTags(editingNoteTags),
+          isPublic: editingNoteIsPublic,
         }),
       });
       if (!res.ok) throw new Error();
@@ -306,6 +317,7 @@ export default function ClientesPage() {
       setEditingNoteValue('');
       setEditingNoteStatus('PENDING');
       setEditingNoteTags('');
+      setEditingNoteIsPublic(false);
       setNoteMessage('Nota actualizada.');
       setTimeout(() => setNoteMessage(''), 3000);
     } catch {
@@ -487,6 +499,14 @@ export default function ClientesPage() {
                 {saveMessage && <div className="text-xs text-stone-500 mt-3">{saveMessage}</div>}
               </div>
 
+              {/* AI Analyzer */}
+              <DocumentAnalyzer 
+                clientEmail={selectedClient} 
+                onAnalysisComplete={() => loadClientNotes(selectedClient)} 
+              />
+
+              <ClientDocumentsPanel clientEmail={selectedClient} />
+
               {/* Client history */}
               <div className="card">
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -503,7 +523,7 @@ export default function ClientesPage() {
                   value={noteInput}
                   onChange={(e) => setNoteInput(e.target.value)}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-3 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_120px] gap-3 mt-3 items-end">
                   <div>
                     <label className="form-label block text-xs">Estado</label>
                     <select
@@ -525,6 +545,15 @@ export default function ClientesPage() {
                       value={noteTags}
                       onChange={(e) => setNoteTags(e.target.value)}
                       placeholder="presupuesto, docs, seguimiento"
+                    />
+                  </div>
+                  <div className="flex flex-col items-center pb-2">
+                    <label className="text-[10px] text-stone-500 mb-1">Pública (Cliente)</label>
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 accent-teal-600"
+                      checked={noteIsPublic}
+                      onChange={(e) => setNoteIsPublic(e.target.checked)}
                     />
                   </div>
                 </div>
@@ -564,13 +593,22 @@ export default function ClientesPage() {
                       const isEditing = editingNoteId === note.id;
                       const statusMeta = getStatusMeta(note.status);
                       return (
-                        <div key={note.id} className="p-3 rounded-lg border border-stone-200">
+                        <div key={note.id} className={`p-3 rounded-lg border ${note.isPublic ? 'border-blue-200 bg-blue-50/30' : 'border-stone-200'}`}>
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex flex-wrap items-center gap-2 text-xs text-stone-400">
                               <span>{formatDateTime(note.createdAt)}</span>
                               <span className={`px-2 py-0.5 rounded-full border ${statusMeta.color}`}>
                                 {statusMeta.label}
                               </span>
+                              {note.isPublic && (
+                                <span className="flex items-center gap-1 text-blue-600 font-medium">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                  </svg>
+                                  Pública
+                                </span>
+                              )}
                             </div>
                             {!isEditing && (
                               <div className="flex items-center gap-2 text-xs">
@@ -613,7 +651,7 @@ export default function ClientesPage() {
                                 value={editingNoteValue}
                                 onChange={(e) => setEditingNoteValue(e.target.value)}
                               />
-                              <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-3 mt-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_120px] gap-3 mt-3 items-end">
                                 <div>
                                   <label className="form-label block text-xs">Estado</label>
                                   <select
@@ -637,6 +675,15 @@ export default function ClientesPage() {
                                     placeholder="presupuesto, docs, seguimiento"
                                   />
                                 </div>
+                                <div className="flex flex-col items-center pb-2">
+                                  <label className="text-[10px] text-stone-500 mb-1">Pública (Cliente)</label>
+                                  <input
+                                    type="checkbox"
+                                    className="w-5 h-5 accent-teal-600"
+                                    checked={editingNoteIsPublic}
+                                    onChange={(e) => setEditingNoteIsPublic(e.target.checked)}
+                                  />
+                                </div>
                               </div>
                               <div className="flex flex-wrap items-center gap-2 mt-2">
                                 <button
@@ -652,6 +699,7 @@ export default function ClientesPage() {
                                     setEditingNoteValue('');
                                     setEditingNoteStatus('PENDING');
                                     setEditingNoteTags('');
+                                    setEditingNoteIsPublic(false);
                                     setNoteError('');
                                   }}
                                   className="btn btn-ghost text-xs"
@@ -683,9 +731,14 @@ export default function ClientesPage() {
                             <div className="text-sm font-medium">{appt.service?.name || 'Servicio'}</div>
                             <div className="text-xs text-stone-500">{formatDateShort(dateStr)} a las {appt.startTime}</div>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full border self-start sm:self-center ${STATUS_COLORS[appt.status] || ''}`}>
-                            {STATUS_LABELS[appt.status] || appt.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${appt.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                              {appt.paymentStatus === 'PAID' ? 'Pagado' : 'Pendiente'}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full border self-start sm:self-center ${STATUS_COLORS[appt.status] || ''}`}>
+                              {STATUS_LABELS[appt.status] || appt.status}
+                            </span>
+                          </div>
                         </div>
                       );
                     })}

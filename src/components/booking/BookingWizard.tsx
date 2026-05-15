@@ -3,13 +3,27 @@
 import { useState, useEffect } from 'react';
 import { ServiceType } from '@/types/booking';
 import { formatDateES } from '@/lib/constants';
+import { CONSULTATION_DEPOSIT_AMOUNT, formatEuro } from '@/lib/payments';
 import { isValidEmail, isValidPhone, normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
 import { ServiceSelector } from './ServiceSelector';
 import { DateTimePicker } from './DateTimePicker';
 import { ClientForm } from './ClientForm';
 import { BookingConfirmation } from './BookingConfirmation';
 
-const STEPS = ['Servicio', 'Fecha y hora', 'Datos', 'Confirmacion'];
+const LAWYERS = [
+  {
+    id: 'luz',
+    name: 'Abogada Luz',
+    detail: 'Especialista en estrategia documental y seguimiento de expedientes.',
+  },
+  {
+    id: 'dian',
+    name: 'Abogada Dian',
+    detail: 'Especialista en citas, renovaciones y acompanamiento administrativo.',
+  },
+];
+
+const STEPS = ['Abogada', 'Servicio', 'Fecha y hora', 'Datos', 'Confirmacion'];
 
 export function BookingWizard() {
   const [step, setStep] = useState(0);
@@ -19,6 +33,7 @@ export function BookingWizard() {
   const [error, setError] = useState('');
 
   // Form state
+  const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -33,10 +48,13 @@ export function BookingWizard() {
 
   // Confirmation data
   const [confirmation, setConfirmation] = useState<{
+    appointmentId: string;
     clientName: string;
     serviceName: string;
+    lawyerName: string;
     date: string;
     time: string;
+    price: number;
   } | null>(null);
 
   useEffect(() => {
@@ -48,11 +66,13 @@ export function BookingWizard() {
   }, []);
 
   const selectedService = services.find((s) => s.id === selectedServiceId);
+  const selectedLawyer = LAWYERS.find((lawyer) => lawyer.id === selectedLawyerId);
 
   const canGoNext = () => {
-    if (step === 0) return !!selectedServiceId;
-    if (step === 1) return !!selectedDate && !!selectedTime;
-    if (step === 2) return !!clientData.clientName && !!clientData.clientEmail && !!clientData.clientPhone;
+    if (step === 0) return !!selectedLawyerId;
+    if (step === 1) return !!selectedServiceId;
+    if (step === 2) return !!selectedDate && !!selectedTime;
+    if (step === 3) return !!clientData.clientName && !!clientData.clientEmail && !!clientData.clientPhone;
     return false;
   };
 
@@ -70,7 +90,7 @@ export function BookingWizard() {
   };
 
   const handleNext = () => {
-    if (step === 2) {
+    if (step === 3) {
       if (!validateStep2()) return;
       handleSubmit();
       return;
@@ -100,7 +120,10 @@ export function BookingWizard() {
           clientEmail: normalizeEmail(clientData.clientEmail),
           clientPhone: normalizePhone(clientData.clientPhone),
           clientNie: clientData.clientNie ? normalizeNie(clientData.clientNie) : undefined,
-          notes: clientData.notes || undefined,
+          notes: [
+            selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
+            clientData.notes || null,
+          ].filter(Boolean).join('\n\n') || undefined,
         }),
       });
 
@@ -109,13 +132,18 @@ export function BookingWizard() {
         throw new Error(data.error || 'Error al crear la cita');
       }
 
+      const appointment = await res.json();
+
       setConfirmation({
+        appointmentId: appointment.id,
         clientName: clientData.clientName,
         serviceName: selectedService?.name || '',
+        lawyerName: selectedLawyer?.name || '',
         date: formatDateES(selectedDate!),
         time: selectedTime!,
+        price: selectedService?.price || 0,
       });
-      setStep(3);
+      setStep(4);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al procesar la reserva');
     } finally {
@@ -126,119 +154,187 @@ export function BookingWizard() {
   if (loading) {
     return (
       <div className="card text-center py-12">
-        <div className="inline-block w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm text-stone-500 mt-3">Cargando servicios...</p>
+        <div className="inline-block w-8 h-8 border-2 border-[var(--pv-gold)] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-sm text-[var(--pv-muted)] mt-3">Cargando servicios...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Step indicator */}
-      {step < 3 && (
-        <div className="flex items-center gap-1.5 mb-3">
-          {STEPS.slice(0, 3).map((label, i) => (
-            <div key={label} className="flex items-center gap-1.5 flex-1">
-              <div className={`flex items-center gap-1.5 flex-1 ${i <= step ? 'opacity-100' : 'opacity-40'}`}>
-                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-semibold shrink-0 ${
-                  i < step ? 'bg-teal-600 text-white' : i === step ? 'bg-teal-600 text-white' : 'bg-stone-200 text-stone-500'
-                }`}>
-                  {i < step ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span className="text-[10px] sm:text-[11px] font-medium hidden sm:inline">{label}</span>
+    <div className="space-y-4">
+      {step < 4 && (
+        <div className="card !p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--pv-muted)]">
+                Paso {step + 1} de 4
               </div>
-              {i < 2 && <div className={`h-px flex-1 ${i < step ? 'bg-teal-400' : 'bg-stone-200'}`} />}
+              <div className="font-legal text-xl text-[var(--pv-navy)] mt-1">{STEPS[step]}</div>
             </div>
-          ))}
+            <div className="hidden sm:block text-xs text-[var(--pv-muted)]">
+              Reserva guiada
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {STEPS.slice(0, 4).map((label, i) => (
+              <div key={label} className="space-y-1">
+                <div className={`h-1.5 rounded-full ${i <= step ? 'bg-[var(--pv-navy)]' : 'bg-[#d8c7a0]/50'}`} />
+                <div className={`text-[10px] hidden sm:block ${i <= step ? 'text-[var(--pv-navy)] font-semibold' : 'text-[var(--pv-muted)]'}`}>
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Content */}
-      <div className="card">
-        {step === 0 && (
-          <ServiceSelector
-            services={services}
-            selected={selectedServiceId}
-            onSelect={(id) => setSelectedServiceId(id)}
-          />
-        )}
+      <div className={step < 4 ? 'grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 items-start' : ''}>
+        <div className="card">
+          {step === 0 && (
+            <div>
+              <h2 className="font-legal text-2xl text-[var(--pv-navy)] mb-1">Seleccione abogada</h2>
+              <p className="text-sm text-[var(--pv-muted)] mb-5">
+                Elija con quien quiere iniciar la reserva. Despues seleccionara servicio, fecha y sus datos.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {LAWYERS.map((lawyer) => (
+                  <button
+                    key={lawyer.id}
+                    type="button"
+                    onClick={() => setSelectedLawyerId(lawyer.id)}
+                    className={`group text-left rounded-md border p-4 transition-all ${
+                      selectedLawyerId === lawyer.id
+                        ? 'border-[var(--pv-gold)] bg-[#fff8e8] shadow-sm'
+                        : 'border-[var(--pv-line)] bg-[#fffdf5]/80 hover:border-[var(--pv-gold)]'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="pv-seal w-12 h-12 rounded-full flex items-center justify-center font-legal text-xs font-bold shrink-0">
+                        {lawyer.name === 'Abogada Luz' ? 'LZ' : 'DN'}
+                      </div>
+                      <div>
+                        <div className="font-legal text-xl text-[var(--pv-navy)]">{lawyer.name}</div>
+                        <p className="text-xs text-[var(--pv-muted)] mt-1 leading-relaxed">{lawyer.detail}</p>
+                        <div className="mt-3 text-[10px] uppercase tracking-[0.16em] text-[var(--pv-muted)] group-hover:text-[var(--pv-navy)]">
+                          {selectedLawyerId === lawyer.id ? 'Seleccionada' : 'Seleccionar'}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {step === 1 && selectedServiceId && (
-          <DateTimePicker
-            serviceId={selectedServiceId}
-            selectedDate={selectedDate}
-            selectedTime={selectedTime}
-            onDateSelect={setSelectedDate}
-            onTimeSelect={(t) => setSelectedTime(t || null)}
-          />
-        )}
+          {step === 1 && (
+            <ServiceSelector
+              services={services}
+              selected={selectedServiceId}
+              onSelect={(id) => setSelectedServiceId(id)}
+            />
+          )}
 
-        {step === 2 && (
-          <ClientForm
-            data={clientData}
-            onChange={setClientData}
-            errors={formErrors}
-          />
-        )}
+          {step === 2 && selectedServiceId && (
+            <DateTimePicker
+              serviceId={selectedServiceId}
+              selectedDate={selectedDate}
+              selectedTime={selectedTime}
+              onDateSelect={setSelectedDate}
+              onTimeSelect={(t) => setSelectedTime(t || null)}
+            />
+          )}
 
-        {step === 3 && confirmation && (
+          {step === 3 && (
+            <ClientForm
+              data={clientData}
+              onChange={setClientData}
+              errors={formErrors}
+            />
+          )}
+
+          {step === 4 && confirmation && (
           <BookingConfirmation
+            appointmentId={confirmation.appointmentId}
             clientName={confirmation.clientName}
             serviceName={confirmation.serviceName}
+            lawyerName={confirmation.lawyerName}
             date={confirmation.date}
             time={confirmation.time}
+            price={confirmation.price}
           />
-        )}
+          )}
 
-        {/* Error message */}
-        {error && (
-          <div className="mt-3 sm:mt-4 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-lg p-2.5 sm:p-3">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-md p-3">
+              {error}
+            </div>
+          )}
 
-        {/* Navigation */}
-        {step < 3 && (
-          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-stone-200">
-            {step > 0 ? (
-              <button onClick={handleBack} className="btn btn-secondary text-xs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                Atras
-              </button>
-            ) : (
-              <div />
-            )}
-            <button
-              onClick={handleNext}
-              disabled={!canGoNext() || submitting}
-              className="btn btn-primary text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Procesando...
-                </>
-              ) : step === 2 ? (
-                'Confirmar reserva'
+          {step < 4 && (
+            <div className="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-[var(--pv-line)]">
+              {step > 0 ? (
+                <button onClick={handleBack} className="btn btn-secondary text-xs">
+                  Atras
+                </button>
               ) : (
-                <>
-                  Siguiente
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </>
+                <div />
               )}
-            </button>
-          </div>
-        )}
+              <button
+                onClick={handleNext}
+                disabled={!canGoNext() || submitting}
+                className="btn btn-primary text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Procesando...
+                  </>
+                ) : step === 3 ? (
+                  'Confirmar reserva'
+                ) : (
+                  'Continuar'
+                )}
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* Summary sidebar on step 1 and 2 */}
-        {step > 0 && step < 3 && selectedService && (
-          <div className="mt-2 pt-2 border-t border-stone-100">
-            <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-stone-500">
-              <span className="bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-medium">{selectedService.name}</span>
+        {step > 0 && step < 4 && (
+          <aside className="card !p-4 lg:sticky lg:top-4">
+            <div className="font-legal text-base text-[var(--pv-navy)]">Resumen</div>
+            <div className="mt-4 space-y-3 text-xs">
+              <div>
+                <div className="uppercase tracking-[0.16em] text-[10px] text-[var(--pv-muted)]">Abogada</div>
+                <div className="mt-1 font-semibold text-[var(--pv-navy)]">{selectedLawyer?.name || 'Pendiente'}</div>
+              </div>
+              <div>
+                <div className="uppercase tracking-[0.16em] text-[10px] text-[var(--pv-muted)]">Servicio</div>
+                <div className="mt-1 font-semibold text-[var(--pv-navy)]">{selectedService?.name || 'Pendiente'}</div>
+              </div>
+              <div>
+                <div className="uppercase tracking-[0.16em] text-[10px] text-[var(--pv-muted)]">Fecha y hora</div>
+                <div className="mt-1 font-semibold text-[var(--pv-navy)]">
+                  {selectedDate ? formatDateES(selectedDate) : 'Pendiente'}
+                  {selectedTime ? `, ${selectedTime}` : ''}
+                </div>
+              </div>
+            </div>
+            <div className="pv-divider my-4" />
+            <div className="rounded-md border border-[var(--pv-line)] bg-[#fff8e8]/70 p-3 text-xs">
+              <div className="uppercase tracking-[0.16em] text-[10px] text-[var(--pv-muted)]">Anticipo</div>
+              <div className="mt-1 font-semibold text-[var(--pv-navy)]">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--pv-muted)]">
+                Se descuenta del total de la consulta o servicio.
+              </p>
+            </div>
+            <div className="pv-divider my-4" />
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {selectedLawyer && (
+                <span className="bg-[#fff8e8] text-[var(--pv-navy)] border border-[var(--pv-line)] px-1.5 py-0.5 rounded font-medium">{selectedLawyer.name}</span>
+              )}
+              {selectedService && (
+                <span className="bg-[#fff8e8] text-[var(--pv-navy)] border border-[var(--pv-line)] px-1.5 py-0.5 rounded font-medium">{selectedService.name}</span>
+              )}
               {selectedDate && (
                 <span className="bg-stone-100 px-1.5 py-0.5 rounded">{formatDateES(selectedDate)}</span>
               )}
@@ -246,7 +342,7 @@ export function BookingWizard() {
                 <span className="bg-stone-100 px-1.5 py-0.5 rounded">{selectedTime}</span>
               )}
             </div>
-          </div>
+          </aside>
         )}
       </div>
     </div>

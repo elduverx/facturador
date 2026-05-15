@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     const content = typeof body?.content === 'string' ? body.content.trim() : '';
     const status = typeof body?.status === 'string' ? body.status : 'PENDING';
     const tags = normalizeTags(body?.tags);
+    const isPublic = typeof body?.isPublic === 'boolean' ? body.isPublic : false;
 
     const normalizedEmail = normalizeEmail(email);
 
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
         content,
         status: status as NoteStatus,
         tags,
+        isPublic,
       },
     });
 

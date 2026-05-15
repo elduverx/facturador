@@ -1,12 +1,11 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { PWARegister } from '@/components/PWARegister';
 
 export const metadata: Metadata = {
-  title: 'Abogados PV - Reserva de Citas',
-  description: 'Reserva tu cita con abogadas especializadas en derecho de extranjeria e inmigracion',
+  title: 'PV Abogadas - Gestion de Expedientes',
+  description: 'Reserva, portal de clientes y gestion profesional de expedientes de extranjeria',
   manifest: '/manifest.json',
-  themeColor: '#0D9488',
   applicationName: 'Consultorio',
   appleWebApp: {
     capable: true,
@@ -20,6 +19,10 @@ export const metadata: Metadata = {
     ],
     apple: '/icons/icon-180.png',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0b1f2d',
 };
 
 export default function RootLayout({

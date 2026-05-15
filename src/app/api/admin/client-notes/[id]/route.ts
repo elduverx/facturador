@@ -22,8 +22,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const content = typeof body?.content === 'string' ? body.content.trim() : '';
     const status = typeof body?.status === 'string' ? body.status : undefined;
     const tags = Object.prototype.hasOwnProperty.call(body || {}, 'tags') ? normalizeTags(body?.tags) : undefined;
+    const isPublic = typeof body?.isPublic === 'boolean' ? body.isPublic : undefined;
 
-    if (!content && status === undefined && tags === undefined) {
+    if (!content && status === undefined && tags === undefined && isPublic === undefined) {
       return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 });
     }
 
@@ -35,6 +36,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (content) data.content = content;
     if (status) data.status = status as NoteStatus;
     if (tags !== undefined) data.tags = tags;
+    if (isPublic !== undefined) data.isPublic = isPublic;
 
     const updated = await prisma.clientNote.update({
       where: { id },

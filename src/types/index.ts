@@ -29,10 +29,12 @@ export interface InvoiceItem {
   iva: number;
 }
 
+export type PaymentMethod = 'tarjeta' | 'efectivo' | 'transferencia';
+
 export interface InvoiceData {
   number: string;
   date: string;
-  dueDate: string;
+  paymentMethod: PaymentMethod;
   emisor: Emisor;
   client: Client;
   items: InvoiceItem[];

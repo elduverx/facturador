@@ -36,7 +36,7 @@ export default function Home() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     number: '',
     date: '',
-    dueDate: '',
+    paymentMethod: 'transferencia',
     emisor: emptyEmisor,
     client: emptyClient,
     items: [{ ...defaultItem }],
@@ -64,8 +64,6 @@ export default function Home() {
       const recentClients = storage.getRecentClients();
 
       const today = new Date().toISOString().split('T')[0];
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 30);
 
       if (!active) return;
 
@@ -77,7 +75,6 @@ export default function Home() {
         ...prev,
         number: generateInvoiceNumber(savedSettings),
         date: today,
-        dueDate: dueDate.toISOString().split('T')[0],
         emisor: savedEmisor || emptyEmisor,
       }));
 
@@ -486,7 +483,7 @@ export default function Home() {
       invoiceData.applyIRPF ? `Retencion IRPF (${invoiceData.irpfPercent}%): -${formatCurrency(irpfAmount)}` : null,
       `Total: ${formatCurrency(total)}`,
       '',
-      `Fecha de vencimiento: ${formatDate(invoiceData.dueDate)}`,
+      `Forma de pago: ${{ tarjeta: 'Tarjeta', efectivo: 'Efectivo', transferencia: 'Transferencia' }[invoiceData.paymentMethod]}`,
       '',
       `${invoiceData.emisor.name}`,
       invoiceData.emisor.email ? invoiceData.emisor.email : null,
@@ -533,7 +530,7 @@ export default function Home() {
       '',
       `Total: ${formatCurrency(total)}`,
       '',
-      `Fecha de vencimiento: ${formatDate(invoiceData.dueDate)}`,
+      `Forma de pago: ${{ tarjeta: 'Tarjeta', efectivo: 'Efectivo', transferencia: 'Transferencia' }[invoiceData.paymentMethod]}`,
       '',
       'Saludos,',
       `${invoiceData.emisor.name}`,
@@ -689,14 +686,24 @@ export default function Home() {
                   onChange={(e) => setInvoiceData(prev => ({ ...prev, date: e.target.value }))}
                 />
               </div>
-              <div className="sm:col-span-2 md:col-span-1">
-                <label className="form-label block text-xs sm:text-sm">Fecha de Vencimiento</label>
-                <input
-                  type="date"
-                  className="form-input text-sm"
-                  value={invoiceData.dueDate}
-                  onChange={(e) => setInvoiceData(prev => ({ ...prev, dueDate: e.target.value }))}
-                />
+              <div>
+                <label className="form-label block text-xs sm:text-sm">Forma de Pago</label>
+                <div className="flex gap-2 mt-1">
+                  {(['tarjeta', 'efectivo', 'transferencia'] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setInvoiceData(prev => ({ ...prev, paymentMethod: method }))}
+                      className={`flex-1 py-2 px-1 rounded-lg border text-xs font-medium transition-colors ${
+                        invoiceData.paymentMethod === method
+                          ? 'border-teal-600 bg-teal-50 text-teal-700'
+                          : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                      }`}
+                    >
+                      {{ tarjeta: 'Tarjeta', efectivo: 'Efectivo', transferencia: 'Transferencia' }[method]}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1016,7 +1023,7 @@ export default function Home() {
                                       <div>
                                         <div className="text-sm font-medium">{invoice.data.number || 'Sin numero'}</div>
                                         <div className="text-xs text-stone-500">
-                                          Emitida {formatDate(invoice.data.date)} - Vence {formatDate(invoice.data.dueDate)}
+                                          Emitida {formatDate(invoice.data.date)}
                                         </div>
                                       </div>
                                       <div className="flex flex-col sm:items-end gap-2">
@@ -1183,13 +1190,12 @@ export default function Home() {
         onClearAll={() => {
           const resetSettings = storage.getSettings();
           const today = new Date().toISOString().split('T')[0];
-          const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
           setSettings(resetSettings);
           setInvoiceData({
             number: generateInvoiceNumber(resetSettings),
             date: today,
-            dueDate,
+            paymentMethod: 'transferencia',
             emisor: emptyEmisor,
             client: emptyClient,
             items: [{ ...defaultItem }],

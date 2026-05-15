@@ -36,29 +36,37 @@ const getEmbedUrl = (url: string) => {
 };
 
 async function getPost(slug: string): Promise<BlogPost | null> {
-  return prisma.blogPost.findFirst({
-    where: {
-      slug,
-      status: 'PUBLISHED',
-    },
-  });
+  try {
+    return await prisma.blogPost.findFirst({
+      where: {
+        slug,
+        status: 'PUBLISHED',
+      },
+    });
+  } catch (error) {
+    console.error('Error cargando post publicado:', error);
+    return null;
+  }
 }
 
-export default async function BlogDetailPage({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug);
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPost(slug);
   if (!post) return notFound();
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-xs text-stone-400">{formatDate(post.publishedAt || post.createdAt)}</div>
-          <h1 className="text-2xl font-semibold mt-2">{post.title}</h1>
-          {post.excerpt && <p className="text-sm text-stone-500 mt-2">{post.excerpt}</p>}
+    <div className="pv-page">
+      <header className="pv-dark-panel border-b border-[rgba(200,170,106,0.42)]">
+        <div className="pv-shell py-6">
+          <a href="/blog" className="text-xs uppercase tracking-[0.18em] text-[#c8aa6a] hover:text-white">Volver al blog</a>
+          <div className="text-xs text-[#d8c7a0] mt-4">{formatDate(post.publishedAt || post.createdAt)}</div>
+          <h1 className="font-legal text-3xl sm:text-5xl text-[#f8f1df] mt-2">{post.title}</h1>
+          {post.excerpt && <p className="text-sm text-[#d8c7a0] mt-3 max-w-2xl">{post.excerpt}</p>}
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="pv-shell py-8">
+        <article className="pv-frame pv-paper p-5 sm:p-8">
         {post.coverImageUrl && (
           <img src={post.coverImageUrl} alt={post.title} className="w-full rounded-lg mb-6 object-cover max-h-[360px]" />
         )}
@@ -96,6 +104,7 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
             ))}
           </div>
         )}
+        </article>
       </main>
     </div>
   );

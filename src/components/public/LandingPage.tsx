@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: 'Proceso', href: '#proceso' },
   { label: 'Opiniones', href: '#testimonios' },
   { label: 'FAQ', href: '#faq' },
+  { label: 'Mi Portal', href: '/portal' },
   { label: 'Blog', href: '/blog' },
 ];
 
@@ -299,9 +300,9 @@ export function LandingPage() {
 
   /* ── Body lock ── */
   useEffect(() => {
-    document.body.style.overflow = (menuOpen || showLookup) ? 'hidden' : '';
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [menuOpen, showLookup]);
+  }, [menuOpen]);
 
   const close = useCallback(() => setMenuOpen(false), []);
 
@@ -352,7 +353,7 @@ export function LandingPage() {
                 <a key={l.href} href={l.href} onClick={close} className="text-xl font-medium text-slate-800 py-3 border-b border-stone-100">{l.label}</a>
               ))}
               <a href="#reservar" onClick={close} className="mt-6 text-center font-semibold px-6 py-4 rounded-full bg-teal-600 text-white text-lg">Reserva tu cita</a>
-              <button type="button" onClick={() => { close(); setShowLookup(true); }} className="mt-2 text-center font-medium px-6 py-4 rounded-full border-2 border-teal-600 text-teal-700 text-lg">Consultar mi cita</button>
+              <a href="/portal" onClick={close} className="mt-2 text-center font-medium px-6 py-4 rounded-full border-2 border-teal-600 text-teal-700 text-lg">Mi Portal</a>
             </div>
           </div>
         )}
@@ -833,10 +834,16 @@ export function LandingPage() {
             <p className="max-w-md mx-auto text-slate-500">Selecciona el servicio, elige fecha y horario, y confirma tu reserva.</p>
           </div>
           <div className="reveal"><BookingWizard /></div>
-          <div className="reveal mt-14 hidden sm:block border-t border-stone-200 pt-10">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Ya tienes una cita?</h3>
-            <p className="text-sm text-slate-500 mb-4">Consulta tus reservas con tu email y telefono.</p>
-            <AppointmentLookup />
+          <div className="reveal mt-14 border-t border-stone-200 pt-10">
+            <div className="rounded-2xl border border-teal-100 bg-teal-50/60 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Ya eres cliente?</h3>
+                <p className="text-sm text-slate-500">Entra a Mi Portal para consultar citas, pagos, documentos y estado de tu tramite.</p>
+              </div>
+              <a href="/portal" className="shrink-0 px-6 py-3 rounded-full bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors text-center">
+                Entrar a Mi Portal
+              </a>
+            </div>
           </div>
         </div>
       </section>

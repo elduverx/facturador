@@ -81,10 +81,6 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <label>Fecha emisión</label>
               <span>{formatDate(data.date)}</span>
             </div>
-            <div className="meta-item">
-              <label>Vencimiento</label>
-              <span>{formatDate(data.dueDate)}</span>
-            </div>
           </div>
 
           {/* Items */}
@@ -139,8 +135,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <div className="mt-8 pt-6 border-t border-stone-200">
             <div className="payment-info">
               <h4>Forma de pago</h4>
-              <p>Transferencia bancaria</p>
-              <p>IBAN: {data.emisor.iban || '---'}</p>
+              <p>{{ tarjeta: 'Tarjeta', efectivo: 'Efectivo', transferencia: 'Transferencia bancaria' }[data.paymentMethod]}</p>
+              {data.paymentMethod === 'transferencia' && (
+                <p>IBAN: {data.emisor.iban || '---'}</p>
+              )}
             </div>
             {data.notes && (
               <div className="invoice-notes">{data.notes}</div>

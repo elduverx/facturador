@@ -126,6 +126,41 @@ export function adminNewBookingEmail(data: AppointmentEmailData & { clientEmail:
   return baseTemplate('Nueva Reserva', body, data.firmName);
 }
 
+export function adminClientDocumentEmail(data: {
+  firmName: string;
+  clientEmail: string;
+  clientPhone: string;
+  fileName: string;
+  description?: string | null;
+  aiSummary?: string | null;
+  aiStatus?: string | null;
+  aiNextAction?: string | null;
+  matchedScore?: number | null;
+}): string {
+  const body = `
+    <p><strong>Un cliente ha subido documentacion desde el portal:</strong></p>
+    <div style="background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;padding:16px;margin:16px 0;">
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:4px 0;color:#57534E;">Email:</td><td style="padding:4px 0;">${escapeHtml(data.clientEmail)}</td></tr>
+        <tr><td style="padding:4px 0;color:#57534E;">Telefono:</td><td style="padding:4px 0;">${escapeHtml(data.clientPhone)}</td></tr>
+        <tr><td style="padding:4px 0;color:#57534E;">Archivo:</td><td style="padding:4px 0;">${escapeHtml(data.fileName)}</td></tr>
+        ${data.description ? `<tr><td style="padding:4px 0;color:#57534E;">Nota cliente:</td><td style="padding:4px 0;">${escapeHtml(data.description)}</td></tr>` : ''}
+      </table>
+    </div>
+    ${data.aiSummary ? `
+      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:16px;margin:16px 0;">
+        <p style="margin:0 0 8px;font-weight:600;font-size:14px;">Lectura automatica de Claude:</p>
+        ${data.aiStatus ? `<p style="margin:0 0 8px;font-size:14px;"><strong>Estado:</strong> ${escapeHtml(data.aiStatus)}</p>` : ''}
+        <p style="margin:0 0 8px;font-size:14px;">${escapeHtml(data.aiSummary)}</p>
+        ${data.aiNextAction ? `<p style="margin:0;font-size:14px;"><strong>Siguiente accion:</strong> ${escapeHtml(data.aiNextAction)}</p>` : ''}
+        ${typeof data.matchedScore === 'number' ? `<p style="margin:8px 0 0;font-size:12px;color:#78716C;">Coincidencia DB: ${Math.round(data.matchedScore * 100)}%</p>` : ''}
+      </div>
+    ` : ''}
+    <p style="font-size:14px;color:#57534E;">Revise el archivo desde Admin &gt; Clientes &gt; ficha del cliente.</p>
+  `;
+  return baseTemplate('Nueva Documentacion de Cliente', body, data.firmName);
+}
+
 export function newsletterEmail(data: {
   post: {
     title: string;

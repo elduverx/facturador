@@ -9,10 +9,8 @@
     "postinstall": "prisma generate",
     "seed": "npx tsx prisma/seed.ts"
   },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
-  },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "@prisma/client": "^6.16.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.3",

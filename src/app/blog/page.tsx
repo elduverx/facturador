@@ -3,15 +3,18 @@ import { NewsletterSignup } from '@/components/public/NewsletterSignup';
 
 export default function BlogPage() {
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-semibold">Blog del consultorio</h1>
-          <p className="text-sm text-stone-500">Noticias, politica y novedades</p>
+    <div className="pv-page">
+      <header className="pv-dark-panel border-b border-[rgba(200,170,106,0.42)]">
+        <div className="pv-shell py-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-legal text-xs uppercase tracking-[0.24em] text-[#c8aa6a]">Actualidad legal</p>
+            <h1 className="font-legal text-3xl text-[#f8f1df] mt-1">Blog del consultorio</h1>
+          </div>
+          <a href="/" className="btn btn-secondary">Inicio</a>
         </div>
       </header>
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <div className="space-y-6">
+      <main className="pv-shell py-8">
+        <div className="pv-frame pv-paper p-5 sm:p-8 space-y-6">
           <BlogList />
           <NewsletterSignup />
         </div>

@@ -25,24 +25,52 @@ export async function POST(request: Request) {
     const page = Number(body?.page) || 1;
     const pageSize = Math.min(10, Math.max(1, Number(body?.pageSize) || 4));
 
-    const today = new Date();
-    const startOfToday = new Date(today.toISOString().split('T')[0] + 'T00:00:00.000Z');
-
-    const appointments = await prisma.appointment.findMany({
+    const allAppointments = await prisma.appointment.findMany({
       where: {
         clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-        date: { gte: startOfToday },
-        status: { in: ['PENDING', 'CONFIRMED'] },
       },
       include: { service: true },
-      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
       take: 200,
     });
 
-    const filtered = appointments.filter((appt) => normalizePhone(appt.clientPhone) === normalizedPhone);
+    const filtered = allAppointments.filter((appt) => normalizePhone(appt.clientPhone) === normalizedPhone);
+    
+    // Si no hay citas que coincidan con el telefono, error de seguridad/privacidad
+    if (filtered.length === 0) {
+       return NextResponse.json({ appointments: [], total: 0, notes: [] });
+    }
+
     const total = filtered.length;
     const startIndex = (Math.max(1, page) - 1) * pageSize;
     const paged = filtered.slice(startIndex, startIndex + pageSize);
+
+    const [publicNotes, documents] = await Promise.all([
+      prisma.clientNote.findMany({
+        where: {
+          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+          isPublic: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.clientDocument.findMany({
+        where: {
+          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+          clientPhone: normalizedPhone,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          sizeBytes: true,
+          description: true,
+          status: true,
+          adminNotes: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       appointments: paged.map((appt) => ({
@@ -51,7 +79,19 @@ export async function POST(request: Request) {
         startTime: appt.startTime,
         endTime: appt.endTime,
         status: appt.status,
+        paymentStatus: appt.paymentStatus,
         serviceName: appt.service?.name || 'Servicio',
+        price: appt.service?.price || 0,
+      })),
+      notes: publicNotes.map(note => ({
+        id: note.id,
+        content: note.content,
+        status: note.status,
+        createdAt: note.createdAt.toISOString(),
+      })),
+      documents: documents.map(document => ({
+        ...document,
+        createdAt: document.createdAt.toISOString(),
       })),
       total,
       page: Math.max(1, page),

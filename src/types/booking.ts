@@ -19,6 +19,8 @@ export interface AppointmentData {
   startTime: string;
   endTime: string;
   status: string;
+  paymentStatus: string;
+  paymentId: string | null;
   notes: string | null;
   adminNotes: string | null;
   createdAt: string;

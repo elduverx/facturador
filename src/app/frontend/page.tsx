@@ -1,5 +1,5 @@
-import { LandingPage } from '@/components/public/LandingPage';
+import { HomeShell } from '@/components/public/HomeShell';
 
 export default function FrontendPage() {
-  return <LandingPage />;
+  return <HomeShell />;
 }

@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Facturador (existente) ─────────────────────────────────────────
+// Facturador (existente)
 model SessionData {
   id            String   @id
   createdAt     DateTime @default(now())
@@ -20,7 +20,7 @@ model SessionData {
   logo          String?
 }
 
-// ─── Sistema de Reservas ────────────────────────────────────────────
+// Sistema de Reservas
 
 model Service {
   id           String        @id @default(cuid())
@@ -43,11 +43,25 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 enum ClientNoteStatus {
   PENDING
   IN_PROGRESS
   WAITING
   DONE
+}
+
+enum ClientDocumentStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
 }
 
 enum BlogStatus {
@@ -75,6 +89,8 @@ model Appointment {
   endTime     String
 
   status      AppointmentStatus @default(PENDING)
+  paymentStatus PaymentStatus   @default(PENDING)
+  paymentId   String?           // Referencia de Redsys u otro
   notes       String?
   adminNotes  String?
 
@@ -92,10 +108,34 @@ model ClientNote {
   content     String
   status      ClientNoteStatus @default(PENDING)
   tags        String[]
+  isPublic    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([clientEmail])
+}
+
+model ClientDocument {
+  id           String               @id @default(cuid())
+  clientEmail  String
+  clientPhone  String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storagePath  String
+  description  String?
+  status       ClientDocumentStatus @default(PENDING)
+  adminNotes   String?
+  aiAnalysis   Json?
+  matchedEmail String?
+  matchedScore Float?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([clientEmail])
+  @@index([matchedEmail])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model BlockedDate {
@@ -168,4 +208,21 @@ model NewsletterSubscriber {
   consentAt      DateTime         @default(now())
   unsubscribedAt DateTime?
   updatedAt      DateTime         @updatedAt
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  title     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // 'user' | 'assistant' | 'system'
+  content   String
+  createdAt DateTime    @default(now())
 }

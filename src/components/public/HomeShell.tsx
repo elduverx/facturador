@@ -1,102 +1,182 @@
-﻿'use client';
-
-import { useEffect, useState } from 'react';
 import { BookingWizard } from '@/components/booking/BookingWizard';
-import { AppointmentLookup } from '@/components/booking/AppointmentLookup';
-import { BlogSection } from '@/components/blog/BlogSection';
 import { HomeNavbar } from '@/components/public/HomeNavbar';
 
+const SERVICES = [
+  ['Arraigo', 'Regularizacion por arraigo social, laboral o familiar con estrategia documental.'],
+  ['NIE / TIE', 'Asignacion, renovacion, duplicados y acompanamiento administrativo.'],
+  ['Renovaciones', 'Control de plazos, documentacion y presentacion de permisos.'],
+  ['Nacionalidad', 'Solicitud, pruebas, seguimiento y preparacion hasta jura o promesa.'],
+  ['Reagrupacion', 'Tramitacion para conyuges, hijos y familiares dependientes.'],
+  ['Asilo y refugio', 'Proteccion internacional y defensa de derechos en procedimientos urgentes.'],
+];
+
+const PROCESS = [
+  ['01', 'Diagnostico', 'Estudiamos tu situacion, antecedentes y documentacion disponible.'],
+  ['02', 'Estrategia', 'Definimos la via legal mas conveniente y los documentos necesarios.'],
+  ['03', 'Seguimiento', 'Controlamos plazos, avances y comunicaciones hasta la resolucion.'],
+];
+
+const PROOF = [
+  ['500+', 'Casos resueltos'],
+  ['10+', 'Anos de experiencia'],
+  ['98%', 'Tasa de exito'],
+  ['2000+', 'Clientes satisfechos'],
+];
+
+const FAQS = [
+  ['Necesito cita previa?', 'Si. Trabajamos con cita previa para estudiar cada caso con tiempo y preparar la consulta.'],
+  ['Que documentos debo aportar?', 'Depende del tramite. Tras reservar, podras subir documentacion desde Mi Portal.'],
+  ['Puedo consultar mi expediente online?', 'Si. Mi Portal permite ver citas, pagos, documentos y actualizaciones publicas.'],
+  ['Atienden urgencias?', 'Si, especialmente en expedientes con plazos, requerimientos u ordenes de expulsion.'],
+];
+
 export function HomeShell() {
-  const [showConsult, setShowConsult] = useState(false);
-
-  useEffect(() => {
-    if (showConsult) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [showConsult]);
-
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-gradient-to-br from-teal-700 via-teal-600 to-teal-500 text-white">
-        <div className="max-w-5xl mx-auto px-4 py-4 sm:py-5">
+    <div className="pv-page">
+      <header className="pv-dark-panel border-b border-[rgba(200,170,106,0.42)]">
+        <div className="pv-shell py-5">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-              </div>
+            <a href="/" className="flex items-center gap-3">
+              <div className="pv-seal w-12 h-12 rounded-full flex items-center justify-center font-legal text-lg font-bold">PV</div>
               <div>
-                <h1 className="font-serif text-xl sm:text-2xl">Abogados PV</h1>
-                <p className="text-teal-100 text-xs sm:text-sm">Reserva tu cita en minutos.</p>
+                <div className="font-legal text-xl sm:text-2xl tracking-wide text-[#f8f1df]">PV Abogadas</div>
+                <p className="text-[11px] sm:text-xs uppercase tracking-[0.22em] text-[#c8aa6a]">Extranjeria e inmigracion</p>
               </div>
-            </div>
-            <HomeNavbar onOpenConsult={() => setShowConsult(true)} />
+            </a>
+            <HomeNavbar />
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 sm:py-10 space-y-6 sm:space-y-8">
-        <section id="reservar" className="space-y-3 sm:space-y-4">
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold">Reserva tu cita</h2>
-            <p className="text-xs sm:text-sm text-stone-500">Selecciona el servicio y el horario disponible.</p>
+      <main>
+        <section className="pv-shell py-8 sm:py-12">
+          <div className="pv-frame pv-paper px-5 py-8 sm:px-10 sm:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-10 items-center">
+              <div>
+                <div className="pv-ribbon px-5 py-2 text-xs sm:text-sm">Derecho de extranjeria</div>
+                <h1 className="font-legal text-4xl sm:text-6xl mt-6 text-[var(--pv-navy)] leading-tight">
+                  Asesoria legal clara para vivir y trabajar en Espana
+                </h1>
+                <p className="mt-5 text-base sm:text-lg leading-relaxed text-[var(--pv-muted)] max-w-2xl">
+                  Acompanamos tramites de extranjeria con una metodologia ordenada: diagnostico, estrategia, documentacion y seguimiento.
+                </p>
+                <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                  <a href="#reservar" className="btn btn-primary justify-center">Reservar cita</a>
+                  <a href="/portal" className="btn btn-secondary justify-center">Entrar a Mi Portal</a>
+                </div>
+              </div>
+
+              <aside className="pv-dark-panel pv-frame p-6">
+                <div className="relative z-10">
+                  <div className="pv-seal w-16 h-16 rounded-full flex items-center justify-center font-legal text-2xl font-bold">PV</div>
+                  <h2 className="font-legal text-2xl text-white mt-5">Metodo de trabajo</h2>
+                  <div className="space-y-4 mt-5">
+                    {PROCESS.map(([num, title, desc]) => (
+                      <div key={num} className="border-t border-[#c8aa6a]/30 pt-4">
+                        <div className="text-xs uppercase tracking-[0.2em] text-[#c8aa6a]">{num} - {title}</div>
+                        <p className="text-sm text-[#d8c7a0] mt-1">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
-          <BookingWizard />
         </section>
 
-        <section id="consultar" className="space-y-3 sm:space-y-4 hidden sm:block">
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold">Consultar cita ya agendada</h2>
-            <p className="text-xs sm:text-sm text-stone-500">Revisa tus reservas futuras con email y telefono.</p>
+        <section id="servicios" className="pv-shell pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[0.38fr_0.62fr] gap-6">
+            <div className="pv-dark-panel pv-frame p-6 sm:p-8">
+              <div className="relative z-10">
+                <p className="font-legal text-xs uppercase tracking-[0.24em] text-[var(--pv-gold-soft)]">Servicios</p>
+                <h2 className="font-legal text-3xl text-white mt-3">Tramites principales</h2>
+                <p className="mt-4 text-sm leading-relaxed text-[#d8c7a0]">
+                  Seleccionamos la via juridica adecuada y preparamos cada expediente con criterios de viabilidad, plazo y documentacion.
+                </p>
+              </div>
+            </div>
+
+            <div className="pv-frame pv-paper p-5 sm:p-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {SERVICES.map(([name, desc]) => (
+                  <article key={name} className="border border-[var(--pv-line)] bg-[#fff8e8]/70 rounded-md p-4">
+                    <h3 className="font-legal text-base text-[var(--pv-navy)]">{name}</h3>
+                    <p className="mt-2 text-sm text-[var(--pv-muted)] leading-relaxed">{desc}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
           </div>
-          <AppointmentLookup />
+        </section>
+
+        <section id="nosotras" className="pv-shell pb-12">
+          <div className="pv-frame pv-paper p-5 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-[0.62fr_0.38fr] gap-8 items-start">
+              <div>
+                <div className="pv-ribbon px-4 py-2 text-xs">Sobre PV Abogadas</div>
+                <h2 className="font-legal text-3xl sm:text-4xl text-[var(--pv-navy)] mt-5">Especialistas en expedientes de extranjeria</h2>
+                <p className="mt-4 text-sm sm:text-base text-[var(--pv-muted)] leading-relaxed">
+                  Nuestro trabajo combina estrategia juridica, orden documental y comunicacion constante. Cada cliente tiene un expediente, una prioridad y una ruta de seguimiento.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {PROOF.map(([value, label]) => (
+                  <div key={label} className="text-center border border-[var(--pv-line)] bg-[#fff8e8]/70 rounded-md p-4">
+                    <div className="font-legal text-2xl text-[var(--pv-navy)]">{value}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-[var(--pv-muted)] mt-1">{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="reservar" className="pv-shell pb-12">
+          <div className="pv-frame pv-paper p-5 sm:p-8">
+            <div className="max-w-2xl mb-6">
+              <div className="pv-ribbon px-4 py-2 text-xs">Reserva online</div>
+              <h2 className="font-legal text-3xl sm:text-4xl text-[var(--pv-navy)] mt-5">Agenda tu consulta</h2>
+              <p className="mt-3 text-sm text-[var(--pv-muted)]">Elige el servicio, selecciona fecha disponible y confirma tus datos.</p>
+            </div>
+            <BookingWizard />
+          </div>
+        </section>
+
+        <section id="proceso" className="pv-shell pb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {PROCESS.map(([num, title, desc]) => (
+              <article key={num} className="pv-frame pv-paper p-5">
+                <div className="font-legal text-4xl text-[rgba(11,31,45,0.18)]">{num}</div>
+                <h3 className="font-legal text-xl text-[var(--pv-navy)] mt-2">{title}</h3>
+                <p className="mt-2 text-sm text-[var(--pv-muted)] leading-relaxed">{desc}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="faq" className="pv-shell pb-12">
+          <div className="pv-frame pv-paper p-5 sm:p-8">
+            <div className="max-w-2xl mb-6">
+              <div className="pv-ribbon px-4 py-2 text-xs">FAQ</div>
+              <h2 className="font-legal text-3xl sm:text-4xl text-[var(--pv-navy)] mt-5">Preguntas frecuentes</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {FAQS.map(([question, answer]) => (
+                <article key={question} className="border border-[var(--pv-line)] bg-[#fff8e8]/70 rounded-md p-5">
+                  <h3 className="font-legal text-sm uppercase tracking-wide text-[var(--pv-navy)]">{question}</h3>
+                  <p className="mt-2 text-sm text-[var(--pv-muted)] leading-relaxed">{answer}</p>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
 
-      <div id="blog">
-        <BlogSection />
-      </div>
-
-      <footer className="border-t border-stone-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-6 text-center">
-          <p className="text-xs text-stone-400">Consultorio de Abogadas de Extranjeria</p>
+      <footer className="border-t border-[rgba(200,170,106,0.34)]">
+        <div className="pv-shell py-7 text-center text-xs uppercase tracking-[0.22em] text-[#c8aa6a]">
+          PV Abogadas - Derecho de extranjeria e inmigracion
         </div>
       </footer>
-
-      {showConsult && (
-        <div
-          className="sm:hidden fixed inset-0 z-50 bg-black/40 flex items-end"
-          onClick={() => setShowConsult(false)}
-        >
-          <div
-            className="bg-white w-full rounded-t-2xl p-4 max-h-[92vh] overflow-y-auto"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-semibold">Consultar cita</h3>
-                <p className="text-xs text-stone-500">Usa el email y telefono de tu reserva.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowConsult(false)}
-                className="text-xs text-stone-500 hover:text-stone-700"
-              >
-                Cerrar
-              </button>
-            </div>
-            <AppointmentLookup />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
