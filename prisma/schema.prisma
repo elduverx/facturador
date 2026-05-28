@@ -74,6 +74,67 @@ enum NewsletterStatus {
   UNSUBSCRIBED
 }
 
+enum MatterStatus {
+  INITIAL
+  IN_PROGRESS
+  WAITING_ADMIN
+  RESOLVED
+  ARCHIVED
+}
+
+enum MatterPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum TimelineEventType {
+  NOTE
+  EMAIL
+  CALL
+  DOCUMENT
+  DEADLINE
+  PAYMENT
+  STATUS_CHANGE
+}
+
+enum DeadlineStatus {
+  OPEN
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum DeadlineKind {
+  CALENDAR_DAYS
+  BUSINESS_DAYS
+}
+
+enum BillingDocumentType {
+  INVOICE
+  PROVISION
+  EXPENSE
+  ENGAGEMENT_LETTER
+  QUOTE
+}
+
+enum BillingDocumentStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum StaffRole {
+  OWNER
+  LAWYER
+  PARALEGAL
+  ADMIN
+}
+
 model Appointment {
   id          String            @id @default(cuid())
   serviceId   String
@@ -119,6 +180,8 @@ model ClientDocument {
   id           String               @id @default(cuid())
   clientEmail  String
   clientPhone  String
+  matterId     String?
+  matter       Matter?              @relation(fields: [matterId], references: [id], onDelete: SetNull)
   fileName     String
   mimeType     String
   sizeBytes    Int
@@ -133,9 +196,162 @@ model ClientDocument {
   updatedAt    DateTime             @updatedAt
 
   @@index([clientEmail])
+  @@index([matterId])
   @@index([matchedEmail])
   @@index([status])
   @@index([createdAt])
+}
+
+model Matter {
+  id               String             @id @default(cuid())
+  reference        String             @unique
+  clientName       String
+  clientEmail      String
+  clientPhone      String
+  clientNie        String?
+  title            String
+  procedureType    String
+  status           MatterStatus       @default(INITIAL)
+  priority         MatterPriority     @default(NORMAL)
+  responsible      String?
+  openedAt         DateTime           @default(now())
+  closedAt         DateTime?
+  nextActionAt     DateTime?
+  summary          String?
+  riskNotes        String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  documents        ClientDocument[]
+  timeline         MatterTimeline[]
+  deadlines        LegalDeadline[]
+  billingDocuments BillingDocument[]
+  communications   CommunicationLog[]
+
+  @@index([clientEmail])
+  @@index([status])
+  @@index([priority])
+  @@index([nextActionAt])
+  @@index([createdAt])
+}
+
+model MatterTimeline {
+  id          String            @id @default(cuid())
+  matterId    String
+  matter      Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  type        TimelineEventType @default(NOTE)
+  title       String
+  content     String?
+  actor       String?
+  isPublic    Boolean           @default(false)
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+
+  @@index([matterId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model LegalDeadline {
+  id          String         @id @default(cuid())
+  matterId    String
+  matter      Matter         @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueAt       DateTime
+  status      DeadlineStatus @default(OPEN)
+  kind        DeadlineKind   @default(BUSINESS_DAYS)
+  alertDays   Int            @default(3)
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([matterId])
+  @@index([dueAt])
+  @@index([status])
+}
+
+model BillingDocument {
+  id              String                @id @default(cuid())
+  matterId        String?
+  matter          Matter?               @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  type            BillingDocumentType   @default(INVOICE)
+  status          BillingDocumentStatus @default(DRAFT)
+  number          String?
+  concept         String
+  baseAmount      Float                 @default(0)
+  vatPercent      Float                 @default(21)
+  irpfPercent     Float                 @default(0)
+  expenseAmount   Float                 @default(0)
+  totalAmount     Float                 @default(0)
+  paidAmount      Float                 @default(0)
+  issuedAt        DateTime              @default(now())
+  dueAt           DateTime?
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  installments    PaymentPlanInstallment[]
+
+  @@index([matterId])
+  @@index([status])
+  @@index([dueAt])
+  @@index([number])
+}
+
+model PaymentPlanInstallment {
+  id                String          @id @default(cuid())
+  billingDocumentId String
+  billingDocument   BillingDocument @relation(fields: [billingDocumentId], references: [id], onDelete: Cascade)
+  label             String
+  amount            Float
+  dueAt             DateTime
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+
+  @@index([billingDocumentId])
+  @@index([dueAt])
+  @@index([paidAt])
+}
+
+model DocumentTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  procedureType String?
+  description   String?
+  content       String
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([procedureType])
+  @@index([active])
+}
+
+model CommunicationLog {
+  id          String   @id @default(cuid())
+  matterId    String?
+  matter      Matter?  @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  clientEmail String
+  channel     String
+  subject     String?
+  body        String?
+  direction   String   @default("OUTBOUND")
+  status      String   @default("RECORDED")
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([matterId])
+  @@index([clientEmail])
+  @@index([sentAt])
+}
+
+model StaffUser {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  role      StaffRole @default(PARALEGAL)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model BlockedDate {

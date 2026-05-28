@@ -33,8 +33,9 @@ export async function GET(request: Request) {
   const amount = CONSULTATION_DEPOSIT_AMOUNT;
 
   // Generar número de pedido único para Redsys (exactamente 12 caracteres alfanuméricos)
-  // Redsys requiere que empiece por dígitos (4 primeros) o que sea alfanumérico.
-  const orderId = appointment.id.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, 'X') + 'P1';
+  // IMPORTANTE: Los 4 primeros DEBEN ser dígitos.
+  const now = Date.now().toString();
+  const orderId = now.substring(now.length - 4) + appointment.id.substring(0, 8).toUpperCase().replace(/[^A-Z0-9]/g, 'X');
 
   // Guardar el orderId en la cita para poder recuperarla en el callback
   await prisma.appointment.update({

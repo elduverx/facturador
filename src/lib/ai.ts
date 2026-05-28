@@ -295,6 +295,7 @@ ${JSON.stringify(context)}
 
 Responde siempre en español, de forma profesional y amable.`;
 
+  console.log('Using model:', CLAUDE_MODEL);
   const response = await anthropic.messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 2048,

@@ -58,10 +58,39 @@ export async function PATCH(request: Request) {
       });
 
       if (nextEmail && nextEmail !== normalizedCurrentEmail) {
+        // Actualizar otras tablas que usan clientEmail
         await tx.clientNote.updateMany({
           where: { clientEmail: { equals: normalizedCurrentEmail, mode: 'insensitive' } },
           data: { clientEmail: nextEmail },
         });
+
+        await tx.matter.updateMany({
+          where: { clientEmail: { equals: normalizedCurrentEmail, mode: 'insensitive' } },
+          data: { clientEmail: nextEmail },
+        });
+
+        await tx.clientDocument.updateMany({
+          where: { clientEmail: { equals: normalizedCurrentEmail, mode: 'insensitive' } },
+          data: { clientEmail: nextEmail },
+        });
+
+        await tx.communicationLog.updateMany({
+          where: { clientEmail: { equals: normalizedCurrentEmail, mode: 'insensitive' } },
+          data: { clientEmail: nextEmail },
+        });
+      } else if (Object.keys(data).length > 0) {
+        // Si no cambio el email pero si otros datos (nombre, telefono, nie), actualizamos Matter
+        const matterUpdates: any = {};
+        if (data.clientName) matterUpdates.clientName = data.clientName;
+        if (data.clientPhone) matterUpdates.clientPhone = data.clientPhone;
+        if (Object.prototype.hasOwnProperty.call(data, 'clientNie')) matterUpdates.clientNie = data.clientNie;
+
+        if (Object.keys(matterUpdates).length > 0) {
+          await tx.matter.updateMany({
+            where: { clientEmail: { equals: normalizedCurrentEmail, mode: 'insensitive' } },
+            data: matterUpdates,
+          });
+        }
       }
 
       return updated;

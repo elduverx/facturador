@@ -6,6 +6,7 @@ import { STATUS_LABELS, STATUS_COLORS, formatDateShort } from '@/lib/constants';
 import { normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
 import { DocumentAnalyzer } from '@/components/admin/DocumentAnalyzer';
 import { ClientDocumentsPanel } from '@/components/admin/ClientDocumentsPanel';
+import { Users, Search, Edit3, Trash2, Check, X, FileText, Calendar, PlusCircle, ExternalLink } from 'lucide-react';
 
 interface ClientInfo {
   name: string;
@@ -36,10 +37,10 @@ const NOTE_TEMPLATES = [
 ];
 
 const NOTE_STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  { value: 'PENDING', label: 'Pendiente', color: 'bg-amber-100 text-amber-800 border-amber-200' },
   { value: 'IN_PROGRESS', label: 'En proceso', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { value: 'WAITING', label: 'En espera', color: 'bg-amber-100 text-amber-800 border-amber-200' },
-  { value: 'DONE', label: 'Finalizado', color: 'bg-green-100 text-green-700 border-green-200' },
+  { value: 'WAITING', label: 'En espera', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  { value: 'DONE', label: 'Finalizado', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 ];
 
 export default function ClientesPage() {
@@ -357,80 +358,113 @@ export default function ClientesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[var(--pv-gold)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-semibold">Clientes</h1>
-        <p className="text-sm text-stone-500">Directorio de clientes del consultorio</p>
+    <div className="space-y-4 lg:space-y-8">
+      <div className="flex justify-between items-end mb-2 lg:mb-4 px-2 lg:px-0">
+        <div>
+          <h1 className="text-xl lg:text-3xl font-bold font-roman uppercase text-[var(--pv-ink)] tracking-tight">Directorio de Clientes</h1>
+          <p className="text-[10px] lg:text-sm text-[var(--pv-navy)] opacity-60">Gestión centralizada de la base de datos.</p>
+        </div>
+        <div className="hidden lg:flex gap-4">
+          <div className="neo-card !p-3 !px-6 flex items-center gap-3 shadow-sm">
+             <div className="p-2 bg-[var(--pv-gold)]/10 rounded-lg text-[var(--pv-gold)]">
+                <Users size={20} />
+             </div>
+             <div>
+                <p className="text-[9px] uppercase font-bold text-[var(--pv-gold)] tracking-widest">Total</p>
+                <p className="text-xl font-bold text-[var(--pv-ink)] leading-none">{clients.length}</p>
+             </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 lg:gap-8">
         {/* Client list */}
-        <div className="card !p-3">
-          <div className="mb-3">
-            <input
-              type="text"
-              placeholder="Buscar cliente..."
-              className="form-input text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {filteredClients.length === 0 ? (
-            <p className="text-sm text-stone-400 text-center py-6">No hay clientes</p>
-          ) : (
-            <div className="space-y-1 max-h-[600px] overflow-y-auto">
-              {filteredClients.map((client) => (
-                <button
-                  key={client.email}
-                  onClick={() => setSelectedClient(client.email)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    selectedClient === client.email
-                      ? 'bg-teal-50 border border-teal-200'
-                      : 'hover:bg-stone-50 border border-transparent'
-                  }`}
-                >
-                  <div className="text-sm font-medium">{client.name}</div>
-                  <div className="text-xs text-stone-500">{client.email}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-stone-400">{client.totalAppointments} citas</span>
-                    <span className="text-[10px] text-stone-400">Ultima: {formatDateShort(client.lastVisit)}</span>
-                  </div>
-                </button>
-              ))}
+        <div className="space-y-4 lg:space-y-6">
+          <div className="neo-card !p-3 lg:!p-4 h-[350px] lg:h-[calc(100vh-200px)] flex flex-col">
+            <div className="relative mb-3 lg:mb-4 shrink-0">
+              <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                className="neo-input !py-2.5 lg:!py-3 pl-10 lg:pl-12 text-xs lg:text-sm w-full"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          )}
+
+            <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2">
+              {filteredClients.length === 0 ? (
+                <div className="text-center py-6 lg:py-10">
+                  <p className="text-xs lg:text-sm text-[var(--pv-navy)] opacity-40">No se encontraron clientes</p>
+                </div>
+              ) : (
+                filteredClients.map((client) => (
+                  <button
+                    key={client.email}
+                    onClick={() => setSelectedClient(client.email)}
+                    className={`w-full text-left p-3 lg:p-4 rounded-xl transition-all duration-300 border ${
+                      selectedClient === client.email
+                        ? 'bg-[var(--pv-gold)] text-white shadow-md border-[var(--pv-gold)]'
+                        : 'bg-white/50 border-white/20 hover:bg-white hover:shadow-sm'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                       <div className="min-w-0 pr-2">
+                          <div className={`text-xs lg:text-sm font-bold truncate ${selectedClient === client.email ? 'text-white' : 'text-[var(--pv-ink)]'}`}>{client.name}</div>
+                          <div className={`text-[10px] lg:text-xs truncate ${selectedClient === client.email ? 'text-white/80' : 'text-[var(--pv-navy)] opacity-60'}`}>{client.email}</div>
+                       </div>
+                       <div className={`text-[9px] lg:text-[10px] font-bold px-1.5 py-0.5 lg:px-2 lg:py-1 rounded shrink-0 ${selectedClient === client.email ? 'bg-white/20' : 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)]'}`}>
+                          {client.totalAppointments}
+                       </div>
+                    </div>
+                    <div className={`flex items-center gap-1.5 lg:gap-2 mt-2 lg:mt-3 text-[9px] lg:text-[10px] font-medium uppercase tracking-wider ${selectedClient === client.email ? 'text-white/70' : 'text-[var(--pv-navy)] opacity-40'}`}>
+                      <Calendar size={10} className="lg:size-12" />
+                      <span>Ultima visita: {formatDateShort(client.lastVisit)}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Client detail */}
-        <div>
+        <div className="space-y-4 lg:space-y-6">
           {!selectedClient ? (
-            <div className="card text-center py-12">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" strokeWidth="1.5" className="mx-auto mb-3">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-              </svg>
-              <p className="text-sm text-stone-400">Seleccione un cliente para ver su historial</p>
+            <div className="neo-card flex flex-col items-center justify-center py-20 lg:py-32 text-center h-[calc(100vh-200px)]">
+              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-[var(--pv-marble)] rounded-full flex items-center justify-center mb-4 lg:mb-6 shadow-inner">
+                <Users size={32} className="lg:size-40 text-[var(--pv-gold)] opacity-30" />
+              </div>
+              <h3 className="text-lg lg:text-xl font-roman uppercase text-[var(--pv-navy)] mb-2">Seleccione un Cliente</h3>
+              <p className="text-xs lg:text-sm text-[var(--pv-navy)] opacity-40 max-w-xs">Elija un registro de la lista para ver su historial completo y gestionar su expediente.</p>
             </div>
           ) : selectedClientData ? (
-            <div className="space-y-4">
+            <div className="space-y-4 lg:space-y-6">
               {/* Client info */}
-              <div className="card">
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                  <h2 className="font-semibold text-lg">{selectedClientData.name}</h2>
-                  <div className="flex gap-2">
+              <div className="neo-card !p-4 lg:!p-6 border-l-4 lg:border-l-8 border-l-[var(--pv-gold)]">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 lg:gap-6 mb-4 lg:mb-6">
+                  <div className="min-w-0">
+                    <h2 className="text-xl lg:text-3xl font-bold text-[var(--pv-ink)] font-roman uppercase tracking-tight truncate">{selectedClientData.name}</h2>
+                    <p className="text-[var(--pv-gold)] font-bold tracking-[0.2em] text-[9px] lg:text-xs uppercase mt-1">Ficha de Cliente</p>
+                  </div>
+                  <div className="flex gap-2 lg:gap-3 shrink-0">
                     {!editMode ? (
-                      <button onClick={() => setEditMode(true)} className="btn btn-secondary text-xs">Editar</button>
+                      <button onClick={() => setEditMode(true)} className="flex items-center gap-1.5 lg:gap-2 px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm bg-white border border-[var(--pv-gold)] text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm">
+                        <Edit3 size={14} className="lg:size-16" />
+                        Editar
+                      </button>
                     ) : (
                       <>
-                        <button onClick={handleCancelEdit} className="btn btn-secondary text-xs">Cancelar</button>
-                        <button onClick={handleSaveClient} disabled={saving} className="btn btn-primary text-xs disabled:opacity-60">
+                        <button onClick={handleCancelEdit} className="px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm bg-[var(--pv-marble)] text-[var(--pv-navy)] hover:bg-stone-200 transition-all">
+                          Cancelar
+                        </button>
+                        <button onClick={handleSaveClient} disabled={saving} className="btn-roman !px-4 !py-1.5 lg:!px-5 lg:!py-2 text-xs lg:text-sm disabled:opacity-60">
                           {saving ? 'Guardando...' : 'Guardar'}
                         </button>
                       </>
@@ -439,303 +473,326 @@ export default function ClientesPage() {
                 </div>
 
                 {!editMode ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-stone-400 text-xs">Email</span>
-                      <div>{selectedClientData.email}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+                    <div className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[var(--pv-marble)] shadow-inner min-w-0">
+                      <span className="text-[9px] lg:text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-0.5 lg:mb-1 truncate">Email Principal</span>
+                      <div className="text-xs lg:text-sm font-bold text-[var(--pv-ink)] truncate" title={selectedClientData.email}>{selectedClientData.email}</div>
                     </div>
-                    <div>
-                      <span className="text-stone-400 text-xs">Telefono</span>
-                      <div>{selectedClientData.phone}</div>
+                    <div className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[var(--pv-marble)] shadow-inner min-w-0">
+                      <span className="text-[9px] lg:text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-0.5 lg:mb-1 truncate">Teléfono Contacto</span>
+                      <div className="text-xs lg:text-sm font-bold text-[var(--pv-ink)] truncate">{selectedClientData.phone}</div>
                     </div>
-                    {selectedClientData.nie && (
-                      <div>
-                        <span className="text-stone-400 text-xs">NIE/Pasaporte</span>
-                        <div>{selectedClientData.nie}</div>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-stone-400 text-xs">Total citas</span>
-                      <div>{selectedClientData.totalAppointments}</div>
+                    <div className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[var(--pv-marble)] shadow-inner min-w-0">
+                      <span className="text-[9px] lg:text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-0.5 lg:mb-1 truncate">NIE / Pasaporte</span>
+                      <div className="text-xs lg:text-sm font-bold text-[var(--pv-ink)] truncate">{selectedClientData.nie || 'No registrado'}</div>
+                    </div>
+                    <div className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[var(--pv-marble)] shadow-inner min-w-0">
+                      <span className="text-[9px] lg:text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-0.5 lg:mb-1 truncate">Total Consultas</span>
+                      <div className="text-xs lg:text-sm font-bold text-[var(--pv-ink)] truncate">{selectedClientData.totalAppointments}</div>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <label className="form-label block text-xs">Nombre</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] lg:text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-3 lg:ml-4">Nombre Completo</label>
                       <input
-                        className="form-input text-sm"
+                        className="neo-input !py-2 lg:!py-3 text-xs lg:text-sm"
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                       />
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">Email</label>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Correo Electrónico</label>
                       <input
                         type="email"
-                        className="form-input text-sm"
+                        className="neo-input"
                         value={editForm.email}
                         onChange={(e) => setEditForm({ ...editForm, email: normalizeEmail(e.target.value) })}
                       />
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">Telefono</label>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Número de Teléfono</label>
                       <input
-                        className="form-input text-sm"
+                        className="neo-input"
                         value={editForm.phone}
                         onChange={(e) => setEditForm({ ...editForm, phone: normalizePhone(e.target.value) })}
                       />
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">NIE/Pasaporte</label>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">NIE / Pasaporte</label>
                       <input
-                        className="form-input text-sm"
+                        className="neo-input"
                         value={editForm.nie}
                         onChange={(e) => setEditForm({ ...editForm, nie: normalizeNie(e.target.value) })}
                       />
                     </div>
                   </div>
                 )}
-                {saveMessage && <div className="text-xs text-stone-500 mt-3">{saveMessage}</div>}
+                {saveMessage && <div className="mt-4 text-sm font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl flex items-center gap-2 animate-fade-in"><Check size={16} /> {saveMessage}</div>}
               </div>
 
-              {/* AI Analyzer */}
-              <DocumentAnalyzer 
-                clientEmail={selectedClient} 
-                onAnalysisComplete={() => loadClientNotes(selectedClient)} 
-              />
-
-              <ClientDocumentsPanel clientEmail={selectedClient} />
-
-              {/* Client history */}
-              <div className="card">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm">Historial de consulta</h3>
-                    <p className="text-xs text-stone-500">Notas internas sobre el progreso del trabajo</p>
-                  </div>
-                  <span className="text-xs text-stone-400">{clientNotes.length} entradas</span>
-                </div>
-
-                <textarea
-                  className="form-input text-sm min-h-[90px]"
-                  placeholder="Ej: Se envio presupuesto, pendiente de documentacion..."
-                  value={noteInput}
-                  onChange={(e) => setNoteInput(e.target.value)}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                 {/* AI Analyzer */}
+                <DocumentAnalyzer 
+                  clientEmail={selectedClient} 
+                  onAnalysisComplete={() => loadClientNotes(selectedClient)} 
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_120px] gap-3 mt-3 items-end">
-                  <div>
-                    <label className="form-label block text-xs">Estado</label>
-                    <select
-                      className="form-input text-sm"
-                      value={noteStatus}
-                      onChange={(e) => setNoteStatus(e.target.value)}
-                    >
-                      {NOTE_STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+
+                <ClientDocumentsPanel clientEmail={selectedClient} />
+              </div>
+
+              {/* Client history / Notes */}
+              <div className="neo-card !p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[var(--pv-navy)] text-white rounded-xl">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-roman uppercase text-[var(--pv-ink)]">Bitácora de Seguimiento</h3>
+                      <p className="text-xs text-[var(--pv-navy)] opacity-40">Historial cronológico de acciones y notas internas.</p>
+                    </div>
                   </div>
-                  <div>
-                    <label className="form-label block text-xs">Etiquetas (coma)</label>
-                    <input
-                      className="form-input text-sm"
-                      value={noteTags}
-                      onChange={(e) => setNoteTags(e.target.value)}
-                      placeholder="presupuesto, docs, seguimiento"
-                    />
+                  <div className="bg-[var(--pv-marble)] px-4 py-2 rounded-xl shadow-inner text-xs font-bold text-[var(--pv-gold)]">
+                    {clientNotes.length} ENTRADAS
                   </div>
-                  <div className="flex flex-col items-center pb-2">
-                    <label className="text-[10px] text-stone-500 mb-1">Pública (Cliente)</label>
-                    <input
-                      type="checkbox"
-                      className="w-5 h-5 accent-teal-600"
-                      checked={noteIsPublic}
-                      onChange={(e) => setNoteIsPublic(e.target.checked)}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {NOTE_TEMPLATES.map((template) => (
-                    <button
-                      key={template}
-                      type="button"
-                      onClick={() => applyTemplate(template)}
-                      className="text-[11px] px-2 py-1 rounded-full border border-stone-200 text-stone-600 hover:border-teal-300 hover:text-teal-700 transition-colors"
-                    >
-                      {template}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <button
-                    onClick={handleAddNote}
-                    disabled={noteSaving}
-                    className="btn btn-secondary text-xs disabled:opacity-60"
-                  >
-                    {noteSaving ? 'Guardando...' : 'Agregar nota'}
-                  </button>
-                  {noteError && <span className="text-xs text-red-600">{noteError}</span>}
-                  {!noteError && noteMessage && <span className="text-xs text-stone-500">{noteMessage}</span>}
                 </div>
 
-                {notesLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="space-y-6">
+                  <div className="p-6 rounded-2xl bg-[var(--pv-marble)] shadow-inner border border-white/50">
+                    <textarea
+                      className="w-full bg-transparent border-none outline-none text-sm text-[var(--pv-navy)] min-h-[120px] resize-none placeholder-[var(--pv-navy)]/30"
+                      placeholder="Escriba aquí los avances del caso, notas de reuniones o instrucciones..."
+                      value={noteInput}
+                      onChange={(e) => setNoteInput(e.target.value)}
+                    />
+                    
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {NOTE_TEMPLATES.map((template) => (
+                        <button
+                          key={template}
+                          type="button"
+                          onClick={() => applyTemplate(template)}
+                          className="text-[10px] px-3 py-1.5 rounded-lg border border-[var(--pv-gold)]/30 text-[var(--pv-navy)] hover:bg-[var(--pv-gold)] hover:text-white hover:border-[var(--pv-gold)] transition-all font-bold uppercase tracking-wider"
+                        >
+                          {template}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end pt-4 border-t border-white/40">
+                      <div>
+                        <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-2 ml-2">Estado del Caso</label>
+                        <select
+                          className="neo-input !py-2.5 !bg-white"
+                          value={noteStatus}
+                          onChange={(e) => setNoteStatus(e.target.value)}
+                        >
+                          {NOTE_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-2 ml-2">Etiquetas</label>
+                        <input
+                          className="neo-input !py-2.5 !bg-white"
+                          value={noteTags}
+                          onChange={(e) => setNoteTags(e.target.value)}
+                          placeholder="p.ej: presupuesto, docs"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-white/50">
+                          <span className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest">Pública</span>
+                          <input
+                            type="checkbox"
+                            className="w-5 h-5 accent-[var(--pv-gold)] rounded-lg cursor-pointer"
+                            checked={noteIsPublic}
+                            onChange={(e) => setNoteIsPublic(e.target.checked)}
+                          />
+                        </div>
+                        <button
+                          onClick={handleAddNote}
+                          disabled={noteSaving}
+                          className="btn-roman !py-2.5 px-6 text-sm flex-1"
+                        >
+                          {noteSaving ? '...' : <><PlusCircle size={18} /> Añadir</>}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                ) : clientNotes.length === 0 ? (
-                  <p className="text-xs text-stone-400 mt-4">Sin notas por ahora.</p>
-                ) : (
-                  <div className="space-y-2 mt-4">
-                    {clientNotes.map((note) => {
-                      const isEditing = editingNoteId === note.id;
-                      const statusMeta = getStatusMeta(note.status);
-                      return (
-                        <div key={note.id} className={`p-3 rounded-lg border ${note.isPublic ? 'border-blue-200 bg-blue-50/30' : 'border-stone-200'}`}>
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-stone-400">
-                              <span>{formatDateTime(note.createdAt)}</span>
-                              <span className={`px-2 py-0.5 rounded-full border ${statusMeta.color}`}>
-                                {statusMeta.label}
-                              </span>
-                              {note.isPublic && (
-                                <span className="flex items-center gap-1 text-blue-600 font-medium">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                  </svg>
-                                  Pública
+
+                  {noteError && <div className="text-xs font-bold text-red-600 bg-red-50 p-3 rounded-xl flex items-center gap-2"><X size={14} /> {noteError}</div>}
+                  {!noteError && noteMessage && <div className="text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl flex items-center gap-2"><Check size={14} /> {noteMessage}</div>}
+
+                  {notesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-8 h-8 border-3 border-[var(--pv-gold)] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : clientNotes.length === 0 ? (
+                    <div className="text-center py-12 bg-white/30 rounded-2xl border border-dashed border-[var(--pv-gold)]/30">
+                      <p className="text-sm text-[var(--pv-navy)] opacity-40">No hay entradas en la bitácora todavía.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                      {clientNotes.map((note) => {
+                        const isEditing = editingNoteId === note.id;
+                        const statusMeta = getStatusMeta(note.status);
+                        return (
+                          <div key={note.id} className={`group p-6 rounded-2xl border transition-all duration-300 ${note.isPublic ? 'bg-blue-50/40 border-blue-200' : 'bg-white border-white/50 hover:shadow-md shadow-sm'}`}>
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <span className="text-[10px] font-bold text-[var(--pv-navy)] opacity-40 uppercase tracking-widest">{formatDateTime(note.createdAt)}</span>
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${statusMeta.color}`}>
+                                  {statusMeta.label}
                                 </span>
+                                {note.isPublic && (
+                                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-100 px-2.5 py-1 rounded-lg">
+                                    <ExternalLink size={10} /> Visible p/ Cliente
+                                  </span>
+                                )}
+                              </div>
+                              {!isEditing && (
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => startEditNote(note)}
+                                    className="p-2 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)]/10 rounded-lg transition-colors"
+                                    title="Editar nota"
+                                  >
+                                    <Edit3 size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteNote(note.id)}
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Eliminar nota"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
                               )}
                             </div>
-                            {!isEditing && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <button
-                                  onClick={() => startEditNote(note)}
-                                  className="text-teal-700 hover:text-teal-800"
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteNote(note.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  Eliminar
-                                </button>
+
+                            {!isEditing ? (
+                              <div className="space-y-4">
+                                <div className="text-sm text-[var(--pv-navy)] leading-relaxed whitespace-pre-wrap">{note.content}</div>
+                                {note.tags && note.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {note.tags.map((tag) => (
+                                      <span
+                                        key={`${note.id}-${tag}`}
+                                        className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md bg-[var(--pv-marble)] text-[var(--pv-navy)] opacity-60 border border-white/50"
+                                      >
+                                        #{tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-4 animate-fade-in">
+                                <textarea
+                                  className="w-full neo-input !bg-[var(--pv-marble)] min-h-[100px] text-sm"
+                                  value={editingNoteValue}
+                                  onChange={(e) => setEditingNoteValue(e.target.value)}
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-1 ml-2">Estado</label>
+                                    <select
+                                      className="neo-input !py-2 !text-xs bg-white"
+                                      value={editingNoteStatus}
+                                      onChange={(e) => setEditingNoteStatus(e.target.value)}
+                                    >
+                                      {NOTE_STATUS_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                          {option.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest block mb-1 ml-2">Etiquetas</label>
+                                    <input
+                                      className="neo-input !py-2 !text-xs bg-white"
+                                      value={editingNoteTags}
+                                      onChange={(e) => setEditingNoteTags(e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-3 h-10 px-4 bg-white rounded-xl shadow-sm border border-white/50">
+                                    <span className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest">Pública</span>
+                                    <input
+                                      type="checkbox"
+                                      className="w-4 h-4 accent-[var(--pv-gold)]"
+                                      checked={editingNoteIsPublic}
+                                      onChange={(e) => setEditingNoteIsPublic(e.target.checked)}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={handleUpdateNote}
+                                    disabled={noteSaving}
+                                    className="btn-roman !py-2 px-6 text-xs flex-1"
+                                  >
+                                    Actualizar Entrada
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingNoteId(null)}
+                                    className="px-6 py-2 rounded-xl text-xs font-bold bg-[var(--pv-marble)] text-[var(--pv-navy)] hover:bg-stone-200 transition-all"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
-
-                          {!isEditing ? (
-                            <div className="mt-2">
-                              <div className="text-sm text-stone-700 whitespace-pre-wrap">{note.content}</div>
-                              {note.tags && note.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {note.tags.map((tag) => (
-                                    <span
-                                      key={`${note.id}-${tag}`}
-                                      className="text-[11px] px-2 py-0.5 rounded-full border border-stone-200 text-stone-600"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="mt-2">
-                              <textarea
-                                className="form-input text-sm min-h-[90px]"
-                                value={editingNoteValue}
-                                onChange={(e) => setEditingNoteValue(e.target.value)}
-                              />
-                              <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_120px] gap-3 mt-3 items-end">
-                                <div>
-                                  <label className="form-label block text-xs">Estado</label>
-                                  <select
-                                    className="form-input text-sm"
-                                    value={editingNoteStatus}
-                                    onChange={(e) => setEditingNoteStatus(e.target.value)}
-                                  >
-                                    {NOTE_STATUS_OPTIONS.map((option) => (
-                                      <option key={option.value} value={option.value}>
-                                        {option.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="form-label block text-xs">Etiquetas (coma)</label>
-                                  <input
-                                    className="form-input text-sm"
-                                    value={editingNoteTags}
-                                    onChange={(e) => setEditingNoteTags(e.target.value)}
-                                    placeholder="presupuesto, docs, seguimiento"
-                                  />
-                                </div>
-                                <div className="flex flex-col items-center pb-2">
-                                  <label className="text-[10px] text-stone-500 mb-1">Pública (Cliente)</label>
-                                  <input
-                                    type="checkbox"
-                                    className="w-5 h-5 accent-teal-600"
-                                    checked={editingNoteIsPublic}
-                                    onChange={(e) => setEditingNoteIsPublic(e.target.checked)}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <button
-                                  onClick={handleUpdateNote}
-                                  disabled={noteSaving}
-                                  className="btn btn-secondary text-xs disabled:opacity-60"
-                                >
-                                  {noteSaving ? 'Guardando...' : 'Guardar cambios'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingNoteId(null);
-                                    setEditingNoteValue('');
-                                    setEditingNoteStatus('PENDING');
-                                    setEditingNoteTags('');
-                                    setEditingNoteIsPublic(false);
-                                    setNoteError('');
-                                  }}
-                                  className="btn btn-ghost text-xs"
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Client appointments */}
-              <div className="card">
-                <h3 className="font-semibold text-sm mb-3">Historial de citas</h3>
+              <div className="neo-card !p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 bg-[var(--pv-gold)] text-white rounded-xl">
+                    <Calendar size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold font-roman uppercase text-[var(--pv-ink)]">Historial de Citas</h3>
+                    <p className="text-xs text-[var(--pv-navy)] opacity-40">Registro de todas las sesiones presenciales y virtuales.</p>
+                  </div>
+                </div>
+
                 {clientAppointments.length === 0 ? (
-                  <p className="text-sm text-stone-400 text-center py-4">Sin citas registradas</p>
+                  <div className="text-center py-10 bg-[var(--pv-marble)]/50 rounded-2xl border border-dashed border-[var(--pv-gold)]/20">
+                    <p className="text-sm text-[var(--pv-navy)] opacity-40">No hay citas registradas para este cliente.</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {clientAppointments.map((appt) => {
                       const dateStr = typeof appt.date === 'string' ? appt.date.split('T')[0] : new Date(appt.date).toISOString().split('T')[0];
                       return (
-                        <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-stone-100">
-                          <div>
-                            <div className="text-sm font-medium">{appt.service?.name || 'Servicio'}</div>
-                            <div className="text-xs text-stone-500">{formatDateShort(dateStr)} a las {appt.startTime}</div>
+                        <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-white/50 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="flex items-center gap-4">
+                             <div className="w-12 h-12 bg-[var(--pv-marble)] rounded-xl flex flex-col items-center justify-center border border-white shadow-inner">
+                                <span className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-tighter">{formatDateShort(dateStr).split(' ')[1]}</span>
+                                <span className="text-sm font-black text-[var(--pv-ink)] leading-none">{formatDateShort(dateStr).split(' ')[0]}</span>
+                             </div>
+                             <div>
+                                <div className="text-sm font-bold text-[var(--pv-ink)]">{appt.service?.name || 'Consulta Legal'}</div>
+                                <div className="text-xs text-[var(--pv-navy)] opacity-60 font-medium">Inicia a las {appt.startTime}</div>
+                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${appt.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
-                              {appt.paymentStatus === 'PAID' ? 'Pagado' : 'Pendiente'}
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border ${appt.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                              {appt.paymentStatus === 'PAID' ? 'Saldado' : 'Pendiente Pago'}
                             </span>
-                            <span className={`text-xs px-2 py-1 rounded-full border self-start sm:self-center ${STATUS_COLORS[appt.status] || ''}`}>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border shadow-sm ${STATUS_COLORS[appt.status] || ''}`}>
                               {STATUS_LABELS[appt.status] || appt.status}
                             </span>
                           </div>

@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { DAYS_OF_WEEK_FULL, MONTHS } from '@/lib/constants';
+import { 
+  Settings as SettingsIcon, 
+  Building2, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Clock, 
+  Calendar as CalendarIcon, 
+  ChevronLeft, 
+  ChevronRight, 
+  Check, 
+  Save, 
+  Trash2, 
+  AlertCircle,
+  Hash
+} from 'lucide-react';
 
 interface Settings {
   firmName: string;
@@ -30,7 +46,7 @@ interface DaySchedule {
 
 export default function ConfiguracionPage() {
   const [settings, setSettings] = useState<Settings>({
-    firmName: 'Consultorio de Extranjeria',
+    firmName: 'PV Abogadas',
     firmEmail: '',
     firmPhone: '',
     firmAddress: '',
@@ -67,7 +83,7 @@ export default function ConfiguracionPage() {
       .then((r) => r.json())
       .then((data) => {
         setSettings({
-          firmName: data.firmName || '',
+          firmName: data.firmName || 'PV Abogadas',
           firmEmail: data.firmEmail || '',
           firmPhone: data.firmPhone || '',
           firmAddress: data.firmAddress || '',
@@ -144,7 +160,6 @@ export default function ConfiguracionPage() {
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error('Error guardando:', error);
-      alert('Error al guardar la configuracion');
     } finally {
       setSaving(false);
     }
@@ -193,7 +208,7 @@ export default function ConfiguracionPage() {
 
   const handleSaveSchedule = async () => {
     if (!selectedDate) {
-      setScheduleMessage('Seleccione un dia en el calendario.');
+      setScheduleMessage('Seleccione un día.');
       return;
     }
     setScheduleSaving(true);
@@ -219,31 +234,28 @@ export default function ConfiguracionPage() {
       setScheduleMessage('Jornada guardada.');
       setTimeout(() => setScheduleMessage(''), 3000);
     } catch {
-      setScheduleMessage('No se pudo guardar la jornada.');
+      setScheduleMessage('No se pudo guardar.');
     } finally {
       setScheduleSaving(false);
     }
   };
 
   const handleDeleteSchedule = async (id: string) => {
-    if (!confirm('Eliminar esta jornada?')) return;
+    if (!confirm('¿Eliminar esta jornada personalizada?')) return;
     try {
-      const schedule = daySchedules.find((item) => item.id === id);
       const res = await fetch(`/api/admin/day-schedules/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
       await loadDaySchedules();
-      if (schedule && selectedDate === schedule.date.split('T')[0]) {
-        setSelectedDate(null);
-      }
+      setSelectedDate(null);
     } catch {
-      alert('No se pudo eliminar la jornada.');
+      alert('Error al eliminar.');
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[var(--pv-gold)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -259,405 +271,248 @@ export default function ConfiguracionPage() {
   const selectedSchedule = selectedDate ? getScheduleForDate(selectedDate) : null;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold">Configuracion</h1>
-          <p className="text-sm text-stone-500">Ajustes del consultorio</p>
+          <h1 className="text-3xl font-bold font-roman uppercase text-[var(--pv-ink)] tracking-tight">Ajustes</h1>
+          <p className="text-sm text-[var(--pv-navy)] opacity-60">Configura datos del despacho, horarios y disponibilidad.</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="btn btn-primary disabled:opacity-50"
+          className="btn-roman px-8 py-3.5 shadow-xl shadow-[var(--pv-gold)]/20"
         >
-          {saving ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Guardando...
-            </>
-          ) : saved ? (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Guardado
-            </>
-          ) : (
-            'Guardar cambios'
-          )}
+          {saving ? 'Guardando...' : saved ? <><Check size={18} /> Guardado</> : <><Save size={18} /> Guardar cambios</>}
         </button>
       </div>
 
-      <div className="space-y-6">
-        {/* Firm info */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-            Datos del consultorio
-          </h2>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          {/* Firm Identity */}
+          <section className="neo-card !p-4 lg:!p-6 border-l-8 border-l-[var(--pv-gold)]">
+             <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-[var(--pv-gold)] text-white rounded-2xl shadow-lg">
+                   <Building2 size={24} />
+                </div>
+                <div>
+                   <h2 className="font-bold font-roman uppercase text-[var(--pv-ink)]">Datos del despacho</h2>
+                   <p className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest">Información pública</p>
+                </div>
+             </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="form-label block text-sm">Nombre del consultorio</label>
-              <input
-                type="text"
-                className="form-input text-sm"
-                value={settings.firmName}
-                onChange={(e) => setSettings({ ...settings, firmName: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="form-label block text-sm">Email (para notificaciones)</label>
-              <input
-                type="email"
-                className="form-input text-sm"
-                placeholder="consultorio@email.com"
-                value={settings.firmEmail}
-                onChange={(e) => setSettings({ ...settings, firmEmail: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="form-label block text-sm">Telefono</label>
-              <input
-                type="tel"
-                className="form-input text-sm"
-                placeholder="+34 600 000 000"
-                value={settings.firmPhone}
-                onChange={(e) => setSettings({ ...settings, firmPhone: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="form-label block text-sm">Direccion</label>
-              <input
-                type="text"
-                className="form-input text-sm"
-                placeholder="Calle, numero, ciudad"
-                value={settings.firmAddress}
-                onChange={(e) => setSettings({ ...settings, firmAddress: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Nombre de la Firma</label>
+                  <div className="relative">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input className="neo-input pl-12" value={settings.firmName} onChange={(e) => setSettings({ ...settings, firmName: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Email de Notificaciones</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input className="neo-input pl-12" value={settings.firmEmail} onChange={(e) => setSettings({ ...settings, firmEmail: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Teléfono de Contacto</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input className="neo-input pl-12" value={settings.firmPhone} onChange={(e) => setSettings({ ...settings, firmPhone: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Dirección Sede Central</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input className="neo-input pl-12" value={settings.firmAddress} onChange={(e) => setSettings({ ...settings, firmAddress: e.target.value })} />
+                  </div>
+                </div>
+             </div>
+          </section>
 
-        {/* Schedule */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            Horario de atencion
-          </h2>
+          {/* Time & Scheduling */}
+          <section className="neo-card !p-4 lg:!p-6">
+             <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-[var(--pv-navy)] text-white rounded-2xl shadow-lg">
+                   <Clock size={24} />
+                </div>
+                <div>
+                   <h2 className="font-bold font-roman uppercase text-[var(--pv-ink)]">Horarios</h2>
+                   <p className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest">Disponibilidad general</p>
+                </div>
+             </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="form-label block text-sm">Hora inicio</label>
-              <select className="form-input text-sm" value={settings.startHour} onChange={(e) => setSettings({ ...settings, startHour: parseInt(e.target.value) })}>
-                {Array.from({ length: 14 }, (_, i) => i + 6).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label block text-sm">Hora fin</label>
-              <select className="form-input text-sm" value={settings.endHour} onChange={(e) => setSettings({ ...settings, endHour: parseInt(e.target.value) })}>
-                {Array.from({ length: 14 }, (_, i) => i + 10).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label block text-sm">Inicio almuerzo</label>
-              <select className="form-input text-sm" value={settings.lunchStartHour} onChange={(e) => setSettings({ ...settings, lunchStartHour: parseInt(e.target.value) })}>
-                {Array.from({ length: 8 }, (_, i) => i + 12).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label block text-sm">Fin almuerzo</label>
-              <select className="form-input text-sm" value={settings.lunchEndHour} onChange={(e) => setSettings({ ...settings, lunchEndHour: parseInt(e.target.value) })}>
-                {Array.from({ length: 8 }, (_, i) => i + 12).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
-                ))}
-              </select>
-            </div>
-          </div>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="space-y-1">
+                   <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Apertura</label>
+                   <select className="neo-input !py-2 !text-xs bg-white" value={settings.startHour} onChange={(e) => setSettings({ ...settings, startHour: parseInt(e.target.value) })}>
+                    {Array.from({ length: 14 }, (_, i) => i + 6).map((h) => (
+                      <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                   <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Cierre</label>
+                   <select className="neo-input !py-2 !text-xs bg-white" value={settings.endHour} onChange={(e) => setSettings({ ...settings, endHour: parseInt(e.target.value) })}>
+                    {Array.from({ length: 14 }, (_, i) => i + 10).map((h) => (
+                      <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                   <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Pausa (Inicio)</label>
+                   <select className="neo-input !py-2 !text-xs bg-white" value={settings.lunchStartHour} onChange={(e) => setSettings({ ...settings, lunchStartHour: parseInt(e.target.value) })}>
+                    {Array.from({ length: 8 }, (_, i) => i + 12).map((h) => (
+                      <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                   <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Pausa (Fin)</label>
+                   <select className="neo-input !py-2 !text-xs bg-white" value={settings.lunchEndHour} onChange={(e) => setSettings({ ...settings, lunchEndHour: parseInt(e.target.value) })}>
+                    {Array.from({ length: 8 }, (_, i) => i + 12).map((h) => (
+                      <option key={h} value={h}>{h.toString().padStart(2, '0')}:00</option>
+                    ))}
+                  </select>
+                </div>
+             </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4">
-            <div>
-              <label className="form-label block text-sm">Duracion del slot (minutos)</label>
-              <input
-                type="number"
-                min={1}
-                className="form-input text-sm w-32"
-                value={settings.slotDurationMin}
-                onChange={(e) => setSettings({ ...settings, slotDurationMin: Number(e.target.value) || 1 })}
-              />
-              <p className="text-xs text-stone-400 mt-2">Permite intervalos cortos (ej: 5 min).</p>
-            </div>
-            <div>
-              <label className="form-label block text-sm">Cupos maximos por dia</label>
-              <input
-                type="number"
-                min={0}
-                className="form-input text-sm w-40"
-                value={settings.maxAppointmentsPerDay}
-                onChange={(e) => setSettings({ ...settings, maxAppointmentsPerDay: Number(e.target.value) || 0 })}
-              />
-              <p className="text-xs text-stone-400 mt-2">0 = sin limite. Se aplica a todo el dia.</p>
-            </div>
-          </div>
-        </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Duración del Slot (Min)</label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input type="number" className="neo-input pl-12" value={settings.slotDurationMin} onChange={(e) => setSettings({ ...settings, slotDurationMin: Number(e.target.value) })} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Máx. Citas Diarias (0 = s/l)</label>
+                  <div className="relative">
+                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                    <input type="number" className="neo-input pl-12" value={settings.maxAppointmentsPerDay} onChange={(e) => setSettings({ ...settings, maxAppointmentsPerDay: Number(e.target.value) })} />
+                  </div>
+                </div>
+             </div>
 
-        {/* Work days */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Dias laborables
-          </h2>
-
-          <div className="flex flex-wrap gap-2">
-            {DAYS_OF_WEEK_FULL.map((dayName, index) => (
-              <button
-                key={index}
-                onClick={() => toggleWorkDay(index)}
-                className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
-                  settings.workDays.includes(index)
-                    ? 'bg-teal-600 text-white border-teal-600'
-                    : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
-                }`}
-              >
-                {dayName}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Day schedules */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Jornadas por dia
-          </h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <button
-                  onClick={() => {
-                    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
-                    else setCurrentMonth(currentMonth - 1);
-                  }}
-                  className="p-2 rounded-lg hover:bg-stone-100"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div className="text-sm font-semibold">{MONTHS[currentMonth]} {currentYear}</div>
-                <button
-                  onClick={() => {
-                    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); }
-                    else setCurrentMonth(currentMonth + 1);
-                  }}
-                  className="p-2 rounded-lg hover:bg-stone-100"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1">
-                {weekDays.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-stone-400 py-1">{day}</div>
-                ))}
-                {calendarCells.map((day, idx) => {
-                  if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
-                  const dateStr = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(day)}`;
-                  const isSelected = selectedDate === dateStr;
-                  const isToday = dateStr === todayStr;
-                  const hasOverride = !!getScheduleForDate(dateStr);
-                  return (
+             <div className="mt-8 space-y-4">
+                <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Días laborables</label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK_FULL.map((dayName, index) => (
                     <button
-                      key={dateStr}
-                      onClick={() => {
-                        setSelectedDate(dateStr);
-                        setScheduleMessage('');
-                      }}
-                      className={`aspect-square rounded-lg text-sm relative transition-colors ${
-                        isSelected
-                          ? 'bg-teal-600 text-white'
-                          : isToday
-                          ? 'bg-teal-50 text-teal-700 font-semibold'
-                          : 'hover:bg-stone-100 text-stone-700'
+                      key={index}
+                      onClick={() => toggleWorkDay(index)}
+                      className={`px-5 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${
+                        settings.workDays.includes(index)
+                          ? 'bg-[var(--pv-gold)] text-white border-[var(--pv-gold)] shadow-lg shadow-[var(--pv-gold)]/20'
+                          : 'bg-white text-[var(--pv-navy)] border-white/50 hover:border-[var(--pv-gold)]'
                       }`}
                     >
-                      <span className="text-xs">{day}</span>
-                      {hasOverride && (
-                        <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
-                          isSelected ? 'bg-white' : 'bg-teal-500'
-                        }`} />
-                      )}
+                      {dayName}
                     </button>
-                  );
-                })}
-              </div>
-
-              <div className="text-xs text-stone-400 mt-3">
-                Los dias con punto tienen jornada personalizada.
-              </div>
-
-              {daySchedules.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {daySchedules.map((schedule) => {
-                    const scheduleDate = schedule.date.split('T')[0];
-                    return (
-                      <div key={schedule.id} className="flex items-center justify-between gap-2 border border-stone-200 rounded-lg p-2 text-xs">
-                        <button
-                          onClick={() => setSelectedDate(scheduleDate)}
-                          className="text-left flex-1"
-                        >
-                          <div className="font-medium text-stone-700">{scheduleDate}</div>
-                          <div className="text-stone-500">{schedule.startTime} - {schedule.endTime}</div>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSchedule(schedule.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    );
-                  })}
+                  ))}
                 </div>
-              )}
-            </div>
+             </div>
+          </section>
+        </div>
 
-            <div className="border border-stone-200 rounded-xl p-4">
-              <div className="flex items-start justify-between gap-2 mb-3">
+        {/* Custom Day Overrides */}
+        <div className="space-y-8">
+           <section className="neo-card !p-4 lg:!p-6 h-full">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-[var(--pv-gold)] text-white rounded-2xl shadow-lg">
+                   <CalendarIcon size={24} />
+                </div>
                 <div>
-                  <div className="text-sm font-semibold">Configurar dia</div>
-                  <div className="text-xs text-stone-500">
-                    {selectedDate ? `Fecha seleccionada: ${selectedDate}` : 'Seleccione un dia del calendario.'}
-                  </div>
+                   <h2 className="font-bold font-roman uppercase text-[var(--pv-ink)]">Excepciones de Jornada</h2>
+                   <p className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest">Personalización por Día</p>
                 </div>
-                {selectedSchedule && (
-                  <button
-                    onClick={() => handleDeleteSchedule(selectedSchedule.id)}
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    Eliminar jornada
-                  </button>
-                )}
               </div>
 
-              {!selectedDate ? (
-                <div className="text-xs text-stone-400 py-6 text-center">
-                  Haga clic en un dia para editar su jornada.
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="form-label block text-xs">Cupos del dia</label>
-                      <input
-                        type="number"
-                        min={0}
-                        className="form-input text-sm"
-                        placeholder="Ej: 20"
-                        value={scheduleForm.maxAppointmentsPerDay}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, maxAppointmentsPerDay: e.target.value })}
-                      />
-                      <p className="text-[10px] text-stone-400 mt-1">Vacio = usar cupo global. 0 = sin limite.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <button onClick={() => setCurrentMonth(prev => prev === 0 ? 11 : prev - 1)} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronLeft size={18} /></button>
+                      <div className="font-roman font-bold uppercase tracking-widest text-[var(--pv-ink)] text-sm">{MONTHS[currentMonth]} {currentYear}</div>
+                      <button onClick={() => setCurrentMonth(prev => prev === 11 ? 0 : prev + 1)} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronRight size={18} /></button>
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">Duracion slot (min)</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="form-input text-sm"
-                        placeholder="Auto"
-                        value={scheduleForm.slotDurationMin}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, slotDurationMin: e.target.value })}
-                      />
-                      <p className="text-[10px] text-stone-400 mt-1">Vacio = calcular segun cupos.</p>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <label className="form-label block text-xs">Hora inicio</label>
-                      <input
-                        type="time"
-                        className="form-input text-sm"
-                        value={scheduleForm.startTime}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
-                      />
+                    <div className="grid grid-cols-7 gap-2">
+                      {weekDays.map(d => <div key={d} className="text-[9px] font-black text-[var(--pv-gold)] text-center uppercase mb-2">{d}</div>)}
+                      {calendarCells.map((day, idx) => {
+                        if (!day) return <div key={`empty-${idx}`} className="aspect-square opacity-20 bg-[var(--pv-marble)] rounded-lg" />;
+                        const dateStr = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(day)}`;
+                        const isSelected = selectedDate === dateStr;
+                        const hasOverride = !!getScheduleForDate(dateStr);
+                        return (
+                          <button
+                            key={dateStr}
+                            onClick={() => setSelectedDate(dateStr)}
+                            className={`aspect-square rounded-xl text-xs font-bold transition-all relative ${
+                              isSelected ? 'bg-[var(--pv-gold)] text-white shadow-lg' : hasOverride ? 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] border border-[var(--pv-gold)]/20' : 'bg-white border border-white/50 hover:border-[var(--pv-gold)]'
+                            }`}
+                          >
+                            {day}
+                            {hasOverride && !isSelected && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--pv-gold)] rounded-full"></span>}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">Hora fin</label>
-                      <input
-                        type="time"
-                        className="form-input text-sm"
-                        value={scheduleForm.endTime}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
-                      />
-                    </div>
-                  </div>
+                 </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <label className="form-label block text-xs">Pausa inicio</label>
-                      <input
-                        type="time"
-                        className="form-input text-sm"
-                        value={scheduleForm.lunchStartTime}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, lunchStartTime: e.target.value })}
-                      />
+                 <div className="p-6 rounded-2xl bg-[var(--pv-marble)] shadow-inner border border-white space-y-5">
+                    <div className="flex justify-between items-start">
+                       <h3 className="text-xs font-black uppercase text-[var(--pv-gold)] tracking-[0.2em]">Configurar Fecha</h3>
+                       {selectedSchedule && <button onClick={() => handleDeleteSchedule(selectedSchedule.id)} className="text-red-500 hover:text-red-700 transition-all"><Trash2 size={16} /></button>}
                     </div>
-                    <div>
-                      <label className="form-label block text-xs">Pausa fin</label>
-                      <input
-                        type="time"
-                        className="form-input text-sm"
-                        value={scheduleForm.lunchEndTime}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, lunchEndTime: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  {estimateAutoSlot() !== null && (
-                    <div className="text-[10px] text-stone-500 mt-2">
-                      Duracion auto estimada: {estimateAutoSlot()} min
-                    </div>
-                  )}
-                  <div className="text-[10px] text-stone-400 mt-1">Si deja la pausa vacia, se usa la pausa global.</div>
-
-                  <div className="flex items-center gap-2 mt-4">
-                    <button
-                      onClick={handleSaveSchedule}
-                      disabled={scheduleSaving}
-                      className="btn btn-secondary text-xs disabled:opacity-60"
-                    >
-                      {scheduleSaving ? 'Guardando...' : 'Guardar jornada'}
-                    </button>
-                    {scheduleMessage && <span className="text-xs text-stone-500">{scheduleMessage}</span>}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+                    
+                    {!selectedDate ? (
+                       <div className="py-20 text-center">
+                          <p className="text-[10px] font-bold text-[var(--pv-navy)] opacity-30 uppercase tracking-widest">Selecciona un día</p>
+                       </div>
+                    ) : (
+                      <div className="space-y-4 animate-fade-in">
+                        <div className="text-sm font-bold text-[var(--pv-ink)] mb-4">{selectedDate}</div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                             <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Cupos</label>
+                             <input type="number" className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.maxAppointmentsPerDay} onChange={e => setScheduleForm({...scheduleForm, maxAppointmentsPerDay: e.target.value})} />
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Slot (Min)</label>
+                             <input type="number" className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.slotDurationMin} onChange={e => setScheduleForm({...scheduleForm, slotDurationMin: e.target.value})} />
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Inicio</label>
+                             <input type="time" className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.startTime} onChange={e => setScheduleForm({...scheduleForm, startTime: e.target.value})} />
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Fin</label>
+                             <input type="time" className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.endTime} onChange={e => setScheduleForm({...scheduleForm, endTime: e.target.value})} />
+                           </div>
+                        </div>
+                        <button onClick={handleSaveSchedule} disabled={scheduleSaving} className="w-full btn-roman !py-3 !text-[10px] !uppercase !tracking-[0.2em] mt-4">
+                           {scheduleSaving ? '...' : 'Sellar Jornada'}
+                        </button>
+                        {scheduleMessage && <p className="text-center text-[10px] font-bold text-emerald-600 animate-pulse mt-2">{scheduleMessage}</p>}
+                      </div>
+                    )}
+                 </div>
+              </div>
+           </section>
         </div>
       </div>
+
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

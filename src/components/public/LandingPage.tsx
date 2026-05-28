@@ -147,35 +147,33 @@ const DIFFERENTIATORS = [
 
 const PROCESS_STEPS = [
   {
-    num: '01',
-    title: 'Reserva tu cita',
-    desc: 'Selecciona el servicio y elige un horario disponible en nuestro calendario online.',
+    num: 'I',
+    title: 'Valoración jurídica',
+    desc: 'Revisamos tu situación real, antecedentes, riesgos y documentos disponibles antes de prometer una vía.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M16 2v4M8 2v4M3 10h18" />
+        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
   {
-    num: '02',
-    title: 'Consulta personalizada',
-    desc: 'Analizamos tu caso, revisamos documentacion y disenamos la mejor estrategia legal.',
+    num: 'II',
+    title: 'Plan de actuación',
+    desc: 'Te explicamos qué trámite conviene, qué pruebas hacen falta, qué plazos importan y qué coste tendrá el proceso.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
-        <circle cx="11" cy="11" r="8" />
-        <path d="M21 21l-4.35-4.35" />
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
   },
   {
-    num: '03',
-    title: 'Gestion integral',
-    desc: 'Nos encargamos de todos los tramites y te mantenemos informado hasta la resolucion.',
+    num: 'III',
+    title: 'Gestión y seguimiento',
+    desc: 'Preparamos el expediente, presentamos cuando esté sólido y mantenemos el control de avisos, requerimientos y resolución.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-        <path d="M22 4L12 14.01l-3-3" />
+        <path d="M21 12a9 9 0 11-6.22-8.56" />
+        <path d="M21 3v6h-6" />
       </svg>
     ),
   },
@@ -383,18 +381,19 @@ export function LandingPage() {
             <div className="max-w-xl">
               <div className="animate-hero-1 inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass text-teal-300 text-sm font-medium mb-8">
                 <span className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse" />
-                Abogadas de Extranjeria — Madrid
+                Abogadas de Extranjeria — ICAV
               </div>
 
               <h1 className="animate-hero-2 font-display text-[2.5rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-7xl text-white leading-[1.05] mb-6 tracking-tight">
-                Hacemos posible{' '}
-                <span className="text-gradient-teal">tu vida</span>
+                Expertas en{' '}
+                <span className="text-gradient-teal">Nacionalidad</span>
                 <br className="hidden sm:block" />
-                {' '}en Espana
+                {' '}y Residencias
               </h1>
 
               <p className="animate-hero-2 text-base sm:text-lg text-slate-400 leading-relaxed mb-10 max-w-md">
-                Mas de una decada transformando vidas. Te acompanamos con profesionalismo y cercania en cada paso de tu proceso migratorio.
+                Asilo y Arraigos · Derecho Familiar · Representación en toda España. <br className="hidden sm:block" />
+                <span className="text-teal-400 font-semibold">Excelencia jurídica para tu tranquilidad.</span>
               </p>
 
               <div className="animate-hero-3 flex flex-col sm:flex-row gap-3">
@@ -601,7 +600,7 @@ export function LandingPage() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-800">Colegiadas</p>
-                      <p className="text-[10px] text-slate-500">ICAM Madrid</p>
+                      <p className="text-[10px] text-slate-500">ICAV</p>
                     </div>
                   </div>
                 </div>
@@ -666,11 +665,18 @@ export function LandingPage() {
       <section id="proceso" className="py-24 sm:py-32 bg-stone-50/60">
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
           <div className="text-center mb-16 reveal">
-            <p className="text-sm font-semibold text-teal-600 tracking-widest uppercase mb-3">Proceso</p>
+            <p className="text-sm font-semibold text-teal-600 tracking-widest uppercase mb-3">Metodología</p>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-slate-900 mb-5">
-              Tres pasos hacia tu <span className="text-teal-600">tranquilidad</span>
+              Nuestro <span className="text-teal-600">Método</span>
             </h2>
-            <p className="max-w-lg mx-auto text-lg text-slate-500">Sencillo, claro y sin complicaciones.</p>
+            <p className="max-w-3xl mx-auto text-lg text-slate-500 leading-relaxed">
+              No convertimos tu caso en una lista mecánica de pasos. Primero entendemos el contexto, después elegimos la vía más defendible y, cuando hay base documental, gestionamos el trámite con control de plazos y comunicación clara.
+            </p>
+            <div className="mt-8">
+              <a href="#reservar" className="inline-flex px-8 py-3.5 rounded-full bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20">
+                Empezar ahora
+              </a>
+            </div>
           </div>
 
           <div className="relative">
@@ -829,7 +835,6 @@ export function LandingPage() {
       <section id="reservar" className="py-24 sm:py-32 bg-white">
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <div className="text-center mb-12 reveal">
-            <p className="text-sm font-semibold text-teal-600 tracking-widest uppercase mb-3">Reserva Online</p>
             <h2 className="font-display text-3xl sm:text-4xl text-slate-900 mb-4">Agenda tu cita en minutos</h2>
             <p className="max-w-md mx-auto text-slate-500">Selecciona el servicio, elige fecha y horario, y confirma tu reserva.</p>
           </div>
@@ -906,7 +911,7 @@ export function LandingPage() {
               <h4 className="text-xs font-semibold text-white uppercase tracking-widest mb-4">Contacto</h4>
               <ul className="space-y-3">
                 {[
-                  [<svg key="loc" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>, 'Madrid, Espana'],
+                  [<svg key="loc" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>, 'España'],
                   [<svg key="mail" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>, 'info@consultorioextranjeria.es'],
                   [<svg key="phone" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>, '+34 600 000 000'],
                   [<svg key="clock" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>, 'Lun - Vie: 9:00 - 18:00'],

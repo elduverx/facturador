@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { Sparkles, UploadCloud, Check, AlertCircle } from 'lucide-react';
 
 interface DocumentAnalyzerProps {
   clientEmail: string;
@@ -67,7 +68,7 @@ export function DocumentAnalyzer({ clientEmail, onAnalysisComplete }: DocumentAn
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -75,12 +76,12 @@ export function DocumentAnalyzer({ clientEmail, onAnalysisComplete }: DocumentAn
         }}
         onDragLeave={() => setIsOver(false)}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 text-center ${
+        className={`relative neo-card !p-8 border-2 border-dashed transition-all duration-300 text-center flex flex-col items-center justify-center min-h-[220px] ${
           analyzing
-            ? 'opacity-60 cursor-wait'
+            ? 'opacity-60 cursor-wait bg-[var(--pv-marble)] border-[var(--pv-gold)]'
             : isOver
-              ? 'border-teal-500 bg-teal-50/50 scale-[1.01]'
-              : 'border-stone-200 hover:border-stone-300'
+              ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 scale-[1.02] shadow-xl'
+              : 'border-[var(--pv-gold)]/30 hover:border-[var(--pv-gold)] hover:bg-white/50'
         }`}
       >
         <input
@@ -91,46 +92,46 @@ export function DocumentAnalyzer({ clientEmail, onAnalysisComplete }: DocumentAn
           accept=".pdf,image/*"
         />
 
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-4">
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              isOver ? 'bg-teal-100 text-teal-600' : 'bg-stone-100 text-stone-400'
+            className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-500 ${
+              analyzing ? 'bg-[var(--pv-gold)] text-white' : isOver ? 'bg-[var(--pv-gold)] text-white rotate-12' : 'bg-white text-[var(--pv-gold)]'
             }`}
           >
             {analyzing ? (
-              <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+              <Sparkles className="w-8 h-8 animate-pulse" />
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
+              <UploadCloud className="w-8 h-8" />
             )}
           </div>
 
-          <div>
-            <p className="text-sm font-bold text-stone-700">
-              {analyzing ? 'Analizando con IA...' : 'Analizar documento con IA'}
+          <div className="max-w-xs">
+            <h4 className="text-lg font-bold font-roman uppercase tracking-tight text-[var(--pv-ink)]">
+              {analyzing ? 'Analizando documento...' : 'Análisis de documentos'}
+            </h4>
+            <p className="text-xs text-[var(--pv-navy)] opacity-60 mt-2 font-medium">
+              Arrastra resoluciones, requerimientos o tasas para que la IA los procese y categorice automáticamente.
             </p>
-            <p className="text-xs text-stone-400 mt-1">Arrastra o haz clic para subir resolucion, requerimiento o tasa</p>
           </div>
         </div>
 
         {analyzing && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-stone-100 overflow-hidden rounded-b-xl">
-            <div className="h-full bg-teal-500 animate-[loading_1.5s_infinite_linear]" style={{ width: '30%' }}></div>
+          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-[var(--pv-marble)] overflow-hidden rounded-b-2xl">
+            <div className="h-full bg-[var(--pv-gold)] animate-[loading_2s_infinite_linear]" style={{ width: '40%' }}></div>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="text-xs text-red-600 bg-red-50 border border-red-100 p-2 rounded-lg text-center animate-shake">
+        <div className="text-xs font-bold text-red-600 bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-3 animate-shake">
+          <AlertCircle size={18} />
           {error}
         </div>
       )}
 
       {message && (
-        <div className="text-xs text-teal-700 bg-teal-50 border border-teal-100 p-2 rounded-lg text-center">
+        <div className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-3 animate-fade-in">
+          <Check size={18} />
           {message}
         </div>
       )}
@@ -138,7 +139,7 @@ export function DocumentAnalyzer({ clientEmail, onAnalysisComplete }: DocumentAn
       <style jsx>{`
         @keyframes loading {
           0% { transform: translateX(-100%); }
-          100% { transform: translateX(400%); }
+          100% { transform: translateX(250%); }
         }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
@@ -146,6 +147,13 @@ export function DocumentAnalyzer({ clientEmail, onAnalysisComplete }: DocumentAn
           75% { transform: translateX(4px); }
         }
         .animate-shake { animation: shake 0.4s ease-in-out; }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </div>
   );

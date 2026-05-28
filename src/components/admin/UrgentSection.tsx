@@ -1,5 +1,6 @@
 import { AppointmentData } from '@/types/booking';
 import { STATUS_COLORS, STATUS_LABELS, formatDateShort } from '@/lib/constants';
+import { AlertTriangle, Clock, User, Check, X, ShieldAlert } from 'lucide-react';
 
 interface UrgentSectionProps {
   urgentItems: { appointment: AppointmentData; label: string }[];
@@ -9,46 +10,70 @@ interface UrgentSectionProps {
 
 export function UrgentSection({ urgentItems, urgentCount, onUpdateStatus }: UrgentSectionProps) {
   return (
-    <div className="card h-full">
-      <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-600">
-          <path d="M12 9v4"></path>
-          <path d="M12 17h.01"></path>
-          <path d="M10.29 3.86l-8.13 14a2 2 0 0 0 1.71 3h16.26a2 2 0 0 0 1.71-3l-8.13-14a2 2 0 0 0-3.42 0z"></path>
-        </svg>
-        Prioridad / Alertas
-        <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">{urgentCount}</span>
-      </h2>
+    <div className="neo-card !p-8 h-full border-t-8 border-t-red-500 shadow-2xl">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-red-50 text-red-600 rounded-xl shadow-inner">
+             <AlertTriangle size={22} className="animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-roman uppercase tracking-tight text-[var(--pv-ink)]">Alertas Críticas</h2>
+            <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Atención Inmediata</p>
+          </div>
+        </div>
+        <span className="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white font-black text-sm shadow-lg shadow-red-200">
+           {urgentCount}
+        </span>
+      </div>
 
       {urgentItems.length === 0 ? (
-        <p className="text-sm text-stone-400 py-4 text-center">No hay alertas urgentes</p>
+        <div className="py-20 text-center bg-[var(--pv-marble)] rounded-2xl border-2 border-dashed border-red-100">
+           <p className="text-sm font-bold text-[var(--pv-navy)] opacity-30 uppercase tracking-widest">Sin Alertas de Combate</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {urgentItems.map(({ appointment, label }) => {
+        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          {urgentItems.map(({ appointment, label }, idx) => {
             const dateStr = typeof appointment.date === 'string' ? appointment.date.split('T')[0] : new Date(appointment.date).toISOString().split('T')[0];
             return (
-              <div key={appointment.id} className="p-3 rounded-lg border-l-4 border-l-red-500 border border-stone-200 bg-red-50/10">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] uppercase tracking-wide text-red-600 font-bold">{label}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${STATUS_COLORS[appointment.status] || ''}`}>
+              <div key={appointment.id} className="p-5 rounded-2xl bg-white border border-red-100 shadow-sm hover:shadow-xl transition-all duration-500 group">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600 px-3 py-1 bg-red-50 rounded-lg">{label}</span>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-sm ${STATUS_COLORS[appointment.status] || ''}`}>
                     {STATUS_LABELS[appointment.status] || appointment.status}
                   </span>
                 </div>
-                <div className="text-sm font-semibold mt-1 text-stone-800">{appointment.clientName}</div>
-                <div className="text-[11px] text-stone-500 mt-0.5">
-                  {formatDateShort(dateStr)} · {appointment.startTime} · {appointment.service?.name || 'Servicio'}
+                
+                <div className="mb-4">
+                  <h4 className="text-base font-bold text-[var(--pv-ink)] group-hover:text-red-600 transition-colors">{appointment.clientName}</h4>
+                  <div className="flex flex-wrap items-center gap-3 mt-2">
+                     <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--pv-navy)] opacity-50 uppercase">
+                        <Clock size={12} /> {formatDateShort(dateStr)} · {appointment.startTime}
+                     </div>
+                     <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--pv-navy)] opacity-50 uppercase">
+                        <User size={12} /> {appointment.service?.name || 'Consulta'}
+                     </div>
+                  </div>
                 </div>
-                <div className="flex gap-1 mt-3">
+
+                <div className="flex gap-2 pt-4 border-t border-[var(--pv-marble)]">
                   {appointment.status === 'PENDING' && (
                     <>
-                      <button onClick={() => onUpdateStatus(appointment.id, 'CONFIRMED')} className="text-[10px] px-2 py-1 rounded bg-teal-600 text-white hover:bg-teal-700">Confirmar</button>
-                      <button onClick={() => onUpdateStatus(appointment.id, 'CANCELLED')} className="text-[10px] px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200">Cancelar</button>
+                      <button onClick={() => onUpdateStatus(appointment.id, 'CONFIRMED')} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all">
+                        <Check size={14} /> Confirmar
+                      </button>
+                      <button onClick={() => onUpdateStatus(appointment.id, 'CANCELLED')} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all">
+                        <X size={14} /> Anular
+                      </button>
                     </>
                   )}
                   {appointment.status === 'CONFIRMED' && (
                     <>
-                      <button onClick={() => onUpdateStatus(appointment.id, 'COMPLETED')} className="text-[10px] px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700">Completar</button>
-                      <button onClick={() => onUpdateStatus(appointment.id, 'NO_SHOW')} className="text-[10px] px-2 py-1 rounded bg-stone-100 text-stone-600 hover:bg-stone-200">No presentado</button>
+                      <button onClick={() => onUpdateStatus(appointment.id, 'COMPLETED')} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--pv-gold)] text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-[var(--pv-gold)]/20 transition-all">
+                        Finalizar
+                      </button>
+                      <button onClick={() => onUpdateStatus(appointment.id, 'NO_SHOW')} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--pv-marble)] text-[var(--pv-navy)] text-[10px] font-black uppercase tracking-widest hover:bg-stone-200 transition-all">
+                        <ShieldAlert size={14} /> No Presentado
+                      </button>
                     </>
                   )}
                 </div>

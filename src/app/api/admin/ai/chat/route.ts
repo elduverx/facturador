@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
     // 6. Actualizar el updatedAt de la sesión y opcionalmente el título
     const updateData: any = { updatedAt: new Date() };
-    if (session.title === 'Nueva conversación' && content.length > 5) {
+    if ((session.title === 'Nueva conversación' || session.title === 'Nueva consulta imperial') && content.length > 5) {
       updateData.title = content.substring(0, 40) + (content.length > 40 ? '...' : '');
     }
 

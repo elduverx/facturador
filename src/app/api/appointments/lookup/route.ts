@@ -35,24 +35,12 @@ export async function POST(request: Request) {
     });
 
     const filtered = allAppointments.filter((appt) => normalizePhone(appt.clientPhone) === normalizedPhone);
-    
-    // Si no hay citas que coincidan con el telefono, error de seguridad/privacidad
-    if (filtered.length === 0) {
-       return NextResponse.json({ appointments: [], total: 0, notes: [] });
-    }
 
     const total = filtered.length;
     const startIndex = (Math.max(1, page) - 1) * pageSize;
     const paged = filtered.slice(startIndex, startIndex + pageSize);
 
-    const [publicNotes, documents] = await Promise.all([
-      prisma.clientNote.findMany({
-        where: {
-          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-          isPublic: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
+    const [documents, matters] = await Promise.all([
       prisma.clientDocument.findMany({
         where: {
           clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
@@ -70,11 +58,59 @@ export async function POST(request: Request) {
           createdAt: true,
         },
       }),
+      prisma.matter.findMany({
+        where: {
+          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+          clientPhone: normalizedPhone,
+        },
+        include: {
+          timeline: {
+            where: { isPublic: true },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          },
+          deadlines: {
+            where: { status: 'OPEN' },
+            orderBy: { dueAt: 'asc' },
+            take: 10,
+          },
+          billingDocuments: {
+            where: { status: { in: ['SENT', 'ACCEPTED', 'PARTIALLY_PAID', 'PAID'] } },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+            select: {
+              id: true,
+              type: true,
+              status: true,
+              number: true,
+              concept: true,
+              totalAmount: true,
+              paidAmount: true,
+              dueAt: true,
+              issuedAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
+
+    const hasPortalMatch = filtered.length > 0 || documents.length > 0 || matters.length > 0;
+    const publicNotes = hasPortalMatch
+      ? await prisma.clientNote.findMany({
+          where: {
+            clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+            isPublic: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        })
+      : [];
 
     return NextResponse.json({
       appointments: paged.map((appt) => ({
         id: appt.id,
+        clientName: appt.clientName,
+        clientNie: appt.clientNie,
         date: appt.date.toISOString(),
         startTime: appt.startTime,
         endTime: appt.endTime,
@@ -92,6 +128,37 @@ export async function POST(request: Request) {
       documents: documents.map(document => ({
         ...document,
         createdAt: document.createdAt.toISOString(),
+      })),
+      matters: matters.map((matter) => ({
+        id: matter.id,
+        reference: matter.reference,
+        clientName: matter.clientName,
+        clientNie: matter.clientNie,
+        title: matter.title,
+        procedureType: matter.procedureType,
+        status: matter.status,
+        priority: matter.priority,
+        openedAt: matter.openedAt.toISOString(),
+        nextActionAt: matter.nextActionAt?.toISOString() || null,
+        summary: matter.summary,
+        timeline: matter.timeline.map((entry) => ({
+          id: entry.id,
+          type: entry.type,
+          title: entry.title,
+          content: entry.content,
+          createdAt: entry.createdAt.toISOString(),
+        })),
+        deadlines: matter.deadlines.map((deadline) => ({
+          id: deadline.id,
+          title: deadline.title,
+          dueAt: deadline.dueAt.toISOString(),
+          kind: deadline.kind,
+        })),
+        billingDocuments: matter.billingDocuments.map((document) => ({
+          ...document,
+          issuedAt: document.issuedAt.toISOString(),
+          dueAt: document.dueAt?.toISOString() || null,
+        })),
       })),
       total,
       page: Math.max(1, page),

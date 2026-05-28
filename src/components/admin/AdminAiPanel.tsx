@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Sparkles, Activity, AlertTriangle, ArrowRight, CheckCircle2, Cpu } from 'lucide-react';
 
 type AiPlan = {
   resumen: string;
@@ -45,106 +46,128 @@ export function AdminAiPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || 'No se pudo ejecutar Claude.');
+        throw new Error(data?.error || 'No se pudo ejecutar la automatización.');
       }
 
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo ejecutar Claude.');
+      setError(err instanceof Error ? err.message : 'No se pudo conectar con la IA.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="card shadow-sm border-teal-200 bg-white">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2v4"></path>
-                <path d="M12 18v4"></path>
-                <path d="m4.93 4.93 2.83 2.83"></path>
-                <path d="m16.24 16.24 2.83 2.83"></path>
-                <path d="M2 12h4"></path>
-                <path d="M18 12h4"></path>
-                <path d="m4.93 19.07 2.83-2.83"></path>
-                <path d="m16.24 7.76 2.83-2.83"></path>
-              </svg>
-            </span>
-            <div>
-              <h2 className="text-sm font-bold text-stone-800">Automatizacion con Claude</h2>
-              <p className="text-xs text-stone-500 mt-0.5">Revisa agenda, pagos y notas; crea seguimientos internos si procede.</p>
-            </div>
+    <section className="neo-card !p-8 shadow-2xl relative overflow-hidden">
+      {/* Background Icon */}
+      <div className="absolute -right-10 -bottom-10 opacity-[0.03] text-[var(--pv-navy)] pointer-events-none">
+         <Cpu size={200} />
+      </div>
+
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--pv-navy)] flex items-center justify-center text-[var(--pv-gold)] shadow-xl shrink-0">
+             <Sparkles size={32} className={loading ? 'animate-pulse' : ''} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-roman uppercase tracking-tight text-[var(--pv-ink)]">Revisión automática</h2>
+            <p className="text-sm text-[var(--pv-navy)] opacity-60 mt-1">Revisa agenda, pagos y expedientes para detectar pendientes.</p>
           </div>
         </div>
 
         <button
           onClick={runAutomation}
           disabled={loading}
-          className="btn btn-primary text-xs disabled:opacity-60 shrink-0"
+          className="btn-roman px-8 py-4 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-[var(--pv-gold)]/20 min-w-[240px]"
         >
-          {loading ? 'Analizando...' : 'Analizar y automatizar'}
+          {loading ? 'Consultando...' : <><Activity size={18} /> Iniciar Análisis</>}
         </button>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
-          {error}
+        <div className="mt-8 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs font-bold flex items-center gap-2 animate-shake">
+          <AlertTriangle size={16} /> {error}
         </div>
       )}
 
       {result && (
-        <div className="mt-4 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-[10px] px-2 py-1 rounded-full border font-bold ${PRIORITY_CLASS[result.plan.prioridad]}`}>
+        <div className="mt-10 space-y-8 animate-fade-in relative z-10">
+          <div className="flex flex-wrap items-center gap-4 border-b border-[var(--pv-marble)] pb-6">
+            <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${PRIORITY_CLASS[result.plan.prioridad]}`}>
               Prioridad {result.plan.prioridad}
-            </span>
-            <span className="text-xs text-stone-500">
-              {result.createdCount} notas internas creadas automaticamente
-            </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--pv-navy)] opacity-60">
+              <CheckCircle2 size={14} className="text-emerald-500" />
+              {result.createdCount} Seguimientos Creados
+            </div>
           </div>
 
-          <p className="text-sm text-stone-700 leading-relaxed">{result.plan.resumen}</p>
+          <div className="p-6 rounded-2xl bg-[var(--pv-marble)] shadow-inner border border-white/50">
+             <p className="text-sm text-[var(--pv-navy)] leading-relaxed font-medium">"{result.plan.resumen}"</p>
+          </div>
 
-          {result.plan.alertas.length > 0 && (
-            <div>
-              <h3 className="text-xs font-bold text-stone-700 mb-2">Alertas</h3>
-              <div className="space-y-2">
-                {result.plan.alertas.map((alerta, index) => (
-                  <div key={`${alerta.titulo}-${index}`} className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <div className="text-xs font-bold text-stone-800">{alerta.titulo}</div>
-                    <div className="text-xs text-stone-600 mt-1">{alerta.detalle}</div>
-                    {alerta.clientEmail && (
-                      <div className="text-[11px] text-stone-400 mt-2">{alerta.clientEmail}</div>
-                    )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+             {result.plan.alertas.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black text-[var(--pv-gold)] uppercase tracking-[0.2em] flex items-center gap-2">
+                    <AlertTriangle size={14} /> Alertas de Control
+                  </h3>
+                  <div className="space-y-3">
+                    {result.plan.alertas.map((alerta, index) => (
+                      <div key={index} className="p-4 rounded-xl bg-white border border-red-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="text-xs font-bold text-[var(--pv-ink)]">{alerta.titulo}</div>
+                        <div className="text-[11px] text-[var(--pv-navy)] opacity-60 mt-1">{alerta.detalle}</div>
+                        {alerta.clientEmail && (
+                          <div className="text-[9px] font-black text-[var(--pv-gold)] uppercase mt-3 tracking-widest">{alerta.clientEmail}</div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+             )}
 
-          {result.plan.proximas_acciones.length > 0 && (
-            <div>
-              <h3 className="text-xs font-bold text-stone-700 mb-2">Proximas acciones</h3>
-              <div className="space-y-2">
-                {result.plan.proximas_acciones.map((item, index) => (
-                  <div key={`${item.accion}-${index}`} className="rounded-lg border border-teal-100 bg-teal-50/40 p-3">
-                    <div className="text-xs font-bold text-stone-800">{item.accion}</div>
-                    <div className="text-xs text-stone-600 mt-1">{item.motivo}</div>
-                    {item.clientEmail && (
-                      <a href={`/admin/clientes?search=${encodeURIComponent(item.clientEmail)}`} className="inline-block text-[11px] text-teal-700 mt-2 hover:underline">
-                        {item.clientEmail}
-                      </a>
-                    )}
+             {result.plan.proximas_acciones.length > 0 && (
+                <div className="space-y-4">
+                   <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <ArrowRight size={14} /> Acciones Sugeridas
+                  </h3>
+                  <div className="space-y-3">
+                    {result.plan.proximas_acciones.map((item, index) => (
+                      <div key={index} className="p-4 rounded-xl bg-white border border-emerald-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="text-xs font-bold text-[var(--pv-ink)]">{item.accion}</div>
+                        <div className="text-[11px] text-[var(--pv-navy)] opacity-60 mt-1">{item.motivo}</div>
+                        {item.clientEmail && (
+                          <a 
+                            href={`/admin/clientes?search=${encodeURIComponent(item.clientEmail)}`} 
+                            className="inline-flex items-center gap-1 text-[9px] font-black text-emerald-600 uppercase mt-3 tracking-widest hover:underline"
+                          >
+                             Ver Cliente <ArrowRight size={10} />
+                          </a>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+             )}
+          </div>
         </div>
       )}
+
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+      `}</style>
     </section>
   );
 }
