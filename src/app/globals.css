@@ -96,6 +96,280 @@
     @apply bg-[var(--pv-gold)] text-white shadow-lg;
     box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
   }
+
+  .card {
+    @apply rounded-2xl border border-white/60 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 sm:p-6;
+    box-shadow: var(--neo-shadow-flat);
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply text-white;
+    background: linear-gradient(135deg, #d4af37 0%, var(--pv-gold) 100%);
+    box-shadow: 0 4px 10px rgba(197, 160, 89, 0.25);
+  }
+
+  .btn-primary:hover {
+    @apply brightness-105;
+    box-shadow: 0 6px 15px rgba(197, 160, 89, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    @apply border border-white/70 bg-white/75 text-[var(--pv-navy)] hover:bg-white hover:text-[var(--pv-gold)];
+    box-shadow: var(--neo-shadow-flat);
+  }
+
+  .btn-icon {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--pv-navy)] transition hover:bg-[var(--pv-marble)] hover:text-[var(--pv-gold)];
+  }
+
+  .btn-add-item {
+    @apply mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--pv-gold)]/45 bg-[var(--pv-gold)]/10 px-4 py-2 text-sm font-bold text-[var(--pv-gold)] transition hover:border-[var(--pv-gold)] hover:bg-[var(--pv-gold)]/15;
+  }
+
+  .form-label {
+    @apply mb-1.5 font-bold text-[var(--pv-navy)]/75;
+  }
+
+  .form-input {
+    @apply w-full rounded-xl border border-white/70 bg-[var(--pv-marble)] px-4 py-3 text-[var(--pv-ink)] outline-none transition duration-300 placeholder:text-[var(--pv-navy)]/35;
+    box-shadow: var(--neo-shadow-inset);
+  }
+
+  .form-input:focus {
+    @apply border-[var(--pv-gold)]/40 bg-white ring-2 ring-[var(--pv-gold)]/15;
+  }
+
+  .tab {
+    @apply flex-1 rounded-lg px-3 py-2.5 font-bold text-[var(--pv-navy)]/65 transition;
+  }
+
+  .tab.active {
+    @apply bg-white text-[var(--pv-gold)];
+    box-shadow: var(--neo-shadow-flat);
+  }
+
+  .section-title {
+    @apply mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--pv-gold)];
+  }
+
+  .status-badge,
+  .info-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-black uppercase tracking-widest;
+  }
+
+  .status-badge.ready {
+    @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200;
+  }
+
+  .status-badge.draft,
+  .info-badge {
+    @apply bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] ring-1 ring-[var(--pv-gold)]/20;
+  }
+
+  .saved-item {
+    @apply flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-[var(--pv-marble)] p-3 text-sm text-[var(--pv-navy)] transition hover:bg-white hover:text-[var(--pv-gold)];
+  }
+
+  .items-table {
+    @apply w-full min-w-[720px] border-separate border-spacing-y-2 text-sm;
+  }
+
+  .items-table th {
+    @apply px-2 pb-2 text-left text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/45;
+  }
+
+  .items-table td {
+    @apply px-2 align-middle;
+  }
+
+  .items-table tbody tr {
+    @apply rounded-xl bg-white;
+  }
+
+  .invoice-preview-frame {
+    @apply overflow-auto rounded-2xl bg-white shadow-lg ring-1 ring-black/5;
+  }
+
+  .invoice-paper {
+    @apply relative bg-white text-[var(--pv-ink)];
+    width: 794px;
+    min-height: 1123px;
+    padding: 64px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .invoice-paper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-top: 8px solid var(--pv-navy);
+    pointer-events: none;
+  }
+
+  .invoice-header {
+    @apply mb-8 flex items-start justify-between gap-8 border-b pb-8;
+    border-color: rgba(197, 160, 89, 0.35);
+  }
+
+  .invoice-title input {
+    @apply text-[var(--pv-gold)];
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+
+  .invoice-heading {
+    @apply min-w-[280px] text-right;
+  }
+
+  .invoice-number {
+    @apply mt-3 text-sm font-black uppercase tracking-widest;
+    color: rgba(22, 38, 53, 0.55);
+  }
+
+  .invoice-logo {
+    @apply max-h-20 max-w-44 object-contain;
+  }
+
+  .logo-placeholder {
+    @apply flex h-20 w-32 flex-col items-center justify-center rounded-xl border border-dashed bg-[var(--pv-marble)] text-[var(--pv-gold)];
+    border-color: rgba(197, 160, 89, 0.45);
+  }
+
+  .invoice-meta-grid {
+    @apply mb-8 grid grid-cols-3 gap-3;
+  }
+
+  .invoice-parties {
+    @apply mb-9 grid grid-cols-2 gap-5;
+  }
+
+  .party-block {
+    @apply min-h-36 rounded-xl border border-stone-200 bg-[var(--pv-marble)] p-5 text-[12px] leading-relaxed;
+    color: rgba(22, 38, 53, 0.7);
+  }
+
+  .party-block h4,
+  .payment-info h4 {
+    @apply mb-2 text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)];
+  }
+
+  .party-block .name {
+    @apply mb-2 text-sm font-black text-[var(--pv-ink)];
+  }
+
+  .meta-item {
+    @apply rounded-xl border px-4 py-3;
+    border-color: rgba(197, 160, 89, 0.2);
+    background-color: rgba(197, 160, 89, 0.1);
+  }
+
+  .meta-item label {
+    @apply block text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)];
+  }
+
+  .meta-item span {
+    @apply mt-1 block text-sm font-black text-[var(--pv-ink)];
+  }
+
+  .invoice-items-table {
+    @apply mb-8 w-full border-collapse text-[12px];
+  }
+
+  .invoice-items-table th {
+    @apply bg-[var(--pv-navy)] px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white;
+  }
+
+  .invoice-items-table th:first-child {
+    @apply rounded-l-lg;
+  }
+
+  .invoice-items-table th:last-child {
+    @apply rounded-r-lg;
+  }
+
+  .invoice-items-table td {
+    @apply border-b border-stone-200 px-3 py-4;
+    color: rgba(22, 38, 53, 0.75);
+  }
+
+  .invoice-items-table th:not(:first-child),
+  .invoice-items-table td:not(:first-child) {
+    @apply text-right;
+  }
+
+  .invoice-items-table .desc {
+    @apply font-semibold text-[var(--pv-ink)];
+  }
+
+  .invoice-summary {
+    @apply flex justify-end;
+  }
+
+  .totals-box {
+    @apply w-[300px];
+  }
+
+  .totals-row {
+    @apply flex justify-between gap-4 border-b border-stone-200 py-2.5 text-sm;
+    color: rgba(22, 38, 53, 0.7);
+  }
+
+  .totals-row.total {
+    @apply mt-3 rounded-xl border-0 bg-[var(--pv-navy)] px-5 py-4 text-base font-black text-white;
+  }
+
+  .totals-row.irpf {
+    @apply text-red-700;
+  }
+
+  .payment-info {
+    @apply text-sm leading-relaxed;
+    color: rgba(22, 38, 53, 0.7);
+  }
+
+  .invoice-notes {
+    @apply rounded-xl bg-[var(--pv-marble)] p-4 text-sm leading-relaxed;
+    color: rgba(22, 38, 53, 0.7);
+  }
+
+  .invoice-footer {
+    @apply mt-10 grid grid-cols-[1fr_1.4fr] gap-5 border-t border-stone-200 pt-6;
+  }
+
+  .legal-text {
+    @apply absolute bottom-10 left-16 right-16 border-t border-stone-200 pt-4 text-center text-[9px] uppercase tracking-widest;
+    color: rgba(22, 38, 53, 0.35);
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 z-50 hidden items-center justify-center bg-[var(--pv-ink)]/45 p-4 backdrop-blur-sm;
+  }
+
+  .modal-overlay.active {
+    @apply flex;
+  }
+
+  .modal {
+    @apply max-h-[90vh] w-full max-w-xl overflow-auto rounded-2xl bg-white;
+    box-shadow: 0 24px 70px rgba(10, 17, 24, 0.28);
+  }
+
+  .sticky-header {
+    @apply sticky top-0 z-40 bg-[var(--pv-marble)]/90 pt-3 backdrop-blur-md transition-transform duration-300;
+  }
+
+  .sticky-header.is-hidden {
+    transform: translateY(-110%);
+  }
 }
 
 /* Custom Scrollbar */

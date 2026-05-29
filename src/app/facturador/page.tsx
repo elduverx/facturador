@@ -297,20 +297,59 @@ export default function Home() {
 
     try {
       const canvas = await html2canvas(element, {
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
         onclone: (doc) => {
+          doc.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove());
           const style = doc.createElement('style');
-          style.textContent = ':root{--color-teal-500:#00baa7;--color-teal-600:#009588;--color-teal-700:#00776e;--color-stone-100:#f5f5f4;--color-stone-200:#e7e5e4;--color-stone-400:#a6a09b;--color-stone-500:#79716b;--color-stone-800:#292524;--color-white:#fff;}.logo-placeholder{display:none !important;}';
+          style.textContent = `
+            * { box-sizing: border-box; }
+            body { margin: 0; background: #ffffff; font-family: Inter, Arial, sans-serif; color: #0a1118; }
+            .invoice-paper { position: relative; width: 794px; min-height: 1123px; padding: 64px; background: #ffffff; color: #0a1118; font-size: 13px; line-height: 1.45; }
+            .invoice-paper::before { content: ""; position: absolute; inset: 0; border-top: 8px solid #162635; pointer-events: none; }
+            .invoice-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid rgba(197, 160, 89, 0.35); }
+            .invoice-heading { min-width: 280px; text-align: right; }
+            .invoice-title { margin: 0; }
+            .invoice-title input { width: 100%; border: 0; background: transparent; padding: 0; text-align: right; color: #c5a059; font-family: Cinzel, Georgia, serif; font-size: 36px; font-weight: 700; line-height: 1; text-transform: uppercase; outline: none; }
+            .invoice-number { margin-top: 12px; color: rgba(22, 38, 53, 0.55); font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+            .invoice-logo { max-width: 176px; max-height: 80px; object-fit: contain; }
+            .logo-placeholder { display: none !important; }
+            .invoice-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+            .meta-item { border: 1px solid rgba(197, 160, 89, 0.2); border-radius: 12px; background: rgba(197, 160, 89, 0.1); padding: 12px 16px; }
+            .meta-item label { display: block; color: #c5a059; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+            .meta-item span { display: block; margin-top: 4px; color: #0a1118; font-size: 14px; font-weight: 900; }
+            .invoice-parties { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 36px; }
+            .party-block { min-height: 144px; border: 1px solid #e7e5e4; border-radius: 12px; background: #f4f7f9; padding: 20px; color: rgba(22, 38, 53, 0.7); font-size: 12px; line-height: 1.6; }
+            .party-block h4, .payment-info h4 { margin: 0 0 8px; color: #c5a059; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+            .party-block p { margin: 0; }
+            .party-block .name { margin-bottom: 8px; color: #0a1118; font-size: 14px; font-weight: 900; }
+            .invoice-items-table { width: 100%; margin-bottom: 32px; border-collapse: collapse; font-size: 12px; }
+            .invoice-items-table th { background: #162635; color: #ffffff; padding: 12px; text-align: left; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+            .invoice-items-table th:first-child { border-radius: 8px 0 0 8px; }
+            .invoice-items-table th:last-child { border-radius: 0 8px 8px 0; }
+            .invoice-items-table td { border-bottom: 1px solid #e7e5e4; padding: 16px 12px; color: rgba(22, 38, 53, 0.75); }
+            .invoice-items-table th:not(:first-child), .invoice-items-table td:not(:first-child) { text-align: right; }
+            .invoice-items-table .desc { color: #0a1118; font-weight: 700; }
+            .invoice-summary { display: flex; justify-content: flex-end; }
+            .totals-box { width: 300px; }
+            .totals-row { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e7e5e4; padding: 10px 0; color: rgba(22, 38, 53, 0.7); font-size: 14px; }
+            .totals-row.irpf { color: #b91c1c; }
+            .totals-row.total { margin-top: 12px; border: 0; border-radius: 12px; background: #162635; padding: 16px 20px; color: #ffffff; font-size: 16px; font-weight: 900; }
+            .invoice-footer { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e7e5e4; }
+            .payment-info { color: rgba(22, 38, 53, 0.7); font-size: 14px; line-height: 1.6; }
+            .payment-info p { margin: 0; }
+            .invoice-notes { border-radius: 12px; background: #f4f7f9; padding: 16px; color: rgba(22, 38, 53, 0.7); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+            .legal-text { position: absolute; left: 64px; right: 64px; bottom: 40px; border-top: 1px solid #e7e5e4; padding-top: 16px; color: rgba(22, 38, 53, 0.35); text-align: center; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
+          `;
           doc.head.appendChild(style);
         },
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.82);
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -324,15 +363,15 @@ export default function Home() {
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
+      const imgY = (pdfHeight - imgHeight * ratio) / 2;
 
       pdf.addImage(
         imgData,
         'JPEG',
         imgX,
         imgY,
-        imgWidth * ratio * 0.95,
-        imgHeight * ratio * 0.95,
+        imgWidth * ratio,
+        imgHeight * ratio,
         undefined,
         'FAST'
       );
@@ -554,12 +593,12 @@ export default function Home() {
       {/* Header */}
       <header className={`flex flex-row justify-between items-center mb-6 sm:mb-8 lg:mb-12 pb-4 sm:pb-6 border-b border-stone-200 sticky-header gap-3 sm:gap-4 ${hideHeader ? 'is-hidden' : ''}`}>
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-500 to-teal-700 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--pv-navy)] rounded-xl flex items-center justify-center text-[var(--pv-gold)] font-roman font-black text-lg sm:text-xl shadow-lg">
             F
           </div>
           <div className="min-w-0">
-            <h1 className="font-serif text-xl sm:text-2xl leading-tight">Facturador</h1>
-            <span className="text-[10px] sm:text-xs text-stone-400 uppercase tracking-wider">Autónomos España</span>
+            <h1 className="font-roman text-xl sm:text-2xl font-bold uppercase leading-tight text-[var(--pv-ink)]">Facturador</h1>
+            <span className="text-[10px] sm:text-xs text-[var(--pv-gold)] uppercase tracking-wider">Autonomos Espana</span>
           </div>
           <div className="relative flex sm:hidden shrink-0 ml-2" ref={mobileMenuRef}>
             <button
@@ -575,7 +614,7 @@ export default function Home() {
               </svg>
             </button>
             {showMobileMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-stone-200 bg-white shadow-lg p-2 flex flex-col gap-2 z-50">
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-white/70 bg-white shadow-lg p-2 flex flex-col gap-2 z-50">
                 <button
                   onClick={() => {
                     setShowMobileMenu(false);
@@ -655,7 +694,7 @@ export default function Home() {
           <div className="card animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 pb-4 border-b border-stone-200 gap-2 sm:gap-0">
               <h3 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 sm:w-5 sm:h-5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--pv-gold)] sm:w-5 sm:h-5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
@@ -696,8 +735,8 @@ export default function Home() {
                       onClick={() => setInvoiceData(prev => ({ ...prev, paymentMethod: method }))}
                       className={`flex-1 py-2 px-1 rounded-lg border text-xs font-medium transition-colors ${
                         invoiceData.paymentMethod === method
-                          ? 'border-teal-600 bg-teal-50 text-teal-700'
-                          : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                          ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/10 text-[var(--pv-gold)]'
+                          : 'border-white/70 bg-white text-[var(--pv-navy)]/70 hover:border-[var(--pv-gold)]/40'
                       }`}
                     >
                       {{ tarjeta: 'Tarjeta', efectivo: 'Efectivo', transferencia: 'Transferencia' }[method]}
@@ -974,7 +1013,7 @@ export default function Home() {
                         <button
                           key={client.nif}
                           type="button"
-                          className={`saved-item w-full text-left ${selectedHistoryClient?.nif === client.nif ? 'ring-1 ring-teal-500' : ''}`}
+                          className={`saved-item w-full text-left ${selectedHistoryClient?.nif === client.nif ? 'ring-1 ring-[var(--pv-gold)]' : ''}`}
                           onClick={() => setSelectedHistoryClient(client)}
                         >
                           <div>
@@ -1057,7 +1096,7 @@ export default function Home() {
           <div className="card animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 pb-4 border-b border-stone-200 gap-2 sm:gap-0">
               <h3 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 w-4 h-4 sm:w-5 sm:h-5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--pv-gold)] w-4 h-4 sm:w-5 sm:h-5">
                   <line x1="8" y1="6" x2="21" y2="6"></line>
                   <line x1="8" y1="12" x2="21" y2="12"></line>
                   <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -1086,7 +1125,7 @@ export default function Home() {
           <div className="card animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 pb-4 border-b border-stone-200 gap-2 sm:gap-0">
               <h3 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 w-4 h-4 sm:w-5 sm:h-5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--pv-gold)] w-4 h-4 sm:w-5 sm:h-5">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
@@ -1099,7 +1138,7 @@ export default function Home() {
                 <input
                   type="checkbox"
                   id="applyIRPF"
-                  className="w-5 h-5 accent-teal-600"
+                  className="w-5 h-5 accent-[var(--pv-gold)]"
                   checked={invoiceData.applyIRPF}
                   onChange={(e) => setInvoiceData(prev => ({ ...prev, applyIRPF: e.target.checked }))}
                 />
