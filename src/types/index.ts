@@ -30,6 +30,7 @@ export interface InvoiceItem {
 }
 
 export type PaymentMethod = 'tarjeta' | 'efectivo' | 'transferencia';
+export type DocumentType = 'invoice' | 'proforma';
 
 export interface InvoiceData {
   number: string;
@@ -47,11 +48,15 @@ export interface Settings {
   series: string;
   nextNumber: number;
   brandName: string;
+  proformaSeries?: string;
+  proformaNextNumber?: number;
+  proformaBrandName?: string;
 }
 
 export interface InvoiceRecord {
   id: string;
   createdAt: string;
+  type?: DocumentType;
   data: InvoiceData;
   brandName?: string;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings } from '@/types';
+import { DocumentType, Settings } from '@/types';
 import { storage } from '@/lib/storage';
 
 interface SettingsModalProps {
@@ -10,10 +10,19 @@ interface SettingsModalProps {
   onSave: (settings: Settings) => void;
   onLogoChange: (logo: string | null) => void;
   onClearAll: () => void;
+  documentType: DocumentType;
 }
 
-export function SettingsModal({ isOpen, onClose, onSave, onLogoChange, onClearAll }: SettingsModalProps) {
-  const [settings, setSettings] = useState<Settings>({ series: '2025-', nextNumber: 1, brandName: 'Factura' });
+export function SettingsModal({ isOpen, onClose, onSave, onLogoChange, onClearAll, documentType }: SettingsModalProps) {
+  const [settings, setSettings] = useState<Settings>({
+    series: 'F-2026-',
+    nextNumber: 1,
+    brandName: 'Factura',
+    proformaSeries: 'P-2026-',
+    proformaNextNumber: 1,
+    proformaBrandName: 'Factura proforma',
+  });
+  const isProforma = documentType === 'proforma';
 
   useEffect(() => {
     setSettings(storage.getSettings());
@@ -63,16 +72,19 @@ export function SettingsModal({ isOpen, onClose, onSave, onLogoChange, onClearAl
 
         <div className="p-6 space-y-6">
           <div>
-            <div className="section-title">Serie de facturación</div>
+            <div className="section-title">Serie de {isProforma ? 'proformas' : 'facturación'}</div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="form-label block">Prefijo de serie</label>
                 <input
                   type="text"
                   className="form-input"
-                  value={settings.series}
-                  onChange={(e) => setSettings({ ...settings, series: e.target.value })}
-                  placeholder="2025-"
+                  value={isProforma ? settings.proformaSeries || 'P-2026-' : settings.series}
+                  onChange={(e) => setSettings(isProforma
+                    ? { ...settings, proformaSeries: e.target.value }
+                    : { ...settings, series: e.target.value }
+                  )}
+                  placeholder={isProforma ? 'P-2026-' : 'F-2026-'}
                 />
               </div>
               <div>
@@ -80,8 +92,11 @@ export function SettingsModal({ isOpen, onClose, onSave, onLogoChange, onClearAl
                 <input
                   type="number"
                   className="form-input"
-                  value={settings.nextNumber}
-                  onChange={(e) => setSettings({ ...settings, nextNumber: parseInt(e.target.value) || 1 })}
+                  value={isProforma ? settings.proformaNextNumber || 1 : settings.nextNumber}
+                  onChange={(e) => setSettings(isProforma
+                    ? { ...settings, proformaNextNumber: parseInt(e.target.value) || 1 }
+                    : { ...settings, nextNumber: parseInt(e.target.value) || 1 }
+                  )}
                   min="1"
                 />
               </div>
@@ -93,9 +108,12 @@ export function SettingsModal({ isOpen, onClose, onSave, onLogoChange, onClearAl
             <input
               type="text"
               className="form-input"
-              value={settings.brandName}
-              onChange={(e) => setSettings({ ...settings, brandName: e.target.value })}
-              placeholder="Factura"
+              value={isProforma ? settings.proformaBrandName || 'Factura proforma' : settings.brandName}
+              onChange={(e) => setSettings(isProforma
+                ? { ...settings, proformaBrandName: e.target.value }
+                : { ...settings, brandName: e.target.value }
+              )}
+              placeholder={isProforma ? 'Factura proforma' : 'Factura'}
             />
           </div>
 

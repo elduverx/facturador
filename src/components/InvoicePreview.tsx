@@ -1,19 +1,32 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { InvoiceData } from '@/types';
+import { DocumentType, InvoiceData } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/storage';
 
 interface InvoicePreviewProps {
   data: InvoiceData;
+  documentType: DocumentType;
   logo: string | null;
   brandName: string;
   onLogoClick: () => void;
   onBrandNameChange: (value: string) => void;
 }
 
+const normalizeDisplayText = (value?: string) => {
+  if (!value) return '';
+  return value
+    .replace(/([a-záéíóúüñ])([A-ZÁÉÍÓÚÜÑ])/g, '$1 $2')
+    .replace(/([A-Za-zÁÉÍÓÚÜÑáéíóúüñ])(\d)/g, '$1 $2')
+    .replace(/(\d)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ])/g, '$1 $2')
+    .replace(/\bS\.?\s*L\.?\b/g, 'S.L.')
+    .replace(/([A-Za-zÁÉÍÓÚÜÑáéíóúüñ])\s+(S\.L\.)/g, '$1, $2')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
+
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
-  ({ data, logo, brandName, onLogoClick, onBrandNameChange }, ref) => {
+  ({ data, documentType, logo, brandName, onLogoClick, onBrandNameChange }, ref) => {
     const subtotal = data.items.reduce((acc, item) => acc + item.quantity * item.price, 0);
     const totalIVA = data.items.reduce((acc, item) => {
       const base = item.quantity * item.price;
@@ -26,6 +39,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       efectivo: 'Efectivo',
       transferencia: 'Transferencia bancaria',
     }[data.paymentMethod];
+    const isProforma = documentType === 'proforma';
+    const documentLabel = isProforma ? 'Factura proforma' : 'Factura';
+    const legalText = isProforma
+      ? 'Documento proforma sin validez fiscal como factura.'
+      : 'Factura emitida conforme a la normativa espanola de facturacion (RD 1619/2012)';
+    const uniqueIvaRates = Array.from(new Set(data.items.map((item) => item.iva)));
+    const ivaLabel = uniqueIvaRates.length === 1 ? `IVA ${uniqueIvaRates[0]}%` : 'IVA';
 
     return (
       <div className="invoice-preview-frame">
@@ -52,7 +72,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   value={brandName}
                   onChange={(e) => onBrandNameChange(e.target.value)}
                   className="w-full border-0 bg-transparent p-0 text-right text-3xl text-[var(--pv-gold)] focus:outline-none sm:text-4xl"
-                  placeholder="Factura"
+                  placeholder={documentLabel}
                   title="Editar nombre"
                 />
               </h2>
@@ -62,7 +82,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
           <div className="invoice-meta-grid">
             <div className="meta-item">
-              <label>Factura</label>
+              <label>{documentLabel} nº</label>
               <span>{data.number || '---'}</span>
             </div>
             <div className="meta-item">
@@ -78,17 +98,17 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <div className="invoice-parties">
             <div className="party-block">
               <h4>Emisor</h4>
-              <p className="name">{data.emisor.name || '---'}</p>
+              <p className="name">{normalizeDisplayText(data.emisor.name) || '---'}</p>
               <p>NIF: {data.emisor.nif || '---'}</p>
-              <p>{data.emisor.address || '---'}</p>
-              <p>{[data.emisor.cp, data.emisor.city, data.emisor.province].filter(Boolean).join(', ') || '---'}</p>
+              <p>{normalizeDisplayText(data.emisor.address) || '---'}</p>
+              <p>{normalizeDisplayText([data.emisor.cp, data.emisor.city, data.emisor.province].filter(Boolean).join(', ')) || '---'}</p>
             </div>
             <div className="party-block">
               <h4>Cliente</h4>
-              <p className="name">{data.client.name || '---'}</p>
+              <p className="name">{normalizeDisplayText(data.client.name) || '---'}</p>
               <p>NIF: {data.client.nif || '---'}</p>
-              <p>{data.client.address || '---'}</p>
-              <p>{[data.client.cp, data.client.city, data.client.province].filter(Boolean).join(', ') || '---'}</p>
+              <p>{normalizeDisplayText(data.client.address) || '---'}</p>
+              <p>{normalizeDisplayText([data.client.cp, data.client.city, data.client.province].filter(Boolean).join(', ')) || '---'}</p>
             </div>
           </div>
 
@@ -105,7 +125,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             <tbody>
               {data.items.map((item) => (
                 <tr key={item.id}>
-                  <td className="desc">{item.description || '---'}</td>
+                  <td className="desc">{normalizeDisplayText(item.description) || '---'}</td>
                   <td>{item.quantity}</td>
                   <td>{formatCurrency(item.price)}</td>
                   <td>{item.iva}%</td>
@@ -122,7 +142,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="totals-row">
-                <span>IVA</span>
+                <span>{ivaLabel}</span>
                 <span>{formatCurrency(totalIVA)}</span>
               </div>
               {data.applyIRPF && (
@@ -144,11 +164,11 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <p>{paymentLabel}</p>
               {data.paymentMethod === 'transferencia' && <p>IBAN: {data.emisor.iban || '---'}</p>}
             </div>
-            {data.notes && <div className="invoice-notes">{data.notes}</div>}
+            {data.notes && <div className="invoice-notes">{normalizeDisplayText(data.notes)}</div>}
           </div>
 
           <div className="legal-text">
-            Factura emitida conforme a la normativa espanola de facturacion (RD 1619/2012)
+            {legalText}
           </div>
         </div>
       </div>

@@ -91,8 +91,8 @@ export function HomeShell() {
               <ShieldCheck className="text-white w-6 h-6" />
             </div>
             <div>
-              <div className="font-roman text-xl font-bold tracking-tight text-[var(--pv-navy)]">PV ABOGADAS</div>
-              <p className="text-[10px] uppercase tracking-widest text-[var(--pv-gold)] font-bold">Extranjería e Inmigración</p>
+              <div className="font-roman text-xl font-bold tracking-tight text-[var(--pv-navy)]">IURIS EXTRANJERÍA</div>
+              <p className="text-[10px] uppercase tracking-widest text-[var(--pv-gold)] font-bold">Despacho de Abogados</p>
             </div>
           </a>
           <HomeNavbar />
@@ -113,11 +113,11 @@ export function HomeShell() {
                 Especialistas
               </div>
               <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-[var(--pv-navy)] font-roman leading-tight mb-4 sm:mb-8 uppercase tracking-tighter">
-                Expertas en <span className="text-[var(--pv-gold)]">Nacionalidad y Residencias</span>
+                Especialistas en <span className="text-[var(--pv-gold)]">Extranjería e Inmigración</span>
               </h1>
               <p className="text-sm sm:text-lg lg:text-xl text-[var(--pv-navy)] opacity-70 leading-relaxed mb-6 sm:mb-10 max-w-xl mx-auto lg:mx-0">
-                Asilo y Arraigos · Derecho Familiar · Representación en toda España. <br className="hidden sm:block" />
-                <span className="font-bold text-[var(--pv-gold)]">Tu seguridad jurídica es nuestra prioridad.</span>
+                Resoluciones favorables en Nacionalidad, Arraigos y Reagrupación Familiar. <br className="hidden sm:block" />
+                <span className="font-bold text-[var(--pv-gold)]">Asesoramiento jurídico integral en España.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                 <a href="/reservar" className="btn-roman px-6 py-3.5 text-base w-full sm:hidden">
@@ -137,7 +137,7 @@ export function HomeShell() {
             <div className="relative mt-2 hidden sm:block lg:mt-0">
               <div className="neo-card !p-1 bg-gradient-to-br from-[var(--pv-gold)] to-[var(--pv-gold-light)] rounded-[2.5rem] shadow-2xl">
                 <div className="bg-[var(--pv-marble)] rounded-[2.3rem] p-6 sm:p-10">
-                  <h2 className="font-roman text-xl sm:text-2xl font-bold text-[var(--pv-navy)] mb-8 uppercase tracking-wide border-b border-[var(--pv-gold)] pb-4 text-center sm:text-left">Nuestro Método</h2>
+                  <h2 className="font-roman text-xl sm:text-2xl font-bold text-[var(--pv-navy)] mb-8 uppercase tracking-wide border-b border-[var(--pv-gold)] pb-4 text-center sm:text-left">Nuestra Metodología</h2>
                   <div className="space-y-6 sm:space-y-8">
                     {PROCESS.map((step) => (
                       <div key={step.num} className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start text-center sm:text-left">
@@ -185,23 +185,23 @@ export function HomeShell() {
         {/* Sobre Nosotras Section */}
         <section id="nosotras" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 lg:py-32">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-             <div className="order-2 lg:order-1">
+              <div className="order-2 lg:order-1">
                 <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] text-xs font-bold uppercase tracking-widest mb-6 border border-[var(--pv-gold)]/20">
                   <ShieldCheck size={14} />
-                  Sobre Nosotras
+                  El Despacho
                 </div>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight mb-8">
-                  Detrás de cada expediente hay <span className="text-[var(--pv-gold)]">una historia</span>
+                  Excelencia legal para <span className="text-[var(--pv-gold)]">tu tranquilidad</span>
                 </h2>
                 <p className="text-base sm:text-lg text-[var(--pv-navy)] opacity-70 leading-relaxed mb-6">
-                  Somos un equipo de abogadas apasionadas por defender los derechos de la comunidad inmigrante en España. Con más de una década de experiencia, hemos ayudado a miles de personas a regularizar su situación, reunirse con sus familias y construir su futuro.
+                  Somos un bufete de abogados especializado en Derecho de Extranjería e Inmigración. Llevamos más de una década asesorando a ciudadanos extranjeros, inversores y empresas en sus procesos de establecimiento y residencia en España.
                 </p>
                 <p className="text-base sm:text-lg text-[var(--pv-navy)] opacity-70 leading-relaxed mb-8">
-                  Entendemos que detrás de cada trámite hay una familia, un sueño, una vida entera. Por eso ofrecemos un trato cercano, transparente y personalizado.
+                  Nuestra filosofía se basa en el rigor jurídico, la honestidad y la atención personalizada. Analizamos cada expediente de forma exhaustiva para garantizar la máxima probabilidad de éxito ante la Administración.
                 </p>
                 <div className="border-l-4 border-[var(--pv-gold)] pl-6 py-2">
                   <p className="font-roman text-lg sm:text-xl text-[var(--pv-navy)] italic opacity-90">
-                    "Donde otros ven trámites burocráticos, nosotras vemos la construcción de tu futuro."
+                    "La especialización y el conocimiento profundo de la normativa de extranjería son la clave del éxito en nuestros expedientes."
                   </p>
                 </div>
              </div>
@@ -264,13 +264,13 @@ export function HomeShell() {
             <div className="lg:sticky lg:top-32 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] text-xs font-bold uppercase tracking-widest mb-6 border border-[var(--pv-gold)]/20">
                 <Calendar size={14} />
-                Proceso
+                Procedimiento
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight mb-6">
-                Una estrategia clara antes de mover expediente
+                Rigor jurídico en cada etapa del proceso
               </h2>
               <p className="text-base sm:text-lg text-[var(--pv-navy)] opacity-70 leading-relaxed mb-8">
-                No convertimos tu caso en una lista mecanica de pasos. Primero entendemos el contexto, despues elegimos la via mas defendible y, cuando hay base documental, gestionamos el tramite con control de plazos y comunicacion clara.
+                Antes de iniciar cualquier trámite administrativo, realizamos un estudio de viabilidad exhaustivo. Solo presentamos solicitudes con fundamento legal sólido, evitando así denegaciones y pérdidas de tiempo para nuestros clientes.
               </p>
               <a href="/reservar" className="btn-roman inline-flex px-8 py-4 w-full sm:hidden">
                 Empezar ahora
@@ -364,15 +364,26 @@ export function HomeShell() {
         </section>
 
         {/* Booking Section */}
-        <section id="reservar" className="hidden sm:block bg-[var(--pv-marble)] py-14 sm:py-20 lg:py-28 border-t border-[var(--glass-border)] scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="neo-card !p-4 sm:!p-6 lg:!p-8 xl:!p-10 shadow-2xl overflow-hidden">
-              <div className="text-center mb-8 lg:mb-10 max-w-2xl mx-auto">
-                <h2 className="text-3xl sm:text-4xl font-bold font-roman text-[var(--pv-navy)] uppercase mb-4">Agenda tu Consulta</h2>
-                <p className="text-sm sm:text-base text-[var(--pv-navy)] opacity-70">Elige el servicio y selecciona el mejor momento para tu defensa legal.</p>
+        <section id="reservar" className="bg-[var(--pv-navy)] py-14 sm:py-20 lg:py-32 border-t border-[var(--pv-gold)]/30 scroll-mt-24 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-12 lg:mb-16 max-w-3xl mx-auto">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--pv-gold)]/20 mb-6 border border-[var(--pv-gold)]/50">
+                <Calendar className="text-[var(--pv-gold)] w-8 h-8" />
               </div>
-              <div className="overflow-visible">
-                <BookingWizard />
+              <h2 className="text-3xl sm:text-5xl font-bold font-roman text-white uppercase mb-6 tracking-tight">Agenda tu Consulta Legal</h2>
+              <p className="text-base sm:text-lg text-white/70 leading-relaxed">
+                Selecciona a nuestro equipo jurídico, elige tu trámite y reserva el mejor horario. 
+                Recibirás confirmación inmediata y un listado de la documentación necesaria para la primera cita.
+              </p>
+            </div>
+            
+            <div className="neo-card !p-0 sm:!p-2 lg:!p-4 xl:!p-6 shadow-2xl overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] sm:rounded-[3rem]">
+              <div className="bg-[var(--pv-marble)] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden">
+                <div className="overflow-visible p-4 sm:p-6 lg:p-8 xl:p-12">
+                  <BookingWizard />
+                </div>
               </div>
             </div>
           </div>
@@ -386,10 +397,10 @@ export function HomeShell() {
             <div className="w-10 h-10 bg-[var(--pv-gold)] rounded-full flex items-center justify-center shadow-lg transform rotate-12 border border-[var(--pv-gold)]">
               <ShieldCheck className="text-white w-6 h-6" />
             </div>
-            <div className="font-roman text-lg font-bold tracking-tight text-white">PV ABOGADAS</div>
+            <div className="font-roman text-lg font-bold tracking-tight text-white">IURIS EXTRANJERÍA</div>
           </div>
           <div className="text-xs uppercase tracking-[0.3em] opacity-40 font-bold text-white text-center md:text-left">
-            &copy; {new Date().getFullYear()} Consultorio de Extranjería - Todos los derechos reservados
+            &copy; {new Date().getFullYear()} Iuris Extranjería - Todos los derechos reservados
           </div>
           <div className="flex gap-6 opacity-60 text-sm">
              <a href="#" className="hover:text-[var(--pv-gold)] transition-colors text-white">Aviso Legal</a>

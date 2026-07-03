@@ -1,4 +1,4 @@
-import { Emisor, Client, Settings, InvoiceRecord } from '@/types';
+import { DocumentType, Emisor, Client, Settings, InvoiceRecord } from '@/types';
 
 const KEYS = {
   EMISOR: 'facturadorEmisor',
@@ -10,9 +10,12 @@ const KEYS = {
 };
 
 const DEFAULT_SETTINGS: Settings = {
-  series: '2025-',
+  series: 'F-2026-',
   nextNumber: 1,
   brandName: 'Factura',
+  proformaSeries: 'P-2026-',
+  proformaNextNumber: 1,
+  proformaBrandName: 'Factura proforma',
 };
 
 type SessionPayload = {
@@ -211,14 +214,28 @@ export const storage = {
     storage.saveSettings(settings);
   },
 
-  getInvoices: (): InvoiceRecord[] => {
+  incrementDocumentNumber: (type: DocumentType): void => {
+    const settings = storage.getSettings();
+    if (type === 'proforma') {
+      settings.proformaNextNumber = (settings.proformaNextNumber || 1) + 1;
+    } else {
+      settings.nextNumber += 1;
+    }
+    storage.saveSettings(settings);
+  },
+
+  getInvoices: (type?: DocumentType): InvoiceRecord[] => {
     if (typeof window === 'undefined') return [];
-    return getJSON<InvoiceRecord[]>(KEYS.INVOICES, []);
+    const invoices = getJSON<InvoiceRecord[]>(KEYS.INVOICES, []);
+    if (!type) return invoices;
+    return invoices.filter(invoice => (invoice.type || 'invoice') === type);
   },
 
   saveInvoice: (invoice: InvoiceRecord): void => {
+    const invoiceType = invoice.type || 'invoice';
     const invoices = storage.getInvoices();
     const existingIndex = invoices.findIndex(existing =>
+      (existing.type || 'invoice') === invoiceType &&
       existing.data.number &&
       existing.data.number === invoice.data.number &&
       existing.data.client.nif === invoice.data.client.nif
@@ -234,9 +251,9 @@ export const storage = {
     persistSession({ invoices });
   },
 
-  getInvoicesByClient: (nif: string): InvoiceRecord[] => {
+  getInvoicesByClient: (nif: string, type?: DocumentType): InvoiceRecord[] => {
     return storage.getInvoices()
-      .filter(invoice => invoice.data.client.nif === nif)
+      .filter(invoice => invoice.data.client.nif === nif && (!type || (invoice.type || 'invoice') === type))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
@@ -277,9 +294,20 @@ export const formatCurrency = (num: number): string => {
 export const formatDate = (dateStr: string): string => {
   if (!dateStr) return '--/--/----';
   const date = new Date(dateStr);
-  return date.toLocaleDateString('es-ES');
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 };
 
 export const generateInvoiceNumber = (settings: Settings): string => {
   return settings.series + String(settings.nextNumber).padStart(3, '0');
+};
+
+export const generateDocumentNumber = (settings: Settings, type: DocumentType): string => {
+  if (type === 'proforma') {
+    return (settings.proformaSeries || 'P-2026-') + String(settings.proformaNextNumber || 1).padStart(3, '0');
+  }
+  return generateInvoiceNumber(settings);
 };

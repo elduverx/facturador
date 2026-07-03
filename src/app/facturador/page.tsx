@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { InvoiceData, InvoiceItem, Emisor, Client, Settings, InvoiceRecord } from '@/types';
-import { storage, generateInvoiceNumber, formatCurrency, formatDate } from '@/lib/storage';
+import { DocumentType, InvoiceData, InvoiceItem, Emisor, Client, Settings, InvoiceRecord } from '@/types';
+import { storage, generateDocumentNumber, formatCurrency, formatDate } from '@/lib/storage';
 import { InvoicePreview } from '@/components/InvoicePreview';
 import { SettingsModal } from '@/components/SettingsModal';
 import { ItemsTable } from '@/components/ItemsTable';
@@ -20,8 +20,38 @@ const defaultItem: InvoiceItem = {
   id: '1', description: '', quantity: 1, price: 0, iva: 21
 };
 
+const documentCopy = {
+  invoice: {
+    navLabel: 'Facturas',
+    title: 'Factura',
+    dataTitle: 'Datos de la factura',
+    numberLabel: 'Número de factura *',
+    historyEmpty: 'No hay facturas guardadas.',
+    clientEmpty: 'Sin facturas para este cliente.',
+    historyTitle: 'Historial de facturación',
+    fileFallback: 'factura',
+    emailSubject: 'Factura',
+    emailArticle: 'la factura',
+    whatsappLine: 'Te envio la factura',
+  },
+  proforma: {
+    navLabel: 'Proformas',
+    title: 'Factura proforma',
+    dataTitle: 'Datos de la proforma',
+    numberLabel: 'Número de proforma *',
+    historyEmpty: 'No hay proformas guardadas.',
+    clientEmpty: 'Sin proformas para este cliente.',
+    historyTitle: 'Historial de proformas',
+    fileFallback: 'proforma',
+    emailSubject: 'Factura proforma',
+    emailArticle: 'la factura proforma',
+    whatsappLine: 'Te envio la factura proforma',
+  },
+} satisfies Record<DocumentType, Record<string, string>>;
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [documentType, setDocumentType] = useState<DocumentType>('proforma');
   const [activeTab, setActiveTab] = useState<'emisor' | 'cliente' | 'historial'>('emisor');
   const [showSettings, setShowSettings] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -31,7 +61,14 @@ export default function Home() {
   const [historyClients, setHistoryClients] = useState<Client[]>([]);
   const [selectedHistoryClient, setSelectedHistoryClient] = useState<Client | null>(null);
   const [historyInvoices, setHistoryInvoices] = useState<InvoiceRecord[]>([]);
-  const [settings, setSettings] = useState<Settings>({ series: '2025-', nextNumber: 1, brandName: 'Factura' });
+  const [settings, setSettings] = useState<Settings>({
+    series: 'F-2026-',
+    nextNumber: 1,
+    brandName: 'Factura',
+    proformaSeries: 'P-2026-',
+    proformaNextNumber: 1,
+    proformaBrandName: 'Factura proforma',
+  });
   
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     number: '',
@@ -55,7 +92,6 @@ export default function Home() {
     let active = true;
 
     const loadSession = async () => {
-      setMounted(true);
       await storage.syncSession();
 
       const savedEmisor = storage.getEmisor();
@@ -70,10 +106,11 @@ export default function Home() {
       setSettings(savedSettings);
       setSavedClients(recentClients);
       setLogo(savedLogo);
+      setMounted(true);
 
       setInvoiceData(prev => ({
         ...prev,
-        number: generateInvoiceNumber(savedSettings),
+        number: generateDocumentNumber(savedSettings, documentType),
         date: today,
         emisor: savedEmisor || emptyEmisor,
       }));
@@ -89,12 +126,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    setInvoiceData(prev => ({
+      ...prev,
+      number: generateDocumentNumber(settings, documentType),
+    }));
+    setSelectedHistoryClient(null);
+    setHistoryInvoices([]);
+    refreshHistory(documentType);
+  }, [documentType, mounted]);
+
+  useEffect(() => {
     if (!selectedHistoryClient) {
       setHistoryInvoices([]);
       return;
     }
-    setHistoryInvoices(storage.getInvoicesByClient(selectedHistoryClient.nif));
-  }, [selectedHistoryClient]);
+    setHistoryInvoices(storage.getInvoicesByClient(selectedHistoryClient.nif, documentType));
+  }, [selectedHistoryClient, documentType]);
 
   useEffect(() => {
     if (!showMobileMenu) return;
@@ -215,6 +263,11 @@ export default function Home() {
     return { subtotal, totalIVA, irpfAmount, total };
   };
 
+  const getIvaLabel = (data: InvoiceData) => {
+    const uniqueIvaRates = Array.from(new Set(data.items.map((item) => item.iva)));
+    return uniqueIvaRates.length === 1 ? `IVA ${uniqueIvaRates[0]}%` : 'IVA';
+  };
+
   const isInvoiceReady = (data: InvoiceData) => {
     const hasEmisor = data.emisor.name && data.emisor.nif;
     const hasClient = data.client.name && data.client.nif;
@@ -236,15 +289,21 @@ export default function Home() {
       .map((entry) => entry.client);
   };
 
-  const refreshHistory = () => {
-    const invoices = storage.getInvoices();
+  const getBrandName = (type: DocumentType = documentType) => {
+    return type === 'proforma'
+      ? settings.proformaBrandName || 'Factura proforma'
+      : settings.brandName || 'Factura';
+  };
+
+  const refreshHistory = (type: DocumentType = documentType) => {
+    const invoices = storage.getInvoices(type);
     const clients = buildHistoryClients(invoices);
     setHistoryClients(clients);
 
     if (selectedHistoryClient) {
       const exists = clients.some(client => client.nif === selectedHistoryClient.nif);
       if (exists) {
-        setHistoryInvoices(storage.getInvoicesByClient(selectedHistoryClient.nif));
+        setHistoryInvoices(storage.getInvoicesByClient(selectedHistoryClient.nif, type));
       } else {
         setSelectedHistoryClient(clients[0] || null);
       }
@@ -265,8 +324,9 @@ export default function Home() {
     const record: InvoiceRecord = {
       id: `${invoiceData.number}-${invoiceData.client.nif}`,
       createdAt: new Date().toISOString(),
+      type: documentType,
       data: { ...invoiceData },
-      brandName: settings.brandName,
+      brandName: getBrandName(),
     };
 
     storage.saveInvoice(record);
@@ -276,7 +336,9 @@ export default function Home() {
   };
 
   const handleBrandNameChange = (value: string) => {
-    const updated = { ...settings, brandName: value };
+    const updated = documentType === 'proforma'
+      ? { ...settings, proformaBrandName: value }
+      : { ...settings, brandName: value };
     setSettings(updated);
     storage.saveSettings(updated);
   };
@@ -333,7 +395,7 @@ export default function Home() {
             .invoice-items-table th:last-child { border-radius: 0 8px 8px 0; }
             .invoice-items-table td { border-bottom: 1px solid #e7e5e4; padding: 16px 12px; color: rgba(22, 38, 53, 0.75); }
             .invoice-items-table th:not(:first-child), .invoice-items-table td:not(:first-child) { text-align: right; }
-            .invoice-items-table .desc { color: #0a1118; font-weight: 700; }
+            .invoice-items-table .desc { color: #0a1118; font-weight: 700; overflow-wrap: anywhere; white-space: pre-wrap; }
             .invoice-summary { display: flex; justify-content: flex-end; }
             .totals-box { width: 300px; }
             .totals-row { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e7e5e4; padding: 10px 0; color: rgba(22, 38, 53, 0.7); font-size: 14px; }
@@ -342,7 +404,7 @@ export default function Home() {
             .invoice-footer { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e7e5e4; }
             .payment-info { color: rgba(22, 38, 53, 0.7); font-size: 14px; line-height: 1.6; }
             .payment-info p { margin: 0; }
-            .invoice-notes { border-radius: 12px; background: #f4f7f9; padding: 16px; color: rgba(22, 38, 53, 0.7); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+            .invoice-notes { border-radius: 12px; background: #f4f7f9; padding: 16px; color: rgba(22, 38, 53, 0.7); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
             .legal-text { position: absolute; left: 64px; right: 64px; bottom: 40px; border-top: 1px solid #e7e5e4; padding-top: 16px; color: rgba(22, 38, 53, 0.35); text-align: center; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
           `;
           doc.head.appendChild(style);
@@ -393,7 +455,8 @@ export default function Home() {
 
   const generatePDFBlobFromData = async (
     data: InvoiceData,
-    brandNameValue: string
+    brandNameValue: string,
+    type: DocumentType
   ): Promise<Blob | null> => {
     const container = document.createElement('div');
     container.style.position = 'fixed';
@@ -411,12 +474,13 @@ export default function Home() {
 
     const previewRef = createRef<HTMLDivElement>();
     const root = createRoot(container);
-    const safeBrandName = brandNameValue || 'Factura';
+    const safeBrandName = brandNameValue || documentCopy[type].title;
 
     root.render(
       <InvoicePreview
         ref={previewRef}
         data={data}
+        documentType={type}
         logo={logo}
         brandName={safeBrandName}
         onLogoClick={() => {}}
@@ -451,7 +515,7 @@ export default function Home() {
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = `${invoiceData.number || 'factura'}.pdf`;
+    link.download = `${invoiceData.number || documentCopy[documentType].fileFallback}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -460,24 +524,25 @@ export default function Home() {
 
     recordInvoice(true);
 
-    storage.incrementInvoiceNumber();
+    storage.incrementDocumentNumber(documentType);
     const newSettings = storage.getSettings();
     setSettings(newSettings);
     setInvoiceData(prev => ({
       ...prev,
-      number: generateInvoiceNumber(newSettings),
+      number: generateDocumentNumber(newSettings, documentType),
     }));
   };
 
   const downloadInvoiceRecord = async (record: InvoiceRecord) => {
-    const brandNameValue = record.brandName || settings.brandName;
-    const pdfBlob = await generatePDFBlobFromData(record.data, brandNameValue);
+    const type = record.type || 'invoice';
+    const brandNameValue = record.brandName || getBrandName(type);
+    const pdfBlob = await generatePDFBlobFromData(record.data, brandNameValue, type);
     if (!pdfBlob) return;
 
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = `${record.data.number || 'factura'}.pdf`;
+    link.download = `${record.data.number || documentCopy[type].fileFallback}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -497,7 +562,7 @@ export default function Home() {
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = `${invoiceData.number || 'factura'}.pdf`;
+    link.download = `${invoiceData.number || documentCopy[documentType].fileFallback}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -507,8 +572,8 @@ export default function Home() {
 
     const { subtotal, totalIVA, irpfAmount, total } = calculateTotals(invoiceData);
 
-    const subject = invoiceData.number ? `Factura ${invoiceData.number}` : 'Factura';
-    const invoiceLabel = invoiceData.number ? `la factura ${invoiceData.number}` : 'la factura';
+    const subject = invoiceData.number ? `${documentCopy[documentType].emailSubject} ${invoiceData.number}` : documentCopy[documentType].emailSubject;
+    const invoiceLabel = invoiceData.number ? `${documentCopy[documentType].emailArticle} ${invoiceData.number}` : documentCopy[documentType].emailArticle;
     const greeting = invoiceData.client.name ? `Hola ${invoiceData.client.name},` : 'Hola,';
     const body = [
       greeting,
@@ -518,7 +583,7 @@ export default function Home() {
       '',
       'Detalles:',
       `Base imponible: ${formatCurrency(subtotal)}`,
-      `IVA: ${formatCurrency(totalIVA)}`,
+      `${getIvaLabel(invoiceData)}: ${formatCurrency(totalIVA)}`,
       invoiceData.applyIRPF ? `Retencion IRPF (${invoiceData.irpfPercent}%): -${formatCurrency(irpfAmount)}` : null,
       `Total: ${formatCurrency(total)}`,
       '',
@@ -547,7 +612,7 @@ export default function Home() {
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = `${invoiceData.number || 'factura'}.pdf`;
+    link.download = `${invoiceData.number || documentCopy[documentType].fileFallback}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -560,11 +625,11 @@ export default function Home() {
     const message = [
       `Hola ${invoiceData.client.name},`,
       '',
-      `Te envio la factura *${invoiceData.number}*`,
+      `${documentCopy[documentType].whatsappLine} *${invoiceData.number}*`,
       '',
       'Detalles:',
       `Base imponible: ${formatCurrency(subtotal)}`,
-      `IVA: ${formatCurrency(totalIVA)}`,
+      `${getIvaLabel(invoiceData)}: ${formatCurrency(totalIVA)}`,
       invoiceData.applyIRPF ? `Retencion IRPF (${invoiceData.irpfPercent}%): -${formatCurrency(irpfAmount)}` : null,
       '',
       `Total: ${formatCurrency(total)}`,
@@ -599,6 +664,18 @@ export default function Home() {
           <div className="min-w-0">
             <h1 className="font-roman text-xl sm:text-2xl font-bold uppercase leading-tight text-[var(--pv-ink)]">Facturador</h1>
             <span className="text-[10px] sm:text-xs text-[var(--pv-gold)] uppercase tracking-wider">Autonomos Espana</span>
+          </div>
+          <div className="hidden md:flex gap-1 rounded-xl bg-stone-100 p-1">
+            {(['proforma', 'invoice'] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setDocumentType(type)}
+                className={`tab min-w-28 text-xs ${documentType === type ? 'active' : ''}`}
+              >
+                {documentCopy[type].navLabel}
+              </button>
+            ))}
           </div>
           <div className="relative flex sm:hidden shrink-0 ml-2" ref={mobileMenuRef}>
             <button
@@ -687,6 +764,19 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="mb-4 flex gap-1 rounded-xl bg-stone-100 p-1 md:hidden">
+        {(['proforma', 'invoice'] as const).map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => setDocumentType(type)}
+            className={`tab text-xs ${documentType === type ? 'active' : ''}`}
+          >
+            {documentCopy[type].navLabel}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 sm:gap-6 lg:gap-8">
         {/* Form Area */}
         <div className="space-y-4 sm:space-y-6">
@@ -698,7 +788,7 @@ export default function Home() {
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
-                Datos de la Factura
+                {documentCopy[documentType].dataTitle}
               </h3>
               <span className={`status-badge text-xs ${isReady() ? 'ready' : 'draft'}`}>
                 {isReady() ? 'Lista' : 'Borrador'}
@@ -707,11 +797,11 @@ export default function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               <div>
-                <label className="form-label block text-xs sm:text-sm">Número de Factura *</label>
+                <label className="form-label block text-xs sm:text-sm">{documentCopy[documentType].numberLabel}</label>
                 <input
                   type="text"
                   className="form-input text-sm"
-                  placeholder="2025-001"
+                  placeholder={documentType === 'proforma' ? 'P-2026-009' : 'F-2026-009'}
                   value={invoiceData.number}
                   onChange={(e) => setInvoiceData(prev => ({ ...prev, number: e.target.value }))}
                 />
@@ -1004,7 +1094,7 @@ export default function Home() {
             {activeTab === 'historial' && (
               <div className="space-y-3 sm:space-y-4">
                 {historyClients.length === 0 ? (
-                  <div className="text-sm text-stone-500">No hay facturas guardadas.</div>
+                  <div className="text-sm text-stone-500">{documentCopy[documentType].historyEmpty}</div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 sm:gap-6">
                     <div className="space-y-2">
@@ -1047,9 +1137,9 @@ export default function Home() {
                             </div>
                           </div>
                           <div>
-                            <div className="section-title">Historial de facturacion</div>
+                            <div className="section-title">{documentCopy[documentType].historyTitle}</div>
                             {historyInvoices.length === 0 ? (
-                              <div className="text-sm text-stone-500">Sin facturas para este cliente.</div>
+                              <div className="text-sm text-stone-500">{documentCopy[documentType].clientEmpty}</div>
                             ) : (
                               <div className="space-y-2">
                                 {historyInvoices.map((invoice) => {
@@ -1183,8 +1273,9 @@ export default function Home() {
           <InvoicePreview
             ref={invoiceRef}
             data={invoiceData}
+            documentType={documentType}
             logo={logo}
-            brandName={settings.brandName}
+            brandName={getBrandName()}
             onLogoClick={handleLogoClick}
             onBrandNameChange={handleBrandNameChange}
           />
@@ -1222,17 +1313,18 @@ export default function Home() {
           setSettings(newSettings);
           setInvoiceData(prev => ({
             ...prev,
-            number: generateInvoiceNumber(newSettings),
+            number: generateDocumentNumber(newSettings, documentType),
           }));
         }}
         onLogoChange={setLogo}
+        documentType={documentType}
         onClearAll={() => {
           const resetSettings = storage.getSettings();
           const today = new Date().toISOString().split('T')[0];
 
           setSettings(resetSettings);
           setInvoiceData({
-            number: generateInvoiceNumber(resetSettings),
+            number: generateDocumentNumber(resetSettings, documentType),
             date: today,
             paymentMethod: 'transferencia',
             emisor: emptyEmisor,
