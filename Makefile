@@ -1,4 +1,4 @@
-.PHONY: deploy build logs stop clean
+.PHONY: deploy build logs stop clean migrate seed
 
 deploy:
 	docker-compose up -d --build
@@ -15,3 +15,9 @@ stop:
 
 clean:
 	docker-compose down --rmi all --volumes
+
+migrate:
+	docker-compose exec pvabogadas-web npx prisma migrate deploy
+
+seed:
+	docker-compose exec pvabogadas-web npm run seed
