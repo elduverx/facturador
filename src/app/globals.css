@@ -399,3 +399,60 @@
 .glass-effect {
   @apply bg-white/40 backdrop-blur-md border border-white/30;
 }
+
+/* --- Premium Glass Theme Overrides --- */
+.theme-glass {
+  --pv-ink: #ffffff;
+  --pv-navy: rgba(255, 255, 255, 0.7);
+  --pv-marble: rgba(255, 255, 255, 0.03);
+}
+
+.theme-glass .neo-card {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-glass .neo-card:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.theme-glass .bg-white {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: white !important;
+}
+
+.theme-glass .bg-\[var\(--pv-marble\)\] {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+}
+
+.theme-glass .neo-input {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.theme-glass .neo-input:focus {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(197, 160, 89, 0.5) !important;
+}
+
+.theme-glass .text-\[var\(--pv-ink\)\] {
+  color: #ffffff !important;
+}
+
+.theme-glass .text-\[var\(--pv-navy\)\] {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.theme-glass .bg-blue-50, .theme-glass .bg-red-50, .theme-glass .bg-emerald-50, .theme-glass .bg-amber-50 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.theme-glass .border-white {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}

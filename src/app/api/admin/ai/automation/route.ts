@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateAdminAutomationPlan } from '@/lib/ai';
+import { getAdminAppointmentScope } from '@/lib/admin-scope';
 
 const CONFIDENCE_TO_CREATE_NOTE = 0.75;
 const NOTE_STATUSES = ['PENDING', 'IN_PROGRESS', 'WAITING', 'DONE'] as const;
@@ -21,12 +22,18 @@ export async function POST() {
     const toDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
     const duplicateWindow = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    const appointmentScope = await getAdminAppointmentScope();
     const [appointments, recentNotes] = await Promise.all([
       prisma.appointment.findMany({
         where: {
-          OR: [
-            { date: { gte: fromDate, lte: toDate } },
-            { createdAt: { gte: fromDate } },
+          AND: [
+            {
+              OR: [
+                { date: { gte: fromDate, lte: toDate } },
+                { createdAt: { gte: fromDate } },
+              ],
+            },
+            appointmentScope,
           ],
         },
         include: { service: true },

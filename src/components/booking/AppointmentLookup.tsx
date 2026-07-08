@@ -67,8 +67,13 @@ type PublicMatter = {
   }[];
 };
 
+import { AppointmentDetail } from './AppointmentDetail';
+
 interface AppointmentLookupProps {
   compact?: boolean;
+  glass?: boolean;
+  appointmentId?: string;
+  paymentSuccess?: boolean;
 }
 
 const statusLabels: Record<string, string> = {
@@ -76,7 +81,7 @@ const statusLabels: Record<string, string> = {
   IN_PROGRESS: 'En tramite',
   WAITING_ADMIN: 'Pendiente de respuesta',
   RESOLVED: 'Resuelto',
-  ARCHIVED: 'Archivado',
+  ARCHIVED: 'Finalizado',
 };
 
 const noteStatusLabels: Record<string, string> = {
@@ -86,7 +91,11 @@ const noteStatusLabels: Record<string, string> = {
   DONE: 'Completado',
 };
 
-export function AppointmentLookup({ compact = false }: AppointmentLookupProps) {
+export function AppointmentLookup({ compact = false, glass = false, appointmentId, paymentSuccess }: AppointmentLookupProps) {
+  if (appointmentId) {
+    return <AppointmentDetail appointmentId={appointmentId} paymentSuccess={paymentSuccess} />;
+  }
+
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -169,8 +178,10 @@ export function AppointmentLookup({ compact = false }: AppointmentLookupProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    const appointmentIdParam = params.get('appointmentId');
+    const documentIdParam = params.get('documentId');
     if (payment === 'success') {
-      setPortalNotice('Pago recibido correctamente. Hemos actualizado el estado de tu cita.');
+      setPortalNotice('Pago recibido. Estamos actualizando el estado.');
     }
     if (payment === 'error') {
       setPortalNotice('El pago no se completo. Puedes intentarlo de nuevo desde la seccion de citas.');
@@ -181,7 +192,20 @@ export function AppointmentLookup({ compact = false }: AppointmentLookupProps) {
       .then((res) => res.json())
       .then(async (data) => {
         if (!active) return;
-        if (data?.authenticated && data.email && data.phone) {
+        if (data?.authenticated && data.email) {
+          if (payment === 'success') {
+            await fetch('/api/payments/redsys/return-confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                appointmentId: appointmentIdParam,
+                documentId: documentIdParam,
+              }),
+            }).catch(() => undefined);
+          }
+
+          if (!data.phone) return;
+
           const query = { email: normalizeEmail(data.email), phone: normalizePhone(data.phone) };
           setEmail(query.email);
           setPhone(query.phone);
@@ -218,10 +242,10 @@ export function AppointmentLookup({ compact = false }: AppointmentLookupProps) {
     : '/reservar';
 
   return (
-    <div className={`${compact ? 'min-h-0 space-y-4' : 'space-y-8'} animate-fade-in`}>
+    <div className={`${compact ? 'min-h-0 space-y-4' : 'space-y-8'} animate-fade-in ${glass ? 'theme-glass' : ''}`}>
       {portalNotice && (
-        <div className={`p-4 rounded-xl font-bold border flex items-center gap-3 animate-fade-in ${portalNotice.includes('Error') ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}`}>
-          {portalNotice.includes('Error') ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+        <div className={`p-4 rounded-xl font-bold border flex items-center gap-3 animate-fade-in ${portalNotice.includes('completo') ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}`}>
+          {portalNotice.includes('completo') ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
           <span className="text-sm">{portalNotice}</span>
         </div>
       )}
@@ -308,392 +332,158 @@ export function AppointmentLookup({ compact = false }: AppointmentLookupProps) {
         </div>
       )}
 
-      {searched && (notes.length > 0 || results.length > 0 || documents.length > 0 || matters.length > 0) && lastQuery && (
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] gap-4 animate-fade-in">
-          <section className="neo-card !p-5 border-l-4 border-l-[var(--pv-gold)]">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-roman text-lg font-bold uppercase text-[var(--pv-ink)]">Notificaciones</h3>
-                <p className="text-xs text-[var(--pv-navy)]/60">Mensajes publicados por el despacho para tu expediente.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-xl bg-[var(--pv-marble)] px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)]">
-                  {notes.length} visibles
-                </span>
-                <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
-                  <CalendarPlus size={14} />
-                  Pedir cita
-                </a>
-              </div>
-            </div>
-
-            {notes.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[var(--pv-gold)]/20 bg-[var(--pv-marble)]/50 p-6 text-center">
-                <p className="text-xs font-bold uppercase tracking-widest text-[var(--pv-navy)]/40">Sin notificaciones nuevas</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {notes.slice(0, 5).map((note) => (
-                  <article key={note.id} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/40">
-                        {formatDateShort(note.createdAt.split('T')[0])}
-                      </span>
-                      <span className={`rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-widest ${
-                        note.status === 'DONE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                        note.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                        'bg-amber-50 text-amber-700 border-amber-100'
-                      }`}>
-                        {noteStatusLabels[note.status] || note.status}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--pv-navy)]">{note.content}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <aside className="space-y-4">
-            <section className="neo-card !p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--pv-gold)]/10 text-[var(--pv-gold)]">
-                  <Activity size={20} />
+      {searched && (results.length > 0 || documents.length > 0 || matters.length > 0) && lastQuery && (
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] gap-4 sm:gap-6 animate-fade-in mt-6">
+          
+          {/* LEFT COLUMN: Case Status & Documents */}
+          <div className="space-y-6">
+            
+            {/* Estado del Caso */}
+            <section className="neo-card !p-4 sm:!p-6 border-t-4 border-t-[var(--pv-gold)] shadow-xl">
+              <h3 className="font-roman text-lg font-bold uppercase tracking-widest text-[var(--pv-ink)] mb-4 flex flex-wrap items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] flex items-center justify-center">
+                  <Briefcase size={20} />
                 </div>
-                <div>
-                  <h3 className="font-roman text-sm font-bold uppercase tracking-widest text-[var(--pv-ink)]">Estado del caso</h3>
-                  <p className="text-xs text-[var(--pv-navy)]/55">Resumen actual</p>
-                </div>
-              </div>
+                Estado del Caso
+              </h3>
+              
               {latestMatter ? (
-                <div className="rounded-2xl bg-[var(--pv-marble)] p-4 shadow-inner">
-                  <div className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--pv-gold)]">{latestMatter.reference}</div>
-                  <div className="mt-1 font-roman text-base font-bold uppercase text-[var(--pv-ink)]">{latestMatter.title}</div>
-                  <div className="mt-3 inline-flex rounded-lg bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]">
+                <div className="rounded-2xl bg-[var(--pv-marble)] p-5 border border-white">
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--pv-gold)] mb-1">{latestMatter.reference}</div>
+                  <div className="font-roman text-xl font-bold uppercase text-[var(--pv-ink)]">{latestMatter.title}</div>
+                  <div className="mt-3 inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--pv-navy)] shadow-sm">
                     {statusLabels[latestMatter.status] || latestMatter.status}
                   </div>
-                  {latestMatter.summary && <p className="mt-3 text-xs leading-relaxed text-[var(--pv-navy)]/70">{latestMatter.summary}</p>}
+                  {latestMatter.summary && <p className="mt-4 text-sm leading-relaxed text-[var(--pv-navy)]/80">{latestMatter.summary}</p>}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--pv-gold)]/20 bg-[var(--pv-marble)]/50 p-4 text-xs font-bold uppercase tracking-widest text-[var(--pv-navy)]/40">
-                  Todavia no hay expediente publicado.
+                <div className="rounded-2xl border-2 border-dashed border-[var(--pv-gold)]/20 bg-[var(--pv-marble)]/50 p-6 text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--pv-navy)]/40">Todavía no hay expediente publicado.</p>
                 </div>
               )}
             </section>
 
-            <section className="neo-card !p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                  <CreditCard size={20} />
-                </div>
-                <div>
-                  <h3 className="font-roman text-sm font-bold uppercase tracking-widest text-[var(--pv-ink)]">Pagos</h3>
-                  <p className="text-xs text-[var(--pv-navy)]/55">{pendingPayments + pendingMatterPayments} pendiente(s)</p>
-                </div>
+            {/* Documentos */}
+            <section className="neo-card !p-4 sm:!p-6 shadow-xl">
+               <div className="mb-4">
+                 <h3 className="font-roman text-lg font-bold uppercase tracking-widest text-[var(--pv-ink)] flex flex-wrap items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <FileText size={20} />
+                    </div>
+                    Documentos
+                 </h3>
+                 <p className="text-xs text-[var(--pv-navy)]/60 mt-2 pl-13">Descarga los documentos, resoluciones o justificantes que te envíe la abogada.</p>
+               </div>
+              
+              <div className="bg-[var(--pv-marble)] rounded-2xl p-2 border border-white">
+                 <ClientDocumentUploader
+                    documents={documents}
+                    compact={false}
+                  />
               </div>
+            </section>
 
-              <div className="space-y-3">
-                {results
-                  .filter((appt) => appt.paymentStatus !== 'PAID' && appt.status !== 'CANCELLED')
-                  .map((appt) => (
-                    <div key={appt.id} className="rounded-xl bg-white p-3 shadow-sm">
-                      <div className="text-xs font-bold text-[var(--pv-ink)]">{appt.serviceName}</div>
-                      <button onClick={() => handlePay(appt.id)} className="btn-roman mt-3 w-full !py-2.5 !text-[10px] !uppercase !tracking-widest">
-                        Pagar {formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}
-                      </button>
+          </div>
+
+          {/* RIGHT COLUMN: Appointments & Payments */}
+          <div className="space-y-6">
+            
+            {/* Pagos */}
+            <section className="neo-card !p-4 sm:!p-6 shadow-xl border-t-4 border-t-red-500">
+              <div className="mb-6 flex items-center justify-between border-b border-[var(--glass-border)] pb-4">
+                <h3 className="font-roman text-lg font-bold uppercase tracking-widest text-[var(--pv-ink)] flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                    <CreditCard size={20} />
+                  </div>
+                  Tus Pagos
+                </h3>
+              </div>
+              
+              {pendingPayments + pendingMatterPayments === 0 ? (
+                <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-6 text-center flex flex-col items-center justify-center">
+                  <CheckCircle2 size={30} className="text-emerald-500 mb-2" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">¡Todo al día!</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {results
+                    .filter((appt) => appt.paymentStatus !== 'PAID' && appt.status !== 'CANCELLED')
+                    .map((appt) => (
+                      <div key={appt.id} className="rounded-2xl bg-white border border-red-100 p-4 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-red-50 rounded-bl-full -z-10"></div>
+                        <div className="text-[9px] font-black uppercase text-red-600 tracking-widest mb-1">Consulta</div>
+                        <div className="font-bold text-xs text-[var(--pv-ink)] mb-3 line-clamp-1">{appt.serviceName}</div>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="text-lg font-black text-[var(--pv-ink)]">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
+                          <button onClick={() => handlePay(appt.id)} className="btn-roman !py-2 !px-4 !text-[10px] !bg-red-600 hover:!bg-red-700">
+                            Pagar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  
+                  {pendingBillingDocuments.map((doc) => (
+                    <div key={doc.id} className="rounded-2xl bg-white border border-red-100 p-4 shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-12 h-12 bg-red-50 rounded-bl-full -z-10"></div>
+                      <div className="text-[9px] font-black uppercase text-red-600 tracking-widest mb-1">Expediente</div>
+                      <div className="font-bold text-xs text-[var(--pv-ink)] mb-1 truncate">{doc.concept}</div>
+                      <div className="text-[9px] text-[var(--pv-navy)]/50 truncate mb-3">{doc.matterTitle}</div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="text-lg font-black text-[var(--pv-ink)]">
+                          {(doc.totalAmount - doc.paidAmount).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                        </div>
+                        <button className="btn-roman !py-2 !px-4 !text-[9px] !bg-[var(--pv-navy)] hover:!bg-[var(--pv-ink)] opacity-50 cursor-not-allowed">
+                          Contactar
+                        </button>
+                      </div>
                     </div>
                   ))}
-                {pendingBillingDocuments.map((doc) => (
-                  <div key={doc.id} className="rounded-xl bg-white p-3 shadow-sm">
-                    <div className="text-xs font-bold text-[var(--pv-ink)]">{doc.concept}</div>
-                    <div className="mt-1 text-[10px] text-[var(--pv-navy)]/50">{doc.matterTitle}</div>
-                    <div className="mt-2 text-sm font-black text-red-600">
-                      {(doc.totalAmount - doc.paidAmount).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                    </div>
-                  </div>
-                ))}
-                {pendingPayments + pendingMatterPayments === 0 && (
-                  <div className="rounded-2xl bg-emerald-50 p-4 text-xs font-bold uppercase tracking-widest text-emerald-700">
-                    No tienes pagos pendientes.
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="neo-card !p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <Clock size={20} />
-                </div>
-                <div>
-                  <h3 className="font-roman text-sm font-bold uppercase tracking-widest text-[var(--pv-ink)]">Citas</h3>
-                  <p className="text-xs text-[var(--pv-navy)]/55">{activeAppointments} activa(s)</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {results.map((appt) => {
-                  const dateStr = appt.date.split('T')[0];
-                  return (
-                    <div key={appt.id} className="rounded-xl border border-white bg-white p-3 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-xs font-black uppercase text-[var(--pv-ink)]">{appt.serviceName}</div>
-                          <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-[var(--pv-navy)]/45">
-                            {formatDateShort(dateStr)} · {appt.startTime} - {appt.endTime}
-                          </div>
-                        </div>
-                        <span className={`shrink-0 rounded-lg border px-2 py-1 text-[9px] font-black uppercase tracking-widest ${STATUS_COLORS[appt.status] || ''}`}>
-                          {STATUS_LABELS[appt.status] || appt.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {total > pageSize && (
-                <div className="mt-4 flex items-center justify-between px-1">
-                  <button
-                    type="button"
-                    className="p-2.5 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
-                    disabled={page <= 1 || loading}
-                    onClick={() => lastQuery && fetchAppointments(lastQuery, Math.max(1, page - 1))}
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <span className="text-[10px] font-black uppercase text-[var(--pv-navy)] opacity-40 tracking-[0.2em]">Página {page} de {totalPages}</span>
-                  <button
-                    type="button"
-                    className="p-2.5 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
-                    disabled={page >= totalPages || loading}
-                    onClick={() => lastQuery && fetchAppointments(lastQuery, Math.min(totalPages, page + 1))}
-                  >
-                    <ChevronRight size={20} />
-                  </button>
                 </div>
               )}
             </section>
-          </aside>
-        </div>
-      )}
 
-      {false && searched && (notes.length > 0 || results.length > 0 || documents.length > 0 || matters.length > 0) && lastQuery && (
-        <div className="space-y-5 animate-fade-in">
-          {/* Dashboard Summary */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="neo-card !p-4 border-b-4 border-b-blue-500">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                 <Activity size={20} />
-              </div>
-              <div className="text-[10px] uppercase font-black tracking-widest text-blue-600">Citas activas</div>
-              <div className="text-2xl font-black text-[var(--pv-ink)]">{activeAppointments}</div>
-            </div>
-            <div className="neo-card !p-4 border-b-4 border-b-red-500">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                 <CreditCard size={20} />
-              </div>
-              <div className="text-[10px] uppercase font-black tracking-widest text-red-600">Pagos pendientes</div>
-              <div className="text-2xl font-black text-[var(--pv-ink)]">{pendingPayments + pendingMatterPayments}</div>
-            </div>
-            <div className="neo-card !p-4 border-b-4 border-b-[var(--pv-gold)]">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--pv-gold)]/10 text-[var(--pv-gold)]">
-                 <FileText size={20} />
-              </div>
-              <div className="text-[10px] uppercase font-black tracking-widest text-[var(--pv-gold)]">Documentos enviados</div>
-              <div className="text-2xl font-black text-[var(--pv-ink)]">{documents.length}</div>
-            </div>
-            <div className="neo-card !p-4 border-b-4 border-b-emerald-500">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                 <History size={20} />
-              </div>
-              <div className="text-[10px] uppercase font-black tracking-widest text-emerald-600">Actualizaciones</div>
-              <div className="text-2xl font-black text-[var(--pv-ink)]">{notes.length}</div>
-            </div>
-          </div>
-
-        {/* Matters Section */}
-        {matters.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-               <Briefcase size={20} className="text-[var(--pv-gold)]" />
-               <h3 className="font-roman text-lg font-bold uppercase text-[var(--pv-ink)] tracking-tight">Tus expedientes</h3>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {matters.map((matter) => (
-                <div key={matter.id} className="neo-card !p-4 border-l-4 border-l-[var(--pv-gold)]">
-                  <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                    <div>
-                      <div className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--pv-gold)]">{matter.reference}</div>
-                      <h4 className="text-base font-bold text-[var(--pv-ink)] transition-colors mt-1 uppercase font-roman">{matter.title}</h4>
-                      <p className="text-xs font-medium text-[var(--pv-navy)] opacity-60 uppercase tracking-widest mt-1">{matter.procedureType}</p>
-                    </div>
-                    <span className="text-[9px] font-black px-3 py-1 rounded-lg bg-[var(--pv-marble)] border border-white text-[var(--pv-navy)] opacity-70 uppercase tracking-widest">
-                      {statusLabels[matter.status] || matter.status}
-                    </span>
+            {/* Citas */}
+            <section className="neo-card !p-4 sm:!p-6 shadow-xl">
+              <div className="mb-6 flex items-center justify-between border-b border-[var(--glass-border)] pb-4">
+                <h3 className="font-roman text-lg font-bold uppercase tracking-widest text-[var(--pv-ink)] flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Clock size={20} />
                   </div>
-                  
-              {matter.summary && <p className="text-sm text-[var(--pv-navy)] leading-relaxed opacity-80 mb-4 bg-[var(--pv-marble)] p-3 rounded-xl border border-white">{matter.summary}</p>}
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-white border border-[var(--pv-marble)] shadow-sm">
-                      <div className="text-[9px] font-black uppercase text-[var(--pv-gold)] tracking-widest mb-3 flex items-center gap-1"><Clock size={10} /> Proximas fechas</div>
-                      {matter.deadlines.length === 0 ? (
-                        <p className="text-[10px] text-[var(--pv-navy)] opacity-40 font-bold uppercase">Sin vencimientos</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {matter.deadlines.slice(0, 2).map((deadline) => (
-                            <div key={deadline.id} className="flex justify-between items-center gap-2">
-                              <span className="text-[11px] font-bold text-[var(--pv-navy)] truncate">{deadline.title}</span>
-                              <span className="text-[10px] font-black text-[var(--pv-gold)]">{formatDateShort(deadline.dueAt.split('T')[0])}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 rounded-xl bg-white border border-[var(--pv-marble)] shadow-sm">
-                      <div className="text-[9px] font-black uppercase text-emerald-600 tracking-widest mb-3 flex items-center gap-1"><CreditCard size={10} /> Pagos del expediente</div>
-                      {matter.billingDocuments.length === 0 ? (
-                        <p className="text-[10px] text-[var(--pv-navy)] opacity-40 font-bold uppercase">Sin deudas</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {matter.billingDocuments.slice(0, 2).map((doc) => (
-                            <div key={doc.id} className="flex justify-between items-center gap-2">
-                              <span className="text-[11px] font-bold text-[var(--pv-navy)] truncate">{doc.concept}</span>
-                              <span className="text-[10px] font-black text-emerald-600">{doc.totalAmount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {matter.timeline.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-[var(--pv-marble)] space-y-3">
-                      <div className="text-[9px] font-black uppercase text-[var(--pv-gold)] tracking-widest mb-2 flex items-center gap-1"><History size={10} /> Ultimas actualizaciones</div>
-                      {matter.timeline.slice(0, 2).map((entry) => (
-                        <div key={entry.id} className="relative pl-6 before:absolute before:left-0 before:top-1.5 before:w-2 before:h-2 before:bg-[var(--pv-gold)] before:rounded-full before:opacity-40">
-                          <div className="text-[11px] font-black text-[var(--pv-ink)] uppercase tracking-tight">{entry.title}</div>
-                          {entry.content && <div className="text-[11px] text-[var(--pv-navy)] opacity-60 leading-relaxed mt-1 line-clamp-1 italic">"{entry.content}"</div>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  Tus Citas
+                </h3>
+                <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
+                  <CalendarPlus size={14} /> Nueva
+                </a>
+              </div>
+              
+              {results.length === 0 ? (
+                <div className="rounded-2xl border-2 border-dashed border-[var(--pv-gold)]/20 p-6 text-center text-xs font-bold uppercase tracking-widest text-[var(--pv-navy)]/40">
+                  No tienes citas registradas.
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.6fr)] gap-4 items-start">
-          {/* Status Column */}
-          <div className="space-y-4">
-            <section className="neo-card !p-4">
-            <h3 className="font-roman text-sm font-bold uppercase text-[var(--pv-ink)] tracking-widest">Actualizaciones</h3>
-            {notes.length === 0 ? (
-              <div className="mt-3 rounded-xl border border-dashed border-[var(--pv-gold)]/20 bg-[var(--pv-marble)]/50 p-5 text-center">
-                <p className="text-[10px] font-black text-[var(--pv-navy)] opacity-30 uppercase tracking-[0.2em]">Sin entradas recientes</p>
-              </div>
-            ) : (
-              <div className="mt-3 space-y-3 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
-                {notes.map((note) => (
-                  <div key={note.id} className="rounded-xl border border-white bg-white p-3 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--pv-gold)] opacity-20"></div>
-                    <div className="flex items-center justify-between mb-3 gap-2">
-                      <span className="text-[10px] font-black text-[var(--pv-navy)] opacity-40 uppercase tracking-widest">{formatDateShort(note.createdAt.split('T')[0])}</span>
-                      <span className={`text-[9px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border shadow-sm ${
-                        note.status === 'DONE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                        note.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                        'bg-amber-50 text-amber-700 border-amber-100'
-                      }`}>
-                        {noteStatusLabels[note.status] || note.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--pv-navy)] leading-relaxed font-medium bg-[var(--pv-marble)] p-3 rounded-xl border border-white">{note.content}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-4">
+                  {results.map((appt) => {
+                    const dateStr = appt.date.split('T')[0];
+                    return (
+                      <div key={appt.id} className="rounded-2xl border-l-4 border-l-[var(--pv-gold)] bg-white p-4 shadow-sm border-t border-r border-b border-[var(--glass-border)]">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="font-roman text-sm font-bold uppercase text-[var(--pv-ink)] pr-4">{appt.serviceName}</div>
+                          <span className={`shrink-0 text-[9px] font-black px-2 py-1 rounded-lg border uppercase tracking-widest ${STATUS_COLORS[appt.status] || ''}`}>
+                            {STATUS_LABELS[appt.status] || appt.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-[var(--pv-navy)] opacity-70 uppercase tracking-widest bg-[var(--pv-marble)] p-2.5 rounded-xl">
+                          <Clock size={12} className="text-[var(--pv-gold)]" />
+                          {formatDateShort(dateStr)} · {appt.startTime}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
 
-          {/* Document Uploader Column */}
-          <section className="neo-card !p-4">
-             <ClientDocumentUploader
-                email={lastQuery?.email || ''}
-                phone={lastQuery?.phone || ''}
-                documents={documents}
-                onUploaded={(document) => setDocuments((current) => [document, ...current])}
-                compact={compact}
-              />
-          </section>
           </div>
-
-          {/* Appointments Column */}
-          <div className="neo-card !p-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-roman text-sm font-bold uppercase text-[var(--pv-ink)] tracking-widest">Tus citas</h3>
-              {total > pageSize && (
-                <span className="text-[10px] font-black uppercase text-[var(--pv-navy)] opacity-40 tracking-[0.2em]">Pagina {page} de {totalPages}</span>
-              )}
-            </div>
-            <div className="space-y-3 max-h-[720px] overflow-y-auto pr-1 custom-scrollbar">
-              {results.map((appt) => {
-                const dateStr = appt.date.split('T')[0];
-                return (
-                  <div key={appt.id} className="rounded-xl border border-white border-l-4 border-l-[var(--pv-gold)] bg-white p-4 shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                      <div className="min-w-0 text-sm font-black text-[var(--pv-ink)] uppercase font-roman tracking-tight">{appt.serviceName}</div>
-                      <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg border shadow-sm uppercase tracking-widest ${STATUS_COLORS[appt.status] || ''}`}>
-                        {STATUS_LABELS[appt.status] || appt.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--pv-navy)] opacity-50 uppercase tracking-widest">
-                      <Clock size={12} className="text-[var(--pv-gold)]" />
-                      {formatDateShort(dateStr)} · {appt.startTime} - {appt.endTime}
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-[var(--pv-marble)] flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <span className="text-[9px] font-black text-[var(--pv-gold)] uppercase tracking-widest block mb-1">Estado de Pago</span>
-                        <span className={`text-xs font-black uppercase tracking-tighter ${appt.paymentStatus === 'PAID' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {appt.paymentStatus === 'PAID' ? 'Saldado' : 'Pendiente'}
-                        </span>
-                      </div>
-
-                      {appt.paymentStatus !== 'PAID' && appt.status !== 'CANCELLED' && (
-                        <button onClick={() => handlePay(appt.id)} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest shadow-xl shadow-[var(--pv-gold)]/20">
-                          Pagar {formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {total > pageSize && (
-              <div className="mt-4 flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  className="p-2.5 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
-                  disabled={page <= 1 || loading}
-                  onClick={() => lastQuery && fetchAppointments(lastQuery, Math.max(1, page - 1))}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <span className="text-[10px] font-black uppercase text-[var(--pv-navy)] opacity-40 tracking-[0.2em]">Página {page} de {totalPages}</span>
-                <button
-                  type="button"
-                  className="p-2.5 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => lastQuery && fetchAppointments(lastQuery, Math.min(totalPages, page + 1))}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
         </div>
       )}
 

@@ -50,6 +50,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentTargetType {
+  APPOINTMENT
+  DOCUMENT
+}
+
 enum ClientNoteStatus {
   PENDING
   IN_PROGRESS
@@ -139,6 +144,8 @@ model Appointment {
   id          String            @id @default(cuid())
   serviceId   String
   service     Service           @relation(fields: [serviceId], references: [id])
+  staffUserId String?
+  staffUser   StaffUser?        @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
 
   clientName  String
   clientEmail String
@@ -151,9 +158,10 @@ model Appointment {
 
   status      AppointmentStatus @default(PENDING)
   paymentStatus PaymentStatus   @default(PENDING)
-  paymentId   String?           // Referencia de Redsys u otro
+  paymentId   String?           @unique // Referencia de Redsys u otro
   notes       String?
   adminNotes  String?
+  modality    String            @default("OFFICE")
 
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -161,6 +169,25 @@ model Appointment {
   @@index([date])
   @@index([status])
   @@index([clientEmail])
+  @@index([staffUserId])
+}
+
+model PaymentAttempt {
+  id           String            @id @default(cuid())
+  orderId      String            @unique
+  targetType   PaymentTargetType
+  targetId     String
+  amountCents  Int
+  currency     String            @default("978")
+  status       PaymentStatus     @default(PENDING)
+  provider     String            @default("REDSYS")
+  rawResponse  Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model ClientNote {
@@ -192,6 +219,9 @@ model ClientDocument {
   aiAnalysis   Json?
   matchedEmail String?
   matchedScore Float?
+  amountDue    Float?               // Cobro extra requerido para descargar
+  isPaid       Boolean              @default(false)
+  paymentId    String?              @unique
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
 
@@ -200,6 +230,7 @@ model ClientDocument {
   @@index([matchedEmail])
   @@index([status])
   @@index([createdAt])
+  @@index([paymentId])
 }
 
 model Matter {
@@ -348,10 +379,14 @@ model StaffUser {
   id        String    @id @default(cuid())
   name      String
   email     String    @unique
+  loginSlug String?   @unique
+  pinHash   String?
   role      StaffRole @default(PARALEGAL)
   active    Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  appointments Appointment[]
 }
 
 model BlockedDate {

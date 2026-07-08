@@ -7,6 +7,7 @@ type StaffUser = {
   id: string;
   name: string;
   email: string;
+  loginSlug: string | null;
   role: string;
   active: boolean;
 };
@@ -20,7 +21,8 @@ const roleCopy: Record<string, { label: string; detail: string }> = {
 
 export default function EquipoPage() {
   const [staff, setStaff] = useState<StaffUser[]>([]);
-  const [draft, setDraft] = useState({ name: '', email: '', role: 'PARALEGAL' });
+  const [draft, setDraft] = useState({ name: '', email: '', loginSlug: '', pin: '', role: 'LAWYER' });
+  const [pinDrafts, setPinDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function EquipoPage() {
       setMessage(data?.error || 'No se pudo guardar el usuario.');
       return;
     }
-    setDraft({ name: '', email: '', role: 'PARALEGAL' });
+    setDraft({ name: '', email: '', loginSlug: '', pin: '', role: 'LAWYER' });
     setMessage('Usuario guardado.');
     await loadStaff();
     setTimeout(() => setMessage(''), 3000);
@@ -102,6 +104,22 @@ export default function EquipoPage() {
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
                 <input className="neo-input pl-12" placeholder="marcus@pvabogadas.com" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Usuario de acceso</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                <input className="neo-input pl-12" placeholder="luz o diana" value={draft.loginSlug} onChange={(e) => setDraft({ ...draft, loginSlug: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Clave de acceso</label>
+              <div className="relative">
+                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
+                <input type="password" className="neo-input pl-12" placeholder="Mínimo 4 caracteres" value={draft.pin} onChange={(e) => setDraft({ ...draft, pin: e.target.value })} />
               </div>
             </div>
 
@@ -166,6 +184,40 @@ export default function EquipoPage() {
                     <p className="text-[11px] font-medium text-[var(--pv-navy)] opacity-60 leading-relaxed bg-white/50 p-3 rounded-xl border border-white/50 italic">
                       "{roleCopy[user.role]?.detail}"
                     </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Usuario</label>
+                        <input
+                          className="neo-input !py-2 !text-xs !bg-[var(--pv-marble)]"
+                          value={user.loginSlug || ''}
+                          placeholder="luz / diana"
+                          onChange={(e) => update(user.id, { loginSlug: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Nueva clave</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="password"
+                            className="neo-input !py-2 !text-xs !bg-[var(--pv-marble)]"
+                            value={pinDrafts[user.id] || ''}
+                            placeholder="Cambiar clave"
+                            onChange={(e) => setPinDrafts((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                          />
+                          <button
+                            className="px-3 rounded-xl bg-[var(--pv-gold)] text-white text-[9px] font-black uppercase tracking-widest disabled:opacity-40"
+                            disabled={!pinDrafts[user.id]}
+                            onClick={async () => {
+                              await update(user.id, { pin: pinDrafts[user.id] });
+                              setPinDrafts((prev) => ({ ...prev, [user.id]: '' }));
+                            }}
+                          >
+                            Guardar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="pt-4 flex justify-end">
                       <button 

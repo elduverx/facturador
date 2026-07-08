@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+echo "🚀 Iniciando despliegue en servidor Hostinger..."
+
+# 1. Asegurar que tenemos la última versión del código
+echo "📥 Actualizando repositorio..."
+# git pull origin main # Descomenta esto si usas git en el servidor
+
+# 2. Reconstruir las imágenes de Docker sin usar caché
+echo "🏗️ Construyendo contenedores..."
+docker-compose build --no-cache
+
+# 3. Levantar los servicios en segundo plano
+echo "🚀 Levantando servicios (Web + Base de datos)..."
+docker-compose up -d
+
+# 4. Limpiar imágenes huérfanas o viejas para liberar espacio
+echo "🧹 Limpiando imágenes antiguas de Docker..."
+docker image prune -f
+
+echo "✅ ¡Despliegue completado con éxito! Tu aplicación debería estar corriendo en el puerto 3000."

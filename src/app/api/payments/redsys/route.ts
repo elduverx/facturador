@@ -1,13 +1,34 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createRedsysPayment } from '@/lib/redsys';
+import { amountToCents, createRedsysOrderId, createRedsysPayment } from '@/lib/redsys';
 import { CONSULTATION_DEPOSIT_AMOUNT } from '@/lib/payments';
+import { createPortalSessionCookie } from '@/lib/portal-session';
 
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
 const SESSION_MAX_AGE = 60 * 60 * 2;
 
 const getBaseUrl = () =>
   process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+async function createPaymentAttempt(targetId: string, amount: number) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const orderId = createRedsysOrderId();
+    try {
+      await prisma.paymentAttempt.create({
+        data: {
+          orderId,
+          targetType: 'APPOINTMENT',
+          targetId,
+          amountCents: amountToCents(amount),
+        },
+      });
+      return orderId;
+    } catch {
+      // Retry on rare order collision.
+    }
+  }
+  throw new Error('No se pudo crear un identificador de pago unico.');
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,10 +53,7 @@ export async function GET(request: Request) {
 
   const amount = CONSULTATION_DEPOSIT_AMOUNT;
 
-  // Generar número de pedido único para Redsys (exactamente 12 caracteres alfanuméricos)
-  // IMPORTANTE: Los 4 primeros DEBEN ser dígitos.
-  const now = Date.now().toString();
-  const orderId = now.substring(now.length - 4) + appointment.id.substring(0, 8).toUpperCase().replace(/[^A-Z0-9]/g, 'X');
+  const orderId = await createPaymentAttempt(appointment.id, amount);
 
   // Guardar el orderId en la cita para poder recuperarla en el callback
   await prisma.appointment.update({
@@ -48,17 +66,16 @@ export async function GET(request: Request) {
     amount,
     `Anticipo consulta: ${appointment.service.name}`,
     {
-      successUrl: `${getBaseUrl()}/portal?payment=success`,
-      errorUrl: `${getBaseUrl()}/portal?payment=error`,
+      successUrl: `${getBaseUrl()}/portal?payment=success&appointmentId=${appointment.id}`,
+      errorUrl: `${getBaseUrl()}/portal?payment=error&appointmentId=${appointment.id}`,
     }
   );
 
-  const portalSession = Buffer.from(JSON.stringify({
+  const portalSession = await createPortalSessionCookie({
     appointmentId: appointment.id,
     email: appointment.clientEmail,
     phone: appointment.clientPhone,
-    expiresAt: Date.now() + SESSION_MAX_AGE * 1000,
-  })).toString('base64url');
+  });
 
   // Devolver un formulario que se auto-envía
   const formHtml = `

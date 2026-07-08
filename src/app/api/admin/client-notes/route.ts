@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isValidEmail, normalizeEmail } from '@/lib/validation';
+import { canAccessClientEmail } from '@/lib/admin-scope';
 
 const NOTE_STATUSES = ['PENDING', 'IN_PROGRESS', 'WAITING', 'DONE'] as const;
 type NoteStatus = (typeof NOTE_STATUSES)[number];
@@ -24,6 +25,10 @@ export async function GET(request: Request) {
   const normalizedEmail = normalizeEmail(email);
   if (!isValidEmail(normalizedEmail)) {
     return NextResponse.json({ error: 'Email no valido' }, { status: 400 });
+  }
+
+  if (!(await canAccessClientEmail(normalizedEmail))) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
   try {
@@ -56,6 +61,10 @@ export async function POST(request: Request) {
 
     if (!isValidEmail(normalizedEmail)) {
       return NextResponse.json({ error: 'Email no valido' }, { status: 400 });
+    }
+
+    if (!(await canAccessClientEmail(normalizedEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     if (!NOTE_STATUSES.includes(status as NoteStatus)) {

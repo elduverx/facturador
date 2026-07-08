@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get('date');
   const serviceId = searchParams.get('serviceId');
+  const lawyerId = searchParams.get('lawyerId');
 
   if (!date || !serviceId) {
     return NextResponse.json(
@@ -21,6 +22,13 @@ export async function GET(request: Request) {
     );
   }
 
-  const slots = await getAvailableSlots(date, serviceId);
+  const staff = lawyerId
+    ? await import('@/lib/prisma').then(({ prisma }) => prisma.staffUser.findFirst({
+        where: { loginSlug: lawyerId, active: true },
+        select: { id: true },
+      }))
+    : null;
+
+  const slots = await getAvailableSlots(date, serviceId, staff?.id);
   return NextResponse.json(slots);
 }

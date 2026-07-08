@@ -22,6 +22,26 @@ export const REDSYS_CONFIG: RedsysConfig = {
   errorUrl: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/portal?payment=error`,
 };
 
+export type RedsysCallbackParams = {
+  responseCode: number;
+  orderId: string;
+  amountCents: number;
+  currency: string;
+  merchantCode: string;
+  terminal: string;
+  raw: Record<string, unknown>;
+};
+
+export function amountToCents(amount: number) {
+  return Math.round(amount * 100);
+}
+
+export function createRedsysOrderId() {
+  const firstFourDigits = crypto.randomInt(0, 10000).toString().padStart(4, '0');
+  const suffix = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return `${firstFourDigits}${suffix}`;
+}
+
 function encrypt3DES(str: string, key: Buffer): Buffer {
   const cipher = crypto.createCipheriv('des-ede3-cbc', key, Buffer.alloc(8, 0));
   cipher.setAutoPadding(false);
@@ -43,7 +63,7 @@ export function createRedsysPayment(
   urls?: { successUrl?: string; errorUrl?: string }
 ) {
   // Redsys amount is in cents
-  const amountCents = Math.round(amount * 100).toString();
+  const amountCents = amountToCents(amount).toString();
 
   const params = {
     DS_MERCHANT_AMOUNT: amountCents,
@@ -78,11 +98,15 @@ export function createRedsysPayment(
 
 export function verifyRedsysSignature(paramsBase64: string, signature: string) {
   try {
-    const params = JSON.parse(Buffer.from(paramsBase64, 'base64').toString('utf8'));
+    // Redsys sends base64url encoded params
+    const base64Str = paramsBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const params = JSON.parse(Buffer.from(base64Str, 'base64').toString('utf8'));
     const order = params.Ds_Order || params.DS_MERCHANT_ORDER;
 
     const merchantKey = Buffer.from(REDSYS_CONFIG.secretKey, 'base64');
     const derivedKey = encrypt3DES(order, merchantKey);
+    
+    // Compute expected signature using the raw paramsBase64 string as received
     const expectedSignature = mac256(paramsBase64, derivedKey).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
     
     // Redsys uses URL safe base64 in responses sometimes, but let's be flexible
@@ -92,4 +116,35 @@ export function verifyRedsysSignature(paramsBase64: string, signature: string) {
   } catch (e) {
     return false;
   }
+}
+
+export function parseRedsysCallbackParams(paramsBase64: string): RedsysCallbackParams {
+  const base64Str = paramsBase64.replace(/-/g, '+').replace(/_/g, '/');
+  const raw = JSON.parse(Buffer.from(base64Str, 'base64').toString('utf8')) as Record<string, unknown>;
+  const getString = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = raw[key];
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number') return String(value);
+    }
+    return '';
+  };
+
+  return {
+    responseCode: parseInt(getString('Ds_Response', 'DS_RESPONSE'), 10),
+    orderId: getString('Ds_Order', 'DS_MERCHANT_ORDER'),
+    amountCents: parseInt(getString('Ds_Amount', 'DS_MERCHANT_AMOUNT'), 10),
+    currency: getString('Ds_Currency', 'DS_MERCHANT_CURRENCY'),
+    merchantCode: getString('Ds_MerchantCode', 'DS_MERCHANT_MERCHANTCODE'),
+    terminal: getString('Ds_Terminal', 'DS_MERCHANT_TERMINAL'),
+    raw,
+  };
+}
+
+export function isAuthorizedRedsysResponse(responseCode: number) {
+  return Number.isInteger(responseCode) && responseCode >= 0 && responseCode <= 99;
+}
+
+export function normalizeRedsysTerminal(terminal: string) {
+  return String(Number(terminal || '0'));
 }

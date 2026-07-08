@@ -69,6 +69,17 @@ export function confirmationEmail(data: AppointmentEmailData): string {
   return baseTemplate('Cita Confirmada', body, data.firmName);
 }
 
+export function paymentConfirmationEmail(data: AppointmentEmailData & { amount: number }): string {
+  const body = `
+    <p>Estimado/a <strong>${data.clientName}</strong>,</p>
+    <p>Le confirmamos que hemos recibido correctamente el pago de <strong>${data.amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</strong> correspondiente al anticipo de su cita.</p>
+    ${appointmentDetails(data)}
+    <p style="font-size:14px;color:#57534E;">Su cita ya está asegurada. Nos vemos pronto.</p>
+    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Para cualquier duda, contactenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
+  `;
+  return baseTemplate('Confirmacion de Pago Recibido', body, data.firmName);
+}
+
 export function cancellationEmail(data: AppointmentEmailData): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>

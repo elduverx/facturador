@@ -1,13 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+type LoginUser = {
+  name: string;
+  loginSlug: string;
+  role: string;
+  hasPin: boolean;
+};
 
 export default function AdminLoginPage() {
   const [pin, setPin] = useState('');
+  const [login, setLogin] = useState('');
+  const [users, setUsers] = useState<LoginUser[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch('/api/admin/login')
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data.filter((user) => user.loginSlug) : [];
+        setUsers(list);
+        if (list.length > 0) setLogin(list[0].loginSlug);
+      })
+      .catch(() => setUsers([]));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +38,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin }),
+        body: JSON.stringify({ login, pin }),
       });
 
       if (!res.ok) {
@@ -57,6 +77,25 @@ export default function AdminLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {users.length > 0 && (
+              <div>
+                <label className="block text-[var(--pv-navy)] font-bold text-[10px] uppercase tracking-widest mb-3 px-1">
+                  Abogada
+                </label>
+                <select
+                  className="neo-input text-center font-bold py-4"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                >
+                  {users.map((user) => (
+                    <option key={user.loginSlug} value={user.loginSlug}>
+                      {user.name}{user.hasPin ? '' : ' (sin clave configurada)'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-[var(--pv-navy)] font-bold text-[10px] uppercase tracking-widest mb-3 px-1">
                 Codigo de acceso

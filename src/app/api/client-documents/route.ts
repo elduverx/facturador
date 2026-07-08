@@ -88,6 +88,7 @@ export async function GET(request: Request) {
         sizeBytes: true,
         description: true,
         status: true,
+        clientPhone: true,
         adminNotes: true,
         createdAt: true,
       },
@@ -96,6 +97,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       documents: documents.map((document) => ({
         ...document,
+        adminNotes: document.clientPhone === '' ? document.adminNotes : null,
+        clientPhone: undefined,
         createdAt: document.createdAt.toISOString(),
       })),
     });

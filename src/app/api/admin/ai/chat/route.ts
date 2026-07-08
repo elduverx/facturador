@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAdminAuthenticated } from '@/lib/auth';
 import { generateChatResponse } from '@/lib/ai';
+import { getAdminAppointmentScope } from '@/lib/admin-scope';
 
 export async function POST(request: Request) {
   const isAdmin = await isAdminAuthenticated();
@@ -41,14 +42,16 @@ export async function POST(request: Request) {
     }
 
     // 3. Recopilar contexto del sistema
+    const appointmentScope = await getAdminAppointmentScope();
     const [appointments, clients, recentNotes, services] = await Promise.all([
       prisma.appointment.findMany({
-        where: { date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } },
+        where: { AND: [{ date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } }, appointmentScope] },
         orderBy: { date: 'desc' },
         take: 15,
         include: { service: true }
       }),
       prisma.appointment.findMany({
+        where: appointmentScope,
         distinct: ['clientEmail'],
         orderBy: { createdAt: 'desc' },
         take: 20,

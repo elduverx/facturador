@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isValidEmail, isValidPhone, normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 export async function PATCH(request: Request) {
-  const cookieHeader = request.headers.get('cookie') || '';
-  const hasSession = cookieHeader.includes('admin_session=');
-  if (!hasSession) {
+  if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 

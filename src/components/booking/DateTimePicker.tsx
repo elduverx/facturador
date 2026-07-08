@@ -7,13 +7,14 @@ import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, AlertCircle
 
 interface Props {
   serviceId: string;
+  lawyerId?: string | null;
   selectedDate: string | null;
   selectedTime: string | null;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string) => void;
 }
 
-export function DateTimePicker({ serviceId, selectedDate, selectedTime, onDateSelect, onTimeSelect }: Props) {
+export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime, onDateSelect, onTimeSelect }: Props) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -23,12 +24,12 @@ export function DateTimePicker({ serviceId, selectedDate, selectedTime, onDateSe
   useEffect(() => {
     if (!selectedDate || !serviceId) return;
     setLoadingSlots(true);
-    fetch(`/api/available-slots?date=${selectedDate}&serviceId=${serviceId}`)
+    fetch(`/api/available-slots?date=${selectedDate}&serviceId=${serviceId}${lawyerId ? `&lawyerId=${encodeURIComponent(lawyerId)}` : ''}`)
       .then((r) => r.json())
       .then((data) => setSlots(data))
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
-  }, [selectedDate, serviceId]);
+  }, [selectedDate, serviceId, lawyerId]);
 
   const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay();

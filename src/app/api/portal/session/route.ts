@@ -1,27 +1,9 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { parsePortalSessionCookie } from '@/lib/portal-session';
 
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
-
-type PortalSession = {
-  appointmentId: string;
-  email: string;
-  phone: string;
-  expiresAt: number;
-};
-
-const parseSession = (value: string): PortalSession | null => {
-  try {
-    const decoded = Buffer.from(value, 'base64url').toString('utf8');
-    const session = JSON.parse(decoded) as Partial<PortalSession>;
-    if (!session.appointmentId || !session.email || !session.phone || !session.expiresAt) return null;
-    if (Date.now() > session.expiresAt) return null;
-    return session as PortalSession;
-  } catch {
-    return null;
-  }
-};
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -30,26 +12,66 @@ export async function GET() {
     return NextResponse.json({ authenticated: false });
   }
 
-  const session = parseSession(rawSession);
+  const session = await parsePortalSessionCookie(rawSession);
   if (!session) {
     return NextResponse.json({ authenticated: false });
   }
 
-  const appointment = await prisma.appointment.findFirst({
-    where: {
-      id: session.appointmentId,
-      clientEmail: { equals: session.email, mode: 'insensitive' },
-      clientPhone: session.phone,
-    },
-    select: {
-      id: true,
-      clientName: true,
-      clientEmail: true,
-      clientPhone: true,
-      paymentStatus: true,
-      status: true,
-    },
-  });
+  const appointment = session.appointmentId
+    ? await prisma.appointment.findFirst({
+        where: {
+          id: session.appointmentId,
+          clientEmail: { equals: session.email, mode: 'insensitive' },
+          clientPhone: session.phone,
+        },
+        select: {
+          id: true,
+          clientName: true,
+          clientEmail: true,
+          clientPhone: true,
+          paymentStatus: true,
+          status: true,
+        },
+      })
+    : await prisma.appointment.findFirst({
+        where: {
+          clientEmail: { equals: session.email, mode: 'insensitive' },
+          clientPhone: session.phone,
+        },
+        select: {
+          id: true,
+          clientName: true,
+          clientEmail: true,
+          clientPhone: true,
+          paymentStatus: true,
+          status: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+  if (!appointment && session.documentId) {
+    const document = await prisma.clientDocument.findFirst({
+      where: {
+        id: session.documentId,
+        clientEmail: { equals: session.email, mode: 'insensitive' },
+        OR: [{ clientPhone: session.phone }, { clientPhone: '' }],
+      },
+      select: {
+        id: true,
+        clientEmail: true,
+        clientPhone: true,
+      },
+    });
+
+    if (document) {
+      return NextResponse.json({
+        authenticated: true,
+        email: document.clientEmail,
+        phone: session.phone || document.clientPhone,
+        documentId: document.id,
+      });
+    }
+  }
 
   if (!appointment) {
     return NextResponse.json({ authenticated: false });

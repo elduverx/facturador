@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { canAccessClientEmail } from '@/lib/admin-scope';
 
 const DOCUMENT_STATUSES = ['PENDING', 'REVIEWED', 'ACCEPTED', 'REJECTED'] as const;
 type RouteParams = { params: Promise<{ id: string }> };
@@ -7,6 +8,14 @@ type RouteParams = { params: Promise<{ id: string }> };
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const current = await prisma.clientDocument.findUnique({ where: { id }, select: { clientEmail: true } });
+    if (!current) {
+      return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
+    }
+    if (!(await canAccessClientEmail(current.clientEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const status = typeof body?.status === 'string' ? body.status : undefined;
     const adminNotes = typeof body?.adminNotes === 'string' ? body.adminNotes.trim() : undefined;

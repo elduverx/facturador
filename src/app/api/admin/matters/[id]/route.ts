@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
+import { canAccessClientEmail } from '@/lib/admin-scope';
 
 const MATTER_STATUSES = ['INITIAL', 'IN_PROGRESS', 'WAITING_ADMIN', 'RESOLVED', 'ARCHIVED'] as const;
 const MATTER_PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'CRITICAL'] as const;
@@ -24,12 +25,24 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: 'Expediente no encontrado' }, { status: 404 });
   }
 
+  if (!(await canAccessClientEmail(matter.clientEmail))) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   return NextResponse.json(matter);
 }
 
 export async function PATCH(request: Request, { params }: Params) {
   try {
     const { id } = await params;
+    const current = await prisma.matter.findUnique({ where: { id }, select: { clientEmail: true } });
+    if (!current) {
+      return NextResponse.json({ error: 'Expediente no encontrado' }, { status: 404 });
+    }
+    if (!(await canAccessClientEmail(current.clientEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const data: Record<string, unknown> = {};
 

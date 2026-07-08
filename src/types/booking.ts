@@ -11,6 +11,13 @@ export interface AppointmentData {
   id: string;
   serviceId: string;
   service: ServiceType;
+  staffUserId?: string | null;
+  staffUser?: {
+    id: string;
+    name: string;
+    email: string;
+    loginSlug: string | null;
+  } | null;
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -23,6 +30,7 @@ export interface AppointmentData {
   paymentId: string | null;
   notes: string | null;
   adminNotes: string | null;
+  modality?: string;
   createdAt: string;
 }
 

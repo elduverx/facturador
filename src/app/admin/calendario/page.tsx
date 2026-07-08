@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { AppointmentData } from '@/types/booking';
 import { MONTHS, DAYS_OF_WEEK, STATUS_LABELS, STATUS_COLORS } from '@/lib/constants';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin, UserSquare } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CalendarPage() {
   const today = new Date();
@@ -200,10 +201,20 @@ export default function CalendarPage() {
                       </div>
                       
                       <div className="mb-4">
-                        <h4 className="text-base font-bold text-[var(--pv-ink)] group-hover:text-[var(--pv-gold)] transition-colors">{appt.clientName}</h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-base font-bold text-[var(--pv-ink)] group-hover:text-[var(--pv-gold)] transition-colors">{appt.clientName}</h4>
+                          <Link href={`/admin/clientes?email=${encodeURIComponent(appt.clientEmail)}`} className="text-[10px] font-bold text-[var(--pv-gold)] hover:underline uppercase tracking-widest flex items-center gap-1 bg-[var(--pv-marble)] px-2 py-1 rounded-md transition-colors hover:bg-[var(--pv-gold)] hover:text-white">
+                             <UserSquare size={12} /> Ver Ficha
+                          </Link>
+                        </div>
                         <div className="flex items-center gap-1.5 text-xs text-[var(--pv-navy)] opacity-60 font-medium mt-1 uppercase tracking-tighter">
                           <MapPin size={12} className="text-[var(--pv-gold)]" />
                           {appt.service?.name || 'Consulta General'}
+                          {appt.modality && (
+                             <span className="ml-2 font-bold px-1.5 py-0.5 rounded border border-[var(--pv-gold)] text-[var(--pv-gold)] text-[8px] uppercase">
+                               {appt.modality === 'VIDEO_CALL' ? 'VIDEO LLAMADA' : 'EN DESPACHO'}
+                             </span>
+                          )}
                         </div>
                       </div>
                       

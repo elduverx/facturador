@@ -5,12 +5,13 @@ import { confirmationEmail, adminNewBookingEmail } from '@/lib/email-templates';
 import { formatDateES } from '@/lib/constants';
 import { getDayConfig } from '@/lib/slots';
 import { isValidEmail, isValidPhone, normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
+import { isAdminAuthenticated } from '@/lib/auth';
 
 // POST - Create appointment (public)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { serviceId, date, startTime, clientName, clientEmail, clientPhone, clientNie, notes } = body;
+    const { serviceId, date, startTime, clientName, clientEmail, clientPhone, clientNie, notes, lawyerId } = body;
 
     if (!serviceId || !date || !startTime || !clientName || !clientEmail || !clientPhone) {
       return NextResponse.json(
@@ -38,6 +39,13 @@ export async function POST(request: Request) {
     if (!service) {
       return NextResponse.json({ error: 'Servicio no encontrado' }, { status: 404 });
     }
+
+    const selectedStaff = typeof lawyerId === 'string' && lawyerId.trim()
+      ? await prisma.staffUser.findFirst({
+          where: { loginSlug: lawyerId.trim().toLowerCase(), active: true },
+          select: { id: true, name: true },
+        })
+      : null;
 
     const dayConfig = await getDayConfig(date);
     if (!dayConfig) {
@@ -77,6 +85,7 @@ export async function POST(request: Request) {
             clientNie: { equals: normalizedNie, mode: 'insensitive' },
             date: { gte: startOfToday },
             status: { in: ['PENDING', 'CONFIRMED'] },
+            ...(selectedStaff ? { staffUserId: selectedStaff.id } : {}),
           },
           select: { id: true },
         });
@@ -90,6 +99,7 @@ export async function POST(request: Request) {
           where: {
             date: { gte: startOfDay, lte: endOfDay },
             status: { not: 'CANCELLED' },
+            ...(selectedStaff ? { staffUserId: selectedStaff.id } : {}),
           },
         });
         if (countForDay >= dayConfig.maxPerDay) {
@@ -113,6 +123,7 @@ export async function POST(request: Request) {
         where: {
           date: { gte: startOfDay, lte: endOfDay },
           status: { in: ['PENDING', 'CONFIRMED'] },
+          ...(selectedStaff ? { OR: [{ staffUserId: selectedStaff.id }, { staffUserId: null }] } : {}),
         },
         select: { startTime: true, endTime: true },
       });
@@ -130,6 +141,7 @@ export async function POST(request: Request) {
       return tx.appointment.create({
         data: {
           serviceId,
+          staffUserId: selectedStaff?.id || null,
           clientName: normalizedName,
           clientEmail: normalizedEmail,
           clientPhone: normalizedPhone,
@@ -137,7 +149,10 @@ export async function POST(request: Request) {
           date: startOfDay,
           startTime,
           endTime,
-          notes: notes || null,
+          notes: [
+            selectedStaff ? `Abogada asignada: ${selectedStaff.name}` : null,
+            notes || null,
+          ].filter(Boolean).join('\n\n') || null,
           status: 'PENDING',
         },
         include: { service: true },
@@ -260,16 +275,19 @@ export async function GET(request: Request) {
     ];
   }
 
-  // Admin auth check via cookie
-  const cookieHeader = request.headers.get('cookie') || '';
-  const hasSession = cookieHeader.includes('admin_session=');
-  if (!hasSession) {
+  if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
+  const { getAdminAppointmentScope } = await import('@/lib/admin-scope');
+  const scope = await getAdminAppointmentScope();
+
   const appointments = await prisma.appointment.findMany({
-    where,
-    include: { service: true },
+    where: { AND: [where, scope] },
+    include: {
+      service: true,
+      staffUser: { select: { id: true, name: true, email: true, loginSlug: true } },
+    },
     orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
   });
 

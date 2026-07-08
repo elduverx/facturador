@@ -5,14 +5,33 @@ services:
     image: postgres:15-alpine
     container_name: facturador-db
     environment:
-      POSTGRES_USER: facturador_user
-      POSTGRES_PASSWORD: facturador_password
-      POSTGRES_DB: facturador
+      POSTGRES_USER: ${POSTGRES_USER:-facturador_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-facturador_password}
+      POSTGRES_DB: ${POSTGRES_DB:-facturador}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-facturador_user} -d ${POSTGRES_DB:-facturador}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: facturador-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
 
 volumes:
   pgdata:

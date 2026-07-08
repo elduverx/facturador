@@ -73,7 +73,8 @@ export async function getDayConfig(dateStr: string) {
 
 export async function getAvailableSlots(
   dateStr: string,
-  serviceId: string
+  serviceId: string,
+  staffUserId?: string | null
 ): Promise<{ time: string; available: boolean }[]> {
   const dayConfig = await getDayConfig(dateStr);
   if (!dayConfig) return [];
@@ -99,6 +100,7 @@ export async function getAvailableSlots(
       where: {
         date: { gte: startOfDay, lte: endOfDay },
         status: { not: 'CANCELLED' },
+        ...(staffUserId ? { staffUserId } : {}),
       },
     });
     if (countForDay >= dayConfig.maxPerDay) {
@@ -129,6 +131,7 @@ export async function getAvailableSlots(
     where: {
       date: { gte: startOfDay, lte: endOfDay },
       status: { in: ['PENDING', 'CONFIRMED'] },
+      ...(staffUserId ? { OR: [{ staffUserId }, { staffUserId: null }] } : {}),
     },
     select: { startTime: true, endTime: true },
   });

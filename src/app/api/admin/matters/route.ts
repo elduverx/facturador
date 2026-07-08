@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateMatterReference } from '@/lib/legal';
 import { isValidEmail, normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
+import { canAccessClientEmail } from '@/lib/admin-scope';
+import { getAdminSession } from '@/lib/auth';
 
 const MATTER_STATUSES = ['INITIAL', 'IN_PROGRESS', 'WAITING_ADMIN', 'RESOLVED', 'ARCHIVED'] as const;
 const MATTER_PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'CRITICAL'] as const;
@@ -19,7 +21,16 @@ export async function GET(request: Request) {
   }
 
   if (clientEmail) {
-    where.clientEmail = { equals: normalizeEmail(clientEmail), mode: 'insensitive' };
+    const normalizedClientEmail = normalizeEmail(clientEmail);
+    if (!(await canAccessClientEmail(normalizedClientEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    where.clientEmail = { equals: normalizedClientEmail, mode: 'insensitive' };
+  }
+
+  const session = await getAdminSession();
+  if (session?.userId && session.role !== 'OWNER' && !clientEmail) {
+    where.responsible = session.name || session.email || session.userId;
   }
 
   if (search) {
@@ -70,6 +81,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email no valido' }, { status: 400 });
     }
 
+    const session = await getAdminSession();
+    const scopedResponsible = session?.userId && session.role !== 'OWNER'
+      ? (session.name || session.email || session.userId)
+      : responsible;
+
     const matter = await prisma.matter.create({
       data: {
         reference: generateMatterReference(),
@@ -81,7 +97,7 @@ export async function POST(request: Request) {
         procedureType,
         status,
         priority,
-        responsible,
+        responsible: scopedResponsible,
         summary,
         riskNotes,
         nextActionAt,

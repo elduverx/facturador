@@ -3,11 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 import { cancellationEmail, statusChangeEmail } from '@/lib/email-templates';
 import { formatDateES } from '@/lib/constants';
+import { isAdminAuthenticated } from '@/lib/auth';
+import { getAdminAppointmentScope } from '@/lib/admin-scope';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 // PATCH - Update appointment (admin)
 export async function PATCH(request: Request, { params }: RouteParams) {
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { id } = await params;
 
   try {
@@ -21,6 +27,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     if (!existing) {
       return NextResponse.json({ error: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    const scope = await getAdminAppointmentScope();
+    if (Object.keys(scope).length > 0) {
+      const allowed = await prisma.appointment.count({ where: { AND: [{ id }, scope] } });
+      if (!allowed) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -81,6 +93,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 // DELETE - Cancel appointment (admin)
 export async function DELETE(_request: Request, { params }: RouteParams) {
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { id } = await params;
 
   try {
@@ -91,6 +107,12 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     if (!existing) {
       return NextResponse.json({ error: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    const scope = await getAdminAppointmentScope();
+    if (Object.keys(scope).length > 0) {
+      const allowed = await prisma.appointment.count({ where: { AND: [{ id }, scope] } });
+      if (!allowed) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const updated = await prisma.appointment.update({

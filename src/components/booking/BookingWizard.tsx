@@ -13,17 +13,17 @@ import { ShieldCheck, UserCheck, Calendar, FileText, CheckCircle2, ChevronRight,
 
 const LAWYERS = [
   {
-    id: 'luz',
-    name: 'Abogada Luz',
+    id: 'diana',
+    name: 'Abogada Diana',
     detail: 'Te orienta sobre documentación, estrategia y seguimiento del expediente.',
-    initials: 'LZ',
+    initials: 'DN',
     image: '/luz.png',
   },
   {
-    id: 'diana',
-    name: 'Abogada Diana',
+    id: 'luz',
+    name: 'Abogada Luz',
     detail: 'Te ayuda con citas, renovaciones y trámites administrativos.',
-    initials: 'DN',
+    initials: 'LZ',
     image: '/diana.png',
   },
 ];
@@ -36,7 +36,7 @@ const STEPS = [
   { label: 'Pago', icon: CheckCircle2 },
 ];
 
-export function BookingWizard() {
+export function BookingWizard({ initialServiceName }: { initialServiceName?: string | null }) {
   const [step, setStep] = useState(0);
   const [services, setServices] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +77,20 @@ export function BookingWizard() {
   }, []);
 
   useEffect(() => {
+    if (initialServiceName && services.length > 0) {
+      // Find a matching service (case-insensitive partial match to be safe)
+      const srv = services.find(s => 
+        s.name.toLowerCase() === initialServiceName.toLowerCase() || 
+        initialServiceName.toLowerCase().includes(s.name.toLowerCase()) ||
+        s.name.toLowerCase().includes(initialServiceName.toLowerCase())
+      );
+      if (srv) {
+        setSelectedServiceId(srv.id);
+      }
+    }
+  }, [initialServiceName, services]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('portalBooking') !== '1') return;
 
@@ -113,7 +127,7 @@ export function BookingWizard() {
     if (!normalizedEmail) errors.clientEmail = 'El email es obligatorio';
     else if (!isValidEmail(normalizedEmail)) errors.clientEmail = 'Email no válido';
     if (!normalizedPhone) errors.clientPhone = 'El teléfono es obligatorio';
-    else if (!isValidPhone(normalizedPhone)) errors.clientPhone = 'Teléfono no válido (9 dígitos)';
+    else if (!isValidPhone(normalizedPhone)) errors.clientPhone = 'Teléfono no válido';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -124,13 +138,22 @@ export function BookingWizard() {
       handleSubmit();
       return;
     }
-    setStep(step + 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Skip step 1 (Trámite) if it was pre-selected via the hero funnel
+    if (step === 0 && initialServiceName && selectedServiceId) {
+      setStep(2);
+    } else {
+      setStep(step + 1);
+    }
     setError('');
   };
 
   const handleBack = () => {
-    setStep(step - 1);
+    // Go back to step 0 if we skipped step 1
+    if (step === 2 && initialServiceName && selectedServiceId) {
+      setStep(0);
+    } else {
+      setStep(step - 1);
+    }
     setError('');
   };
 
@@ -150,6 +173,7 @@ export function BookingWizard() {
           clientEmail: normalizeEmail(clientData.clientEmail),
           clientPhone: normalizePhone(clientData.clientPhone),
           clientNie: clientData.clientNie ? normalizeNie(clientData.clientNie) : undefined,
+          lawyerId: selectedLawyerId,
           notes: [
             selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
             clientData.notes || null,
@@ -231,7 +255,17 @@ export function BookingWizard() {
                   <button
                     key={lawyer.id}
                     type="button"
-                    onClick={() => setSelectedLawyerId(lawyer.id)}
+                    onClick={() => {
+                      setSelectedLawyerId(lawyer.id);
+                      // Auto-advance for better UX
+                      setTimeout(() => {
+                        if (initialServiceName && selectedServiceId) {
+                          setStep(2);
+                        } else {
+                          setStep(1);
+                        }
+                      }, 400);
+                    }}
                     className={`group rounded-[2.5rem] border-4 transition-all duration-500 relative overflow-hidden aspect-[4/5] sm:aspect-[3/4] cursor-pointer ${
                       selectedLawyerId === lawyer.id
                         ? 'border-[var(--pv-gold)] shadow-2xl scale-[1.02] ring-8 ring-[var(--pv-gold)]/10'
@@ -295,16 +329,23 @@ export function BookingWizard() {
               <ServiceSelector
                 services={services}
                 selected={selectedServiceId}
-                onSelect={(id) => setSelectedServiceId(id)}
+                onSelect={(id) => {
+                  setSelectedServiceId(id);
+                  // Auto-advance for better UX
+                  setTimeout(() => {
+                    setStep(2);
+                  }, 400);
+                }}
               />
             </div>
           )}
 
           {step === 2 && selectedServiceId && (
             <div className="relative z-10 animate-fade-in">
-              <DateTimePicker
-                serviceId={selectedServiceId}
-                selectedDate={selectedDate}
+                <DateTimePicker
+                  serviceId={selectedServiceId}
+                  lawyerId={selectedLawyerId}
+                  selectedDate={selectedDate}
                 selectedTime={selectedTime}
                 onDateSelect={setSelectedDate}
                 onTimeSelect={(t) => setSelectedTime(t || null)}
@@ -449,3 +490,4 @@ export function BookingWizard() {
     </div>
   );
 }
+

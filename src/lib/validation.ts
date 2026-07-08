@@ -8,17 +8,18 @@ export const normalizeNie = (value: string): string =>
   value.trim().toUpperCase().replace(/\s+/g, '');
 
 export const normalizePhone = (value: string): string => {
-  let digits = value.replace(/\D/g, '');
-  if (digits.startsWith('0034')) {
-    digits = digits.slice(4);
+  // Keep only digits and the plus sign
+  let cleaned = value.replace(/[^\d+]/g, '');
+  // If it starts with '+', keep it, but remove any other '+' signs
+  if (cleaned.startsWith('+')) {
+    cleaned = '+' + cleaned.substring(1).replace(/\+/g, '');
+  } else {
+    cleaned = cleaned.replace(/\+/g, '');
   }
-  if (digits.startsWith('34') && digits.length > 9) {
-    digits = digits.slice(2);
-  }
-  if (digits.length > 9) {
-    digits = digits.slice(-9);
-  }
-  return digits;
+  return cleaned;
 };
 
-export const isValidPhone = (value: string): boolean => /^[6-9]\d{8}$/.test(value);
+export const isValidPhone = (value: string): boolean => {
+  // Allow optional '+' at the start, followed by 7 to 15 digits
+  return /^\+?\d{7,15}$/.test(value);
+};

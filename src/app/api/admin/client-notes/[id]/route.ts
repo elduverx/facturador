@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { canAccessClientEmail } from '@/lib/admin-scope';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const { id } = await params;
 
   try {
+    const current = await prisma.clientNote.findUnique({ where: { id }, select: { clientEmail: true } });
+    if (!current) {
+      return NextResponse.json({ error: 'Nota no encontrada' }, { status: 404 });
+    }
+    if (!(await canAccessClientEmail(current.clientEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const content = typeof body?.content === 'string' ? body.content.trim() : '';
     const status = typeof body?.status === 'string' ? body.status : undefined;
@@ -54,6 +63,14 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   const { id } = await params;
 
   try {
+    const current = await prisma.clientNote.findUnique({ where: { id }, select: { clientEmail: true } });
+    if (!current) {
+      return NextResponse.json({ error: 'Nota no encontrada' }, { status: 404 });
+    }
+    if (!(await canAccessClientEmail(current.clientEmail))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     await prisma.clientNote.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {

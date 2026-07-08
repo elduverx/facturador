@@ -4,64 +4,122 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed services
+  // Deactivate old services instead of deleting them to avoid foreign key constraint errors with existing appointments
+  await prisma.service.updateMany({
+    data: { active: false },
+  });
+  console.log('Deactivated old services from database.');
+
+  // Seed new services based on the 3 pillars
   const services = [
+    // EXTRANJERÍA
     {
-      name: 'Arraigo Social/Laboral/Familiar',
-      description: 'Tramitacion de autorizacion de residencia por arraigo social, laboral o familiar',
+      id: 'extranjeria-visados',
+      name: 'Visados o estancias por estudios',
+      description: 'Gestionamos tu visado para que puedas formarte en España.',
       durationMin: 60,
       price: null,
       sortOrder: 1,
     },
     {
-      name: 'Autorizacion de residencia (NIE)',
-      description: 'Solicitud y tramitacion del Numero de Identidad de Extranjero',
+      id: 'extranjeria-arraigos',
+      name: 'Arraigos',
+      description: 'Social, sociolaboral, socioformativo, por estudio o de familia.',
       durationMin: 60,
       price: null,
       sortOrder: 2,
     },
     {
-      name: 'Renovacion de residencia',
-      description: 'Renovacion de tarjeta de residencia y permisos de trabajo',
-      durationMin: 45,
+      id: 'extranjeria-residencia-vinculo',
+      name: 'Residencia por vínculo',
+      description: 'Para familiares de ciudadanos españoles o de la UE.',
+      durationMin: 60,
       price: null,
       sortOrder: 3,
     },
     {
-      name: 'Nacionalidad espanola',
-      description: 'Tramitacion de solicitud de nacionalidad espanola por residencia',
+      id: 'extranjeria-reagrupaciones',
+      name: 'Reagrupaciones familiares',
+      description: 'Trae a tus seres queridos a vivir contigo a España.',
       durationMin: 60,
       price: null,
       sortOrder: 4,
     },
     {
-      name: 'Reagrupacion familiar',
-      description: 'Solicitud de reagrupacion de familiares de residentes en Espana',
+      id: 'extranjeria-nacionalidades',
+      name: 'Nacionalidades',
+      description: 'Tramitación completa para obtener la nacionalidad española.',
       durationMin: 60,
       price: null,
       sortOrder: 5,
     },
     {
-      name: 'Asilo y proteccion internacional',
-      description: 'Solicitud de asilo y proteccion internacional para refugiados',
-      durationMin: 90,
+      id: 'extranjeria-renovaciones',
+      name: 'Renovaciones',
+      description: 'Renueva tus permisos a tiempo y sin complicaciones.',
+      durationMin: 45,
       price: null,
       sortOrder: 6,
     },
+
+    // LABORAL
     {
-      name: 'Consulta general de extranjeria',
-      description: 'Consulta sobre cualquier tramite de extranjeria e inmigracion',
-      durationMin: 30,
+      id: 'laboral-contratos',
+      name: 'Contratos y nóminas',
+      description: 'Revisión y asesoramiento sobre condiciones laborales.',
+      durationMin: 45,
       price: null,
       sortOrder: 7,
+    },
+    {
+      id: 'laboral-despidos',
+      name: 'Despidos',
+      description: 'Impugnación de despidos improcedentes o nulos.',
+      durationMin: 60,
+      price: null,
+      sortOrder: 8,
+    },
+    {
+      id: 'laboral-vacaciones',
+      name: 'Vacaciones',
+      description: 'Reclamaciones por vacaciones no disfrutadas o denegadas.',
+      durationMin: 45,
+      price: null,
+      sortOrder: 9,
+    },
+
+    // FAMILIA
+    {
+      id: 'familia-convenios',
+      name: 'Convenios reguladores',
+      description: 'Redacción y negociación de acuerdos justos y equilibrados.',
+      durationMin: 60,
+      price: null,
+      sortOrder: 10,
+    },
+    {
+      id: 'familia-visitas',
+      name: 'Régimen de visitas',
+      description: 'Establecimiento y modificación de medidas paterno-filiales.',
+      durationMin: 60,
+      price: null,
+      sortOrder: 11,
+    },
+    {
+      id: 'familia-divorcios',
+      name: 'Divorcios',
+      description: 'Asesoramiento integral en separaciones de mutuo acuerdo o contenciosos.',
+      durationMin: 60,
+      price: null,
+      sortOrder: 12,
     },
   ];
 
   for (const service of services) {
     await prisma.service.upsert({
-      where: { id: service.name.toLowerCase().replace(/\s+/g, '-').slice(0, 20) },
-      update: service,
-      create: service,
+      where: { id: service.id },
+      update: { ...service, active: true },
+      create: { ...service, active: true },
     });
   }
 
@@ -71,7 +129,7 @@ async function main() {
     update: {},
     create: {
       id: 'default',
-      firmName: 'Consultorio de Extranjeria',
+      firmName: 'Iuris Abogadas',
       firmEmail: '',
       firmPhone: '',
       firmAddress: '',
@@ -85,7 +143,7 @@ async function main() {
     },
   });
 
-  console.log('Seed completado: 7 servicios + configuracion por defecto');
+  console.log(`Seed completado: ${services.length} servicios nuevos (Extranjería, Laboral, Familia) + configuración por defecto`);
 }
 
 main()

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone } from '@/lib/validation';
+import { createPortalSessionCookie } from '@/lib/portal-session';
+
+const PORTAL_SESSION_COOKIE = 'pv_portal_session';
+const SESSION_MAX_AGE = 60 * 60 * 2;
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +48,7 @@ export async function POST(request: Request) {
       prisma.clientDocument.findMany({
         where: {
           clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-          clientPhone: normalizedPhone,
+          OR: [{ clientPhone: normalizedPhone }, { clientPhone: '' }],
         },
         orderBy: { createdAt: 'desc' },
         select: {
@@ -54,7 +58,10 @@ export async function POST(request: Request) {
           sizeBytes: true,
           description: true,
           status: true,
+          clientPhone: true,
           adminNotes: true,
+          amountDue: true,
+          isPaid: true,
           createdAt: true,
         },
       }),
@@ -106,7 +113,7 @@ export async function POST(request: Request) {
         })
       : [];
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       appointments: paged.map((appt) => ({
         id: appt.id,
         clientName: appt.clientName,
@@ -127,6 +134,8 @@ export async function POST(request: Request) {
       })),
       documents: documents.map(document => ({
         ...document,
+        adminNotes: document.clientPhone === '' ? document.adminNotes : null,
+        clientPhone: undefined,
         createdAt: document.createdAt.toISOString(),
       })),
       matters: matters.map((matter) => ({
@@ -164,6 +173,22 @@ export async function POST(request: Request) {
       page: Math.max(1, page),
       pageSize,
     });
+
+    if (hasPortalMatch) {
+      response.cookies.set(PORTAL_SESSION_COOKIE, await createPortalSessionCookie({
+        appointmentId: filtered[0]?.id,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+      }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: SESSION_MAX_AGE,
+        path: '/',
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error('Error consultando cita:', error);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
