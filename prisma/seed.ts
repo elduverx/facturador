@@ -144,7 +144,7 @@ async function main() {
   });
 
   // Seed default admin user
-  const bcrypt = require('bcrypt');
+  const bcrypt = require('bcryptjs');
   const initialPinHash = await bcrypt.hash('012345', 12);
   
   await prisma.staffUser.upsert({
