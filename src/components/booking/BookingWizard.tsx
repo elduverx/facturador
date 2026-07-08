@@ -42,7 +42,6 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [usedInitialServiceSkip, setUsedInitialServiceSkip] = useState(false);
 
   // Form state
   const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
@@ -250,12 +249,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                       setSelectedLawyerId(lawyer.id);
                       // Auto-advance for better UX
                       setTimeout(() => {
-                        if (initialServiceName && selectedServiceId && !usedInitialServiceSkip) {
-                          setUsedInitialServiceSkip(true);
-                          setStep(2);
-                        } else {
-                          setStep(1);
-                        }
+                        setStep(1);
                       }, 400);
                     }}
                     className={`group rounded-[2.5rem] border-4 transition-all duration-500 relative overflow-hidden aspect-[1/2] sm:aspect-[3/4] cursor-pointer ${
