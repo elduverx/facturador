@@ -59,10 +59,10 @@ export function ServiceSelector({ services, selected, onSelect }: Props) {
 
   return (
     <div className="animate-fade-in">
-      <h2 className="text-xl sm:text-3xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 sm:mb-3 tracking-tighter">
+      <h2 className="text-lg sm:text-2xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-1 tracking-tighter">
         Tipo de trámite
       </h2>
-      <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-6 sm:mb-8 leading-relaxed font-medium max-w-3xl">
+      <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-5 leading-relaxed font-medium max-w-3xl">
         Identifica la naturaleza de tu caso. Selecciona el área legal y luego el trámite específico.
       </p>
 
@@ -89,13 +89,13 @@ export function ServiceSelector({ services, selected, onSelect }: Props) {
       </div>
 
       {/* Services Grid for Active Tab */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 animate-fade-in key-change" key={activeTab}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 animate-fade-in key-change" key={activeTab}>
         {activeServices.map((service) => (
           <button
             key={service.id}
             type="button"
             onClick={() => onSelect(service.id)}
-            className={`group text-left p-2.5 sm:p-5 lg:p-6 rounded-2xl border-2 transition-all duration-500 relative overflow-hidden ${
+            className={`group text-left p-2.5 sm:p-3 lg:p-4 rounded-2xl border-2 transition-all duration-500 relative overflow-hidden ${
               selected === service.id
                 ? 'border-[var(--pv-gold)] bg-[var(--pv-navy)] shadow-2xl md:scale-[1.01]'
                 : 'border-[var(--pv-navy)]/10 bg-white hover:border-[var(--pv-gold)]/50 hover:shadow-lg'
@@ -124,11 +124,11 @@ export function ServiceSelector({ services, selected, onSelect }: Props) {
                   {service.name}
                 </div>
                 {service.description && (
-                  <div className={`hidden sm:block text-[11px] mt-2 font-medium leading-relaxed line-clamp-3 transition-colors ${selected === service.id ? 'text-white opacity-80' : 'text-[var(--pv-navy)] opacity-60'}`}>
+                  <div className={`hidden sm:block text-[10px] mt-1.5 font-medium leading-relaxed line-clamp-2 transition-colors ${selected === service.id ? 'text-white opacity-80' : 'text-[var(--pv-navy)] opacity-60'}`}>
                     {service.description}
                   </div>
                 )}
-                <div className={`hidden sm:flex flex-wrap items-center gap-4 mt-4 pt-4 border-t transition-colors ${selected === service.id ? 'border-white/10' : 'border-[var(--pv-marble)]'}`}>
+                <div className={`hidden sm:flex flex-wrap items-center gap-3 mt-3 pt-3 border-t transition-colors ${selected === service.id ? 'border-white/10' : 'border-[var(--pv-marble)]'}`}>
                   <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase transition-colors ${selected === service.id ? 'text-white opacity-60' : 'text-[var(--pv-navy)] opacity-40'}`}>
                     <Clock size={12} className={selected === service.id ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-navy)]/40'} />
                     {service.durationMin} min

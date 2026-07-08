@@ -206,18 +206,18 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   }
 
   return (
-    <div className="space-y-3 sm:space-y-6 lg:space-y-8 animate-fade-in">
+    <div className="space-y-2 sm:space-y-3 lg:space-y-4 animate-fade-in">
       {/* Progress Stepper */}
       {step < 4 && (
-        <div className="neo-card !p-3 sm:!p-5 lg:!p-6 bg-white/50 border-white/20">
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-lg bg-[var(--pv-gold)] flex items-center justify-center text-white shadow-lg">
-                  <Sparkles size={16} />
+        <div className="neo-card !p-2 sm:!p-3 lg:!p-4 bg-white/50 border-white/20">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-2 sm:mb-3 lg:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+               <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-[var(--pv-gold)] flex items-center justify-center text-white shadow-md">
+                  <Sparkles size={12} />
                </div>
-               <h2 className="font-roman font-bold text-base sm:text-lg uppercase tracking-tight text-[var(--pv-ink)]">{STEPS[step].label}</h2>
+               <h2 className="font-roman font-bold text-sm sm:text-base uppercase tracking-tight text-[var(--pv-ink)]">{STEPS[step].label}</h2>
             </div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)]">
+            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)]">
               Etapa {step + 1} de 4
             </div>
           </div>
@@ -225,10 +225,10 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2 sm:flex sm:items-center">
             {STEPS.slice(0, 4).map((s, i) => (
               <div key={i} className="sm:flex-1 relative min-w-0">
-                <div className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-[var(--pv-gold)] shadow-sm' : 'bg-[var(--pv-marble)]'}`} />
-                <div className={`mt-3 flex flex-col items-center gap-1 ${i <= step ? 'opacity-100' : 'opacity-30'}`}>
-                   <s.icon size={14} className={i === step ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-navy)]'} />
-                   <span className="text-[8px] font-black uppercase tracking-widest hidden md:block text-center truncate max-w-full">{s.label}</span>
+                <div className={`h-1 sm:h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-[var(--pv-gold)] shadow-sm' : 'bg-[var(--pv-marble)]'}`} />
+                <div className={`mt-1.5 flex flex-col items-center gap-0.5 sm:gap-1 ${i <= step ? 'opacity-100' : 'opacity-30'}`}>
+                   <s.icon size={12} className={i === step ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-navy)]'} />
+                   <span className="text-[7px] font-black uppercase tracking-widest hidden md:block text-center truncate max-w-full">{s.label}</span>
                 </div>
               </div>
             ))}
@@ -236,8 +236,8 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
         </div>
       )}
 
-      <div className={step < 4 ? 'grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5 sm:gap-6 xl:gap-8 items-start' : ''}>
-        <div className="neo-card !p-3 sm:!p-6 lg:!p-8 xl:!p-10 shadow-2xl relative overflow-hidden min-w-0">
+      <div className={step > 0 && step < 4 ? 'grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-4 sm:gap-5 xl:gap-6 items-start' : ''}>
+        <div className={`neo-card !p-3 sm:!p-5 lg:!p-6 xl:!p-8 shadow-2xl relative overflow-hidden min-w-0 ${step === 0 ? 'max-w-4xl mx-auto' : ''}`}>
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none transform translate-x-4 -translate-y-4">
              <ShieldCheck size={160} />
@@ -245,12 +245,12 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
 
           {step === 0 && (
             <div className="relative z-10 animate-fade-in">
-              <h2 className="text-xl sm:text-3xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 sm:mb-3 tracking-tighter">Elige quién te atenderá</h2>
-              <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-8 lg:mb-10 leading-relaxed font-medium max-w-3xl">
+              <h2 className="text-lg sm:text-2xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-1.5 tracking-tighter">Elige quién te atenderá</h2>
+              <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-3 sm:mb-5 leading-relaxed font-medium max-w-3xl">
                 Selecciona una abogada para tu consulta. Después podrás elegir el trámite, la fecha disponible y completar tus datos.
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+              <div className="grid grid-cols-2 gap-3 sm:gap-8 lg:gap-10">
                 {LAWYERS.map((lawyer) => (
                   <button
                     key={lawyer.id}
@@ -266,7 +266,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                         }
                       }, 400);
                     }}
-                    className={`group rounded-[2.5rem] border-4 transition-all duration-500 relative overflow-hidden aspect-[4/5] sm:aspect-[3/4] cursor-pointer ${
+                    className={`group rounded-[2.5rem] border-4 transition-all duration-500 relative overflow-hidden aspect-[1/2] sm:aspect-[3/4] cursor-pointer ${
                       selectedLawyerId === lawyer.id
                         ? 'border-[var(--pv-gold)] shadow-2xl scale-[1.02] ring-8 ring-[var(--pv-gold)]/10'
                         : 'border-white hover:border-[var(--pv-gold)]/40 hover:shadow-xl shadow-md'
@@ -291,32 +291,32 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--pv-navy)] via-[var(--pv-navy)]/10 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-500" />
 
                     {/* Selection Indicator (Always visible now) */}
-                    <div className="absolute top-6 right-6 z-20">
-                      <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
+                    <div className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20">
+                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
                         selectedLawyerId === lawyer.id 
                           ? 'bg-[var(--pv-gold)] border-[var(--pv-gold)] shadow-lg' 
                           : 'bg-white/10 border-white/50 backdrop-blur-md group-hover:border-[var(--pv-gold)] group-hover:bg-white/20'
                       }`}>
                         <CheckCircle2 
+                          size={16}
                           className={`text-white transition-all duration-500 ${
                             selectedLawyerId === lawyer.id ? 'opacity-100 scale-110' : 'opacity-0 scale-50'
                           }`} 
-                          size={24} 
                         />
                       </div>
                     </div>
                     
                     {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-8 sm:p-10 z-10 text-left">
-                      <div className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 transition-all duration-500 border ${
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-10 z-10 text-left">
+                      <div className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-5 py-1 sm:py-2 rounded-full text-[7px] sm:text-[10px] font-black uppercase tracking-[0.2em] mb-2 sm:mb-4 transition-all duration-500 border ${
                         selectedLawyerId === lawyer.id 
                           ? 'bg-[var(--pv-gold)] text-white border-[var(--pv-gold)]' 
                           : 'bg-white/10 text-white border-white/30 backdrop-blur-md group-hover:bg-[var(--pv-gold)] group-hover:border-[var(--pv-gold)]'
                       }`}>
                         {selectedLawyerId === lawyer.id ? 'Seleccionada' : 'Seleccionar'}
                       </div>
-                      <h3 className="font-roman text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight leading-tight mb-2 transition-transform duration-500 group-hover:-translate-y-1">{lawyer.name}</h3>
-                      <p className="text-sm text-white/80 font-medium leading-relaxed line-clamp-2 transition-transform duration-500 delay-75 group-hover:-translate-y-1">{lawyer.detail}</p>
+                      <h3 className="font-roman text-lg sm:text-3xl md:text-4xl font-bold text-white uppercase tracking-tight leading-tight mb-1 sm:mb-2 transition-transform duration-500 group-hover:-translate-y-1">{lawyer.name}</h3>
+                      <p className="text-[9px] sm:text-sm text-white/80 font-medium leading-relaxed line-clamp-2 transition-transform duration-500 delay-75 group-hover:-translate-y-1">{lawyer.detail}</p>
                     </div>
                   </button>
                 ))}
@@ -384,10 +384,10 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           )}
 
           {step < 4 && (
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mt-5 sm:mt-10 lg:mt-12 pt-4 sm:pt-7 lg:pt-8 border-t border-[var(--pv-marble)] relative z-10">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mt-4 sm:mt-6 lg:mt-8 pt-3 sm:pt-5 lg:pt-6 border-t border-[var(--pv-marble)] relative z-10">
               {step > 0 ? (
-                <button onClick={handleBack} className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border-2 border-[var(--pv-marble)] text-[var(--pv-navy)] opacity-60 hover:opacity-100 hover:bg-stone-100 transition-all flex items-center justify-center gap-2">
-                   <ChevronLeft size={16} /> Atrás
+                <button onClick={handleBack} className="w-full sm:w-auto px-5 sm:px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] border-2 border-[var(--pv-marble)] text-[var(--pv-navy)] opacity-60 hover:opacity-100 hover:bg-stone-100 transition-all flex items-center justify-center gap-2">
+                   <ChevronLeft size={14} /> Atrás
                 </button>
               ) : (
                 <div className="hidden sm:block" />
@@ -395,17 +395,17 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
               <button
                 onClick={handleNext}
                 disabled={!canGoNext() || submitting}
-                className="btn-roman w-full sm:w-auto px-8 sm:px-10 py-4 text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-[var(--pv-gold)]/20 disabled:grayscale disabled:opacity-50"
+                className="btn-roman w-full sm:w-auto px-6 sm:px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[var(--pv-gold)]/20 disabled:grayscale disabled:opacity-50"
               >
                 {submitting ? (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Procesando...
                   </div>
                 ) : step === 3 ? (
                   'Confirmar y pagar'
                 ) : (
-                  <div className="flex items-center gap-2">Continuar <ChevronRight size={16} /></div>
+                  <div className="flex items-center gap-2">Continuar <ChevronRight size={14} /></div>
                 )}
               </button>
             </div>
@@ -414,11 +414,11 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
 
         {/* Sidebar Summary */}
         {step > 0 && step < 4 && (
-          <aside className="hidden sm:block space-y-4 sm:space-y-6 animate-fade-in xl:sticky xl:top-24 min-w-0">
-             <div className="neo-card !p-4 sm:!p-6 xl:!p-8 border-t-8 border-t-[var(--pv-gold)] shadow-xl">
-                <h3 className="font-roman font-bold text-sm uppercase tracking-[0.2em] text-[var(--pv-ink)] mb-5 xl:mb-8 border-b border-[var(--pv-marble)] pb-4">Resumen de reserva</h3>
+          <aside className="hidden sm:block space-y-3 sm:space-y-4 animate-fade-in xl:sticky xl:top-24 min-w-0">
+             <div className="neo-card !p-4 sm:!p-5 xl:!p-6 border-t-8 border-t-[var(--pv-gold)] shadow-xl">
+                <h3 className="font-roman font-bold text-xs uppercase tracking-[0.2em] text-[var(--pv-ink)] mb-4 xl:mb-6 border-b border-[var(--pv-marble)] pb-3">Resumen de reserva</h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3 xl:gap-4">
                   <div className="group">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-2 group-hover:translate-x-1 transition-transform">Abogada</p>
                     <div className="flex items-center gap-3">

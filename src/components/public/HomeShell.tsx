@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BookingWizard } from '@/components/booking/BookingWizard';
 import { HomeNavbar } from '@/components/public/HomeNavbar';
 import { 
@@ -100,6 +100,23 @@ export function HomeShell() {
   const [activeService, setActiveService] = useState<string | null>(null);
   const bookingRef = useRef<HTMLElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsHeaderVisible(false); // Scrolling down
+      } else {
+        setIsHeaderVisible(true); // Scrolling up
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handlePillarClick = (id: string) => {
     setActivePillar(id);
@@ -121,15 +138,15 @@ export function HomeShell() {
   return (
     <div className="min-h-screen bg-[var(--pv-marble)] font-sans">
       {/* Header */}
-      <header className="fixed w-full z-50 bg-[var(--glass-bg)] backdrop-blur-md border-b border-[var(--glass-border)] shadow-sm">
+      <header className={`fixed w-full z-50 bg-[var(--glass-bg)] backdrop-blur-md border-b border-[var(--glass-border)] shadow-sm transition-transform duration-500 ease-in-out ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[var(--pv-gold)] rounded-full flex items-center justify-center shadow-lg transform rotate-12">
-              <ShieldCheck className="text-white w-4 h-4 sm:w-6 sm:h-6" />
+            <div className="hidden sm:flex w-10 h-10 sm:w-12 sm:h-12 rounded-full items-center justify-center shadow-lg border-2 border-white overflow-hidden shrink-0">
+              <img src="/logopv.jpeg" alt="PV Abogadas" className="w-full h-full object-cover" />
             </div>
             <div>
-              <div className="font-roman text-lg sm:text-xl font-bold tracking-tight text-[var(--pv-navy)] uppercase">Iuris Abogadas</div>
-              <p className="text-[8px] sm:text-[10px] uppercase tracking-widest text-[var(--pv-gold)] font-bold">Despacho Multidisciplinar</p>
+              <div className="font-roman text-lg sm:text-xl font-bold tracking-tight text-[var(--pv-navy)] uppercase">PV Abogadas</div>
+              <p className="text-[7px] sm:text-[8px] uppercase tracking-widest text-[var(--pv-gold)] font-bold">expertas en Extranjeria | Laboral | Familia</p>
             </div>
           </a>
           <HomeNavbar />
@@ -138,7 +155,7 @@ export function HomeShell() {
 
       <main className="pb-8 sm:pb-12">
         {/* Dynamic Funnel Hero Section with Video Background */}
-        <section className="relative w-full min-h-screen pt-28 pb-16 lg:pt-40 lg:pb-32 flex flex-col justify-center overflow-hidden">
+        <section id="servicios" className="relative w-full min-h-screen pt-28 pb-16 lg:pt-40 lg:pb-32 flex flex-col justify-center overflow-hidden">
           {/* Background Video */}
           <div className="absolute inset-0 w-full h-full z-0">
             <video 
@@ -311,7 +328,7 @@ export function HomeShell() {
         <section id="testimonios" className="py-12 sm:py-20 lg:py-32 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-10 sm:mb-16">
-              <h2 className="text-2xl sm:text-4xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight">Opiniones de clientes</h2>
+              <h2 className="text-2xl sm:text-4xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight">Nuestras clientas PV Abogadas</h2>
               <div className="w-16 sm:w-24 h-1 bg-[var(--pv-gold)] mx-auto mt-4 sm:mt-6"></div>
             </div>
 
@@ -336,21 +353,24 @@ export function HomeShell() {
         </section>
 
         {/* Booking Section */}
-        <section ref={bookingRef} id="reservar" className="bg-[var(--pv-navy)] py-12 sm:py-16 lg:py-24 relative overflow-hidden">
+        <section ref={bookingRef} id="reservar" className="bg-[var(--pv-navy)] py-8 sm:py-12 lg:py-16 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
           
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-8 sm:mb-10 lg:mb-12 max-w-3xl mx-auto px-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[var(--pv-gold)]/20 mb-4 sm:mb-6 border border-[var(--pv-gold)]/50">
-                <Calendar className="text-[var(--pv-gold)] w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative z-10">
+            <div className="text-center mb-4 sm:mb-6 max-w-3xl mx-auto px-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] mb-4 border-2 border-[var(--pv-gold)] text-[var(--pv-gold)] bg-[var(--pv-gold)]/10 backdrop-blur-md">
+                <Calendar size={14} /> Reserva tu cita
               </div>
-              <h2 className="text-2xl sm:text-4xl font-bold font-roman text-white uppercase mb-3 sm:mb-4 tracking-tight">Agenda tu Asesoría</h2>
-              <p className="text-sm sm:text-base text-white/70 leading-relaxed">
-                Selecciona la fecha y hora que mejor te convenga. Una vez confirmada, te indicaremos los siguientes pasos.
+              <h2 className="font-roman text-2xl sm:text-3xl lg:text-4xl font-bold text-white uppercase tracking-tight leading-none mb-3 sm:mb-4">
+                Agenda tu Asesoría
+              </h2>
+              <p className="text-xs sm:text-sm text-white/70 font-medium leading-relaxed max-w-2xl mx-auto">
+                Selecciona la modalidad, el área de especialidad y la profesional que mejor se adapte a tus necesidades.
               </p>
             </div>
             
-            <div className="bg-[var(--pv-marble)] rounded-t-[1.5rem] rounded-b-[1.5rem] sm:rounded-t-[2.5rem] sm:rounded-b-[2.5rem] shadow-2xl overflow-hidden p-3 sm:p-6 lg:p-8">
+            {/* Booking Wizard Container */}
+            <div className="bg-[var(--pv-marble)] rounded-t-[1.5rem] rounded-b-[1.5rem] sm:rounded-t-[2rem] sm:rounded-b-[2rem] shadow-2xl overflow-hidden p-2 sm:p-3 lg:p-4">
               <BookingWizard initialServiceName={activeService} />
             </div>
           </div>
@@ -387,14 +407,14 @@ export function HomeShell() {
       {/* Footer */}
       <footer className="bg-[var(--pv-navy)] text-white py-8 sm:py-12 border-t border-[var(--pv-gold)]/30">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
-          <div className="flex items-center gap-2 sm:gap-3 opacity-80">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[var(--pv-gold)] rounded-full flex items-center justify-center shadow-lg transform rotate-12 border border-[var(--pv-gold)]">
-              <ShieldCheck className="text-white w-4 h-4 sm:w-6 sm:h-6" />
+          <div className="flex items-center gap-2 sm:gap-3 opacity-90">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg border-2 border-[var(--pv-gold)] overflow-hidden shrink-0 bg-white">
+              <img src="/logopv.jpeg" alt="PV Abogadas" className="w-full h-full object-cover" />
             </div>
-            <div className="font-roman text-base sm:text-lg font-bold tracking-tight text-white uppercase">Iuris Abogadas</div>
+            <div className="font-roman text-base sm:text-lg font-bold tracking-tight text-white uppercase">PV Abogadas</div>
           </div>
           <div className="text-[9px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-40 font-bold text-white text-center md:text-left">
-            &copy; {new Date().getFullYear()} Iuris Abogadas - Todos los derechos reservados
+            &copy; {new Date().getFullYear()} PV Abogadas - Todos los derechos reservados
           </div>
           <div className="flex gap-4 sm:gap-6 opacity-60 text-xs sm:text-sm">
              <a href="#" className="hover:text-[var(--pv-gold)] transition-colors text-white">Aviso Legal</a>

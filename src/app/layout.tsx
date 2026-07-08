@@ -3,13 +3,13 @@ import './globals.css';
 import { PWARegister } from '@/components/PWARegister';
 
 export const metadata: Metadata = {
-  title: 'PV Abogadas - Gestion de Expedientes',
-  description: 'Reserva, portal de clientes y gestion profesional de expedientes de extranjeria',
+  title: 'PV Abogadas - expertas en Extranjeria | Laboral | Familia',
+  description: 'Despacho de abogadas expertas en extranjería, laboral y familia. Reserva tu cita online.',
   manifest: '/manifest.json',
-  applicationName: 'Consultorio',
+  applicationName: 'PV Abogadas',
   appleWebApp: {
     capable: true,
-    title: 'Consultorio',
+    title: 'PV Abogadas',
     statusBarStyle: 'default',
   },
   icons: {

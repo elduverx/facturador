@@ -7,8 +7,8 @@ import { Menu, X, BookOpen, Users, Calendar, HelpCircle, ArrowRight, UserCircle 
 
 const NAV_LINKS = [
   { label: 'Servicios', href: '#servicios', icon: BookOpen },
-  { label: 'Nosotras', href: '#nosotras', icon: Users },
-  { label: 'Proceso', href: '#proceso', icon: Calendar },
+  { label: 'Testimonios', href: '#testimonios', icon: Users },
+  { label: 'Reserva', href: '#reservar', icon: Calendar },
   { label: 'FAQ', href: '#faq', icon: HelpCircle },
 ];
 
@@ -108,16 +108,9 @@ export function HomeNavbar() {
         ))}
         <Link 
           href="/portal" 
-          className="hover:text-[var(--pv-gold)] transition-colors relative group"
-        >
-          Mi Portal
-          <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--pv-gold)] transition-all group-hover:w-full"></span>
-        </Link>
-        <Link 
-          href="/admin/login" 
           className="btn-roman !px-5 !py-2 !text-[10px]"
         >
-          Area Legal
+          Mi Portal
         </Link>
       </div>
 
