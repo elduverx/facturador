@@ -12,10 +12,10 @@ export interface RedsysConfig {
 }
 
 export const REDSYS_CONFIG: RedsysConfig = {
-  merchantCode: process.env.REDSYS_MERCHANT_CODE || '999008881', // Sandbox default
+  merchantCode: process.env.REDSYS_MERCHANT_CODE || '999008881',
   terminal: process.env.REDSYS_TERMINAL || '1',
-  secretKey: process.env.REDSYS_SECRET_KEY || 'sq7HjrUOBfKmC576ILgskD5srU870gJ7', // Sandbox default
-  url: process.env.REDSYS_URL || 'https://sis-t.redsys.es:25443/sis/realizarPago',
+  secretKey: process.env.REDSYS_SIGNATURE_KEY || process.env.REDSYS_SECRET_KEY || 'sq7HjrUOBfKmC576ILgskD5srU870gJ7',
+  url: process.env.REDSYS_URL || (process.env.REDSYS_ENV === 'production' ? 'https://sis.redsys.es/sis/realizarPago' : 'https://sis-t.redsys.es:25443/sis/realizarPago'),
   merchantName: process.env.REDSYS_MERCHANT_NAME || 'Abogados PV',
   callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/redsys/callback`,
   successUrl: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/portal?payment=success`,
