@@ -10,6 +10,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=postgresql://pv_admin:PVadmin2026@db:5432/pvabogadas_db?schema=public
     depends_on:
       - db
 
