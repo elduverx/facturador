@@ -13,19 +13,19 @@ function baseTemplate(title: string, body: string, firmName: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f5f4;">
-  <div style="max-width:600px;margin:0 auto;padding:20px;">
-    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <div style="background:linear-gradient(135deg,#0F766E,#0D9488);padding:32px;text-align:center;">
-        <h1 style="color:white;margin:0;font-size:22px;font-weight:600;">${title}</h1>
-        <p style="color:#CCFBF1;margin:8px 0 0;font-size:14px;">${firmName}</p>
+<body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f5f5;">
+  <div style="background:#f5f5f5;padding:40px 20px;">
+    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);">
+      <div style="background:#0b1f2d;padding:40px 30px;text-align:center;border-bottom:4px solid #d4af37;">
+        <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${title}</h1>
+        <p style="color:#d4af37;margin:10px 0 0;font-size:12px;letter-spacing:3px;text-transform:uppercase;">${firmName}</p>
       </div>
-      <div style="padding:32px;color:#1C1917;font-size:15px;line-height:1.6;">
+      <div style="padding:40px 30px;color:#333333;font-size:16px;line-height:1.6;">
         ${body}
       </div>
-      <div style="background:#F5F5F4;padding:20px;text-align:center;font-size:12px;color:#A8A29E;border-top:1px solid #E7E5E4;">
-        <p style="margin:0;">${firmName}</p>
-        <p style="margin:4px 0 0;">Este es un mensaje automatico, por favor no responda directamente.</p>
+      <div style="background:#0b1f2d;padding:30px;text-align:center;font-size:12px;color:#ffffff;opacity:0.95;">
+        <p style="margin:0;color:#d4af37;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">${firmName}</p>
+        <p style="margin:10px 0 0;opacity:0.7;color:#ffffff;">Este es un mensaje automático, por favor no responda directamente a este correo.</p>
       </div>
     </div>
   </div>
@@ -34,11 +34,12 @@ function baseTemplate(title: string, body: string, firmName: string): string {
 }
 
 function appointmentDetails(data: AppointmentEmailData): string {
-  return `<div style="background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;padding:20px;margin:20px 0;">
+  return `<div style="background:#fafafa;border:1px solid #eaeaea;border-radius:12px;padding:25px;margin:25px 0;">
+    <h3 style="margin:0 0 15px;color:#0b1f2d;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Detalles de la Cita</h3>
     <table style="width:100%;border-collapse:collapse;">
-      <tr><td style="padding:6px 0;color:#57534E;font-size:14px;">Servicio:</td><td style="padding:6px 0;font-weight:600;">${data.serviceName}</td></tr>
-      <tr><td style="padding:6px 0;color:#57534E;font-size:14px;">Fecha:</td><td style="padding:6px 0;font-weight:600;">${data.date}</td></tr>
-      <tr><td style="padding:6px 0;color:#57534E;font-size:14px;">Hora:</td><td style="padding:6px 0;font-weight:600;">${data.time}</td></tr>
+      <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Servicio:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">${data.serviceName}</td></tr>
+      <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Fecha:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">${data.date}</td></tr>
+      <tr><td style="padding:10px 0;color:#666666;font-size:14px;">Hora:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;">${data.time}</td></tr>
     </table>
   </div>`;
 }
@@ -72,12 +73,19 @@ export function confirmationEmail(data: AppointmentEmailData): string {
 export function paymentConfirmationEmail(data: AppointmentEmailData & { amount: number }): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>
-    <p>Le confirmamos que hemos recibido correctamente el pago de <strong>${data.amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</strong> correspondiente al anticipo de su cita.</p>
-    ${appointmentDetails(data)}
-    <p style="font-size:14px;color:#57534E;">Su cita ya está asegurada. Nos vemos pronto.</p>
-    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Para cualquier duda, contactenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
+    <p>Adjuntamos el recibo de su pago por la cantidad de <strong style="color:#d4af37;font-size:18px;">${data.amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</strong>.</p>
+    <div style="background:#fafafa;border:1px solid #eeeeee;border-radius:12px;padding:25px;margin:25px 0;">
+      <h3 style="margin:0 0 15px;color:#0b1f2d;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Detalles de Facturación</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Concepto:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">Reserva de Asesoría</td></tr>
+        <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Servicio:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">${data.serviceName}</td></tr>
+        <tr><td style="padding:10px 0;color:#666666;font-size:14px;">Total abonado:</td><td style="padding:10px 0;font-weight:bold;color:#0b1f2d;text-align:right;">${data.amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</td></tr>
+      </table>
+    </div>
+    <p style="font-size:14px;color:#666666;">Este documento es un comprobante de pago válido para su reserva.</p>
+    ${data.firmPhone ? `<p style="font-size:14px;color:#666666;">Para cualquier duda, contáctenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
   `;
-  return baseTemplate('Confirmacion de Pago Recibido', body, data.firmName);
+  return baseTemplate('Factura de Pago', body, data.firmName);
 }
 
 export function cancellationEmail(data: AppointmentEmailData): string {

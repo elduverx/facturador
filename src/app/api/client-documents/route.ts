@@ -206,7 +206,7 @@ export async function POST(request: Request) {
           to: settings.firmEmail,
           subject: `Nueva documentacion: ${email}`,
           html: adminClientDocumentEmail({
-            firmName: settings.firmName || 'Consultorio de Extranjeria',
+            firmName: settings.firmName || 'PV Abogadas',
             clientEmail: email,
             clientPhone: phone,
             fileName: saved.safeName,

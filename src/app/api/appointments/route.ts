@@ -160,24 +160,19 @@ export async function POST(request: Request) {
     });
 
     // Send emails (non-blocking)
-    const firmName = dayConfig.settings?.firmName || 'Consultorio de Extranjeria';
+    const firmName = dayConfig.settings?.firmName || 'PV Abogadas';
     const emailData = {
       clientName: normalizedName,
       serviceName: service.name,
       date: formatDateES(date),
       time: startTime,
       firmName,
-      firmAddress: dayConfig.settings?.firmAddress || '',
+      firmAddress: dayConfig.settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
       firmPhone: dayConfig.settings?.firmPhone || '',
       firmEmail: dayConfig.settings?.firmEmail || '',
     };
 
-    // Client confirmation
-    sendEmail({
-      to: normalizedEmail,
-      subject: `Confirmacion de cita - ${firmName}`,
-      html: confirmationEmail(emailData),
-    }).catch(console.error);
+    // Client confirmation removed from here to only send upon payment successful
 
     // Admin notification
     if (dayConfig.settings?.firmEmail) {

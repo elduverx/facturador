@@ -77,7 +77,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         date: formatDateES(updated.date.toISOString().split('T')[0]),
         time: updated.startTime,
         firmName,
-        firmAddress: settings?.firmAddress || '',
+        firmAddress: settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
         firmPhone: settings?.firmPhone || '',
         firmEmail: settings?.firmEmail || '',
       };

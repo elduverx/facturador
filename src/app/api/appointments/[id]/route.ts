@@ -63,8 +63,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         serviceName: updated.service.name,
         date: formatDateES(dateStr),
         time: updated.startTime,
-        firmName: settings?.firmName || 'Consultorio de Extranjeria',
-        firmAddress: settings?.firmAddress || '',
+        firmName: settings?.firmName || 'PV Abogadas',
+        firmAddress: settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
         firmPhone: settings?.firmPhone || '',
         firmEmail: settings?.firmEmail || '',
       };
@@ -126,14 +126,14 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     sendEmail({
       to: updated.clientEmail,
-      subject: `Cita cancelada - ${settings?.firmName || 'Consultorio de Extranjeria'}`,
+      subject: `Cita cancelada - ${settings?.firmName || 'PV Abogadas'}`,
       html: cancellationEmail({
         clientName: updated.clientName,
         serviceName: updated.service.name,
         date: formatDateES(dateStr),
         time: updated.startTime,
-        firmName: settings?.firmName || 'Consultorio de Extranjeria',
-        firmAddress: settings?.firmAddress || '',
+        firmName: settings?.firmName || 'PV Abogadas',
+        firmAddress: settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
         firmPhone: settings?.firmPhone || '',
         firmEmail: settings?.firmEmail || '',
       }),

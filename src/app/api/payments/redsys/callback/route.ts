@@ -159,11 +159,11 @@ export async function POST(request: Request) {
 
         try {
           const { sendEmail } = await import('@/lib/email');
-          const { paymentConfirmationEmail } = await import('@/lib/email-templates');
+          const { paymentConfirmationEmail, confirmationEmail } = await import('@/lib/email-templates');
           const { formatDateES } = await import('@/lib/constants');
           
           const settings = await prisma.officeSettings.findUnique({ where: { id: 'default' } });
-          const firmName = settings?.firmName || 'Consultorio de Extranjería';
+          const firmName = settings?.firmName || 'PV Abogadas';
           
           const emailData = {
             clientName: appointment.clientName,
@@ -171,16 +171,24 @@ export async function POST(request: Request) {
             date: formatDateES(appointment.date.toISOString().split('T')[0]),
             time: appointment.startTime,
             firmName,
-            firmAddress: settings?.firmAddress || '',
+            firmAddress: settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
             firmPhone: settings?.firmPhone || '',
             firmEmail: settings?.firmEmail || '',
             amount
           };
 
+          // 1. Send the Invoice/Payment receipt
           await sendEmail({
             to: appointment.clientEmail,
-            subject: `Pago recibido y Cita Confirmada - ${firmName}`,
+            subject: `Factura de Pago - ${firmName}`,
             html: paymentConfirmationEmail(emailData),
+          });
+
+          // 2. Send the Video/Office Appointment Confirmation
+          await sendEmail({
+            to: appointment.clientEmail,
+            subject: `Confirmación de Cita - ${firmName}`,
+            html: confirmationEmail(emailData),
           });
         } catch (err) {
           console.error('Error enviando email de confirmacion de pago:', err);

@@ -31,15 +31,15 @@ export async function POST(_request: Request, { params }: RouteParams) {
       serviceName: appointment.service.name,
       date: formatDateES(dateStr),
       time: appointment.startTime,
-      firmName: settings?.firmName || 'Consultorio de Extranjeria',
-      firmAddress: settings?.firmAddress || '',
+      firmName: settings?.firmName || 'PV Abogadas',
+      firmAddress: settings?.firmAddress || 'C/ de Sant Ignasi de Loiola, 21, entresuelo, Extramurs, 46008 València, Valencia',
       firmPhone: settings?.firmPhone || '',
       firmEmail: settings?.firmEmail || '',
     });
 
     const sent = await sendEmail({
       to: appointment.clientEmail,
-      subject: `Recordatorio de cita - ${settings?.firmName || 'Consultorio de Extranjeria'}`,
+      subject: `Recordatorio de cita - ${settings?.firmName || 'PV Abogadas'}`,
       html: emailHtml,
     });
 

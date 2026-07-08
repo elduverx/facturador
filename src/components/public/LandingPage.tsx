@@ -863,7 +863,7 @@ export function LandingPage() {
                 <div className="w-9 h-9 rounded-lg bg-teal-600 flex items-center justify-center">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
                 </div>
-                <span className="font-display text-lg text-white">Consultorio de Extranjeria</span>
+                <span className="font-display text-lg text-white">PV Abogadas</span>
               </div>
               <p className="text-sm leading-relaxed mb-5">Abogadas especializadas en derecho de extranjeria. Tu confianza es nuestra responsabilidad.</p>
               <div className="flex gap-2.5">

@@ -29,7 +29,7 @@ export async function sendNewsletterForPost(post: NewsletterPost) {
   }
 
   const settings = await prisma.officeSettings.findUnique({ where: { id: 'default' } });
-  const firmName = settings?.firmName || 'Consultorio de Extranjeria';
+  const firmName = settings?.firmName || 'PV Abogadas';
   const appUrl = getAppUrl();
   const postUrl = `${appUrl}/blog/${post.slug}`;
 

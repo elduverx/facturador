@@ -15,6 +15,7 @@ import {
   Users,
   Wallet,
   X,
+  Receipt,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -24,6 +25,7 @@ const menuItems = [
   { href: '/admin/clientes', label: 'Clientes', icon: Users, mobile: true },
   { href: '/admin/calendario', label: 'Agenda', icon: Calendar, mobile: true },
   { href: '/admin/ingresos', label: 'Ingresos', icon: Wallet, mobile: true },
+  { href: '/facturador', label: 'Facturador', icon: Receipt },
   { href: '/admin/ai', label: 'IA', icon: Sparkles },
   { href: '/admin/equipo', label: 'Equipo', icon: UserCog },
   { href: '/admin/blog', label: 'Blog', icon: FileText },
