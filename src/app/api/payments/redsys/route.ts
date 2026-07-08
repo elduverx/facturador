@@ -7,8 +7,11 @@ import { createPortalSessionCookie } from '@/lib/portal-session';
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
 const SESSION_MAX_AGE = 60 * 60 * 2;
 
-const getBaseUrl = () =>
-  process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const getBaseUrl = (request: Request) => {
+  const configured = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (configured) return configured.replace(/\/$/, '');
+  return new URL(request.url).origin;
+};
 
 async function createPaymentAttempt(targetId: string, amount: number) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -66,8 +69,9 @@ export async function GET(request: Request) {
     amount,
     `Anticipo consulta: ${appointment.service.name}`,
     {
-      successUrl: `${getBaseUrl()}/portal?payment=success&appointmentId=${appointment.id}`,
-      errorUrl: `${getBaseUrl()}/portal?payment=error&appointmentId=${appointment.id}`,
+      callbackUrl: `${getBaseUrl(request)}/api/payments/redsys/callback`,
+      successUrl: `${getBaseUrl(request)}/portal?payment=success&appointmentId=${appointment.id}`,
+      errorUrl: `${getBaseUrl(request)}/portal?payment=error&appointmentId=${appointment.id}`,
     }
   );
 

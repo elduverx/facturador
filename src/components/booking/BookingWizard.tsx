@@ -42,6 +42,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [usedInitialServiceSkip, setUsedInitialServiceSkip] = useState(false);
 
   // Form state
   const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
@@ -138,22 +139,12 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
       handleSubmit();
       return;
     }
-    // Skip step 1 (Trámite) if it was pre-selected via the hero funnel
-    if (step === 0 && initialServiceName && selectedServiceId) {
-      setStep(2);
-    } else {
-      setStep(step + 1);
-    }
+    setStep(step + 1);
     setError('');
   };
 
   const handleBack = () => {
-    // Go back to step 0 if we skipped step 1
-    if (step === 2 && initialServiceName && selectedServiceId) {
-      setStep(0);
-    } else {
-      setStep(step - 1);
-    }
+    setStep(step - 1);
     setError('');
   };
 
@@ -259,7 +250,8 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                       setSelectedLawyerId(lawyer.id);
                       // Auto-advance for better UX
                       setTimeout(() => {
-                        if (initialServiceName && selectedServiceId) {
+                        if (initialServiceName && selectedServiceId && !usedInitialServiceSkip) {
+                          setUsedInitialServiceSkip(true);
                           setStep(2);
                         } else {
                           setStep(1);
@@ -490,4 +482,3 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     </div>
   );
 }
-

@@ -60,7 +60,7 @@ export function createRedsysPayment(
   order: string,
   amount: number,
   description: string,
-  urls?: { successUrl?: string; errorUrl?: string }
+  urls?: { callbackUrl?: string; successUrl?: string; errorUrl?: string }
 ) {
   // Redsys amount is in cents
   const amountCents = amountToCents(amount).toString();
@@ -72,7 +72,7 @@ export function createRedsysPayment(
     DS_MERCHANT_CURRENCY: '978', // EUR
     DS_MERCHANT_TRANSACTIONTYPE: '0',
     DS_MERCHANT_TERMINAL: REDSYS_CONFIG.terminal,
-    DS_MERCHANT_MERCHANTURL: REDSYS_CONFIG.callbackUrl,
+    DS_MERCHANT_MERCHANTURL: urls?.callbackUrl || REDSYS_CONFIG.callbackUrl,
     DS_MERCHANT_URLOK: urls?.successUrl || REDSYS_CONFIG.successUrl,
     DS_MERCHANT_URLKO: urls?.errorUrl || REDSYS_CONFIG.errorUrl,
     DS_MERCHANT_PRODUCTDESCRIPTION: description.substring(0, 125),
