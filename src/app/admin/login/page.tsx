@@ -16,6 +16,7 @@ export default function AdminLoginPage() {
   const [users, setUsers] = useState<LoginUser[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -26,7 +27,11 @@ export default function AdminLoginPage() {
         setUsers(list);
         if (list.length > 0) setLogin(list[0].loginSlug);
       })
-      .catch(() => setUsers([]));
+      .catch(() => {
+        setUsers([]);
+        setError('No se pudieron cargar las usuarias.');
+      })
+      .finally(() => setLoadingUsers(false));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,7 +82,11 @@ export default function AdminLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {users.length > 0 && (
+            {loadingUsers ? (
+              <div className="text-center text-[10px] uppercase tracking-[0.2em] font-bold text-[var(--pv-navy)] opacity-50">
+                Cargando usuarias...
+              </div>
+            ) : users.length > 0 && (
               <div>
                 <label className="block text-[var(--pv-navy)] font-bold text-[10px] uppercase tracking-widest mb-3 px-1">
                   Abogada
@@ -119,7 +128,7 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              disabled={!pin || loading}
+              disabled={!pin || loading || loadingUsers || (users.length > 0 && !login)}
               className="btn-roman w-full py-4 text-xs font-bold uppercase tracking-[0.2em] disabled:opacity-50"
             >
               {loading ? 'Verificando...' : 'Acceder'}

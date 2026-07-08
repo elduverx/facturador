@@ -33,23 +33,28 @@ function clearAttempts(key: string) {
 }
 
 export async function GET() {
-  const staff = await prisma.staffUser.findMany({
-    where: { active: true, loginSlug: { not: null } },
-    orderBy: { name: 'asc' },
-    select: {
-      name: true,
-      loginSlug: true,
-      role: true,
-      pinHash: true,
-    },
-  });
+  try {
+    const staff = await prisma.staffUser.findMany({
+      where: { active: true, loginSlug: { not: null } },
+      orderBy: { name: 'asc' },
+      select: {
+        name: true,
+        loginSlug: true,
+        role: true,
+        pinHash: true,
+      },
+    });
 
-  return NextResponse.json(staff.map((user) => ({
-    name: user.name,
-    loginSlug: user.loginSlug,
-    role: user.role,
-    hasPin: Boolean(user.pinHash),
-  })));
+    return NextResponse.json(staff.map((user) => ({
+      name: user.name,
+      loginSlug: user.loginSlug,
+      role: user.role,
+      hasPin: Boolean(user.pinHash),
+    })));
+  } catch (error) {
+    console.error('Error cargando usuarios de login:', error);
+    return NextResponse.json({ error: 'Error cargando usuarios' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -104,6 +109,14 @@ export async function POST(request: Request) {
       });
 
       return response;
+    }
+
+    const hasStaffUsers = await prisma.staffUser.count({
+      where: { active: true, loginSlug: { not: null } },
+    });
+
+    if (hasStaffUsers > 0) {
+      return NextResponse.json({ error: 'Selecciona una usuaria para acceder' }, { status: 400 });
     }
 
     const valid = await verifyPin(pin);
