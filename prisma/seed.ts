@@ -129,8 +129,8 @@ async function main() {
     update: {},
     create: {
       id: 'default',
-      firmName: 'Iuris Abogadas',
-      firmEmail: '',
+      firmName: 'PV Abogadas',
+      firmEmail: 'contacto@pvabogadas.es',
       firmPhone: '',
       firmAddress: '',
       startHour: 9,
@@ -143,7 +143,23 @@ async function main() {
     },
   });
 
-  console.log(`Seed completado: ${services.length} servicios nuevos (Extranjería, Laboral, Familia) + configuración por defecto`);
+  // Seed default admin user
+  const bcrypt = require('bcrypt');
+  const initialPinHash = await bcrypt.hash('012345', 12);
+  
+  await prisma.staffUser.upsert({
+    where: { email: 'admin@pvabogadas.es' },
+    update: {},
+    create: {
+      name: 'Admin',
+      email: 'admin@pvabogadas.es',
+      loginSlug: 'admin',
+      role: 'ADMIN',
+      pinHash: initialPinHash,
+    },
+  });
+
+  console.log(`Seed completado: ${services.length} servicios nuevos (Extranjería, Laboral, Familia) + admin + configuración por defecto`);
 }
 
 main()
