@@ -10,7 +10,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--pv-ink)] via-[var(--pv-navy)] to-black relative font-sans text-white selection:bg-[var(--pv-gold)] selection:text-white">
       {/* Elegant Gradient Overlay */}
-      <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none mix-blend-overlay z-0" />
+      <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-overlay z-0" />
 
       {/* Header - Glassmorphism */}
       <header className="relative z-50 bg-white/5 backdrop-blur-md border-b border-white/10 shadow-sm">

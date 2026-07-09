@@ -42,9 +42,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       matters,
       pendingAppointments
     });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (err: any) {
+    console.error('Error fetching portal appointment:', err);
+    return NextResponse.json({ error: 'Server error', details: err.message }, { status: 500 });
   }
 }
 
@@ -92,8 +92,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     return NextResponse.json(updated);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (err: any) {
+    console.error('Error updating portal appointment:', err);
+    return NextResponse.json({ error: 'Server error', details: err.message }, { status: 500 });
   }
 }
