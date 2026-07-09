@@ -39,7 +39,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
     const sent = await sendEmail({
       to: appointment.clientEmail,
-      subject: `Recordatorio de cita - ${settings?.firmName || 'PV Abogadas'}`,
+      subject: `Recordatorio de cita - PV Abogadas`,
       html: emailHtml,
     });
 

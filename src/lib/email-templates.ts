@@ -10,7 +10,6 @@ interface AppointmentEmailData {
 }
 
 function baseTemplate(title: string, body: string, firmName: string): string {
-  const displayFirmName = 'PV Abogadas';
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -19,13 +18,13 @@ function baseTemplate(title: string, body: string, firmName: string): string {
     <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);">
       <div style="background:#0b1f2d;padding:40px 30px;text-align:center;border-bottom:4px solid #d4af37;">
         <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${title}</h1>
-        <p style="color:#d4af37;margin:10px 0 0;font-size:12px;letter-spacing:3px;text-transform:uppercase;">${displayFirmName}</p>
+        <p style="color:#d4af37;margin:10px 0 0;font-size:12px;letter-spacing:3px;text-transform:uppercase;">${firmName}</p>
       </div>
       <div style="padding:40px 30px;color:#333333;font-size:16px;line-height:1.6;">
         ${body}
       </div>
       <div style="background:#0b1f2d;padding:30px;text-align:center;font-size:12px;color:#ffffff;opacity:0.95;">
-        <p style="margin:0;color:#d4af37;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">${displayFirmName}</p>
+        <p style="margin:0;color:#d4af37;letter-spacing:2px;font-weight:bold;text-transform:uppercase;">${firmName}</p>
         <p style="margin:10px 0 0;opacity:0.7;color:#ffffff;">Este es un mensaje automático, por favor no responda directamente a este correo.</p>
       </div>
     </div>
