@@ -121,8 +121,16 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
                   </span>
                   <CheckCircle2 size={14} className="text-emerald-400" />
                 </div>
-                <div className="text-xs font-bold text-[var(--pv-gold)] uppercase tracking-widest">
-                  {appointment.modality === 'OFFICE' ? 'En Despacho' : 'Video Llamada'}
+                <div className="flex flex-col items-center">
+                  <div className="text-xs font-bold text-[var(--pv-gold)] uppercase tracking-widest">
+                    {appointment.modality === 'OFFICE' ? 'En Despacho' : 'Video Llamada'}
+                  </div>
+                  {appointment.modality === 'OFFICE' && (
+                    <div className="text-[10px] text-white/70 text-center mt-2 px-4 leading-relaxed">
+                      C/ de Sant Ignasi de Loiola, 21, Entresuelo<br />
+                      46008 València, Valencia
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
