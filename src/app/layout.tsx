@@ -12,13 +12,17 @@ export const metadata: Metadata = {
     title: 'PV Abogadas',
     statusBarStyle: 'default',
   },
+  openGraph: {
+    title: 'PV Abogadas - expertas en Extranjeria | Laboral | Familia',
+    description: 'Despacho de abogadas expertas en extranjería, laboral y familia. Reserva tu cita online.',
+    images: [{ url: '/logopv.jpeg', width: 800, height: 600, alt: 'PV Abogadas Logo' }],
+    type: 'website',
+  },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/logopv.jpeg', sizes: 'any' },
     ],
-    apple: '/icons/icon-180.png',
+    apple: '/logopv.jpeg',
   },
 };
 
