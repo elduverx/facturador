@@ -1,4 +1,8 @@
-.PHONY: deploy build logs stop clean migrate seed
+.PHONY: deploy build logs stop clean migrate seed dev
+
+dev:
+	docker compose up -d db
+	npm run dev
 
 deploy:
 	docker compose up -d --build

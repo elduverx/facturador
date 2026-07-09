@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { BookingWizard } from '@/components/booking/BookingWizard';
 import { HomeNavbar } from '@/components/public/HomeNavbar';
+import { WhatsAppButton } from '@/components/public/WhatsAppButton';
 import { 
   ShieldCheck, 
   Users, 
@@ -451,6 +452,8 @@ export function HomeShell() {
           </div>
         </div>
       </footer>
+
+      <WhatsAppButton />
     </div>
   );
 }

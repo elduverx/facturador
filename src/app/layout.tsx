@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/logopv.jpeg', sizes: 'any' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
     apple: '/logopv.jpeg',
   },

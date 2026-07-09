@@ -16,7 +16,6 @@ import Link from 'next/link';
 import { formatDateShort } from '@/lib/constants';
 
 const secondaryActions = [
-  { href: '/admin/ai', label: 'IA asistente', icon: Sparkles },
   { href: '/admin/blog', label: 'Blog', icon: FileText },
   { href: '/admin/configuracion', label: 'Ajustes', icon: Settings },
 ];
