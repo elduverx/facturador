@@ -16,7 +16,7 @@ export type AdminSession = {
 function getSessionSecret() {
   const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PIN;
   if (!secret || secret === '123456') {
-    return 'pvabogadas-production-secret-key-2026';
+    return 'PVabogadas2026';
   }
   return secret;
 }

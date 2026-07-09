@@ -4,7 +4,11 @@ import type { NextRequest } from 'next/server';
 const encoder = new TextEncoder();
 
 function getSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PIN || 'dev-admin-session-secret';
+  const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PIN;
+  if (!secret || secret === '123456') {
+    return 'pvabogadas-production-secret-key-2026';
+  }
+  return secret;
 }
 
 async function hmac(value: string) {
