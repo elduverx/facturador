@@ -138,7 +138,12 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
       handleSubmit();
       return;
     }
-    setStep(step + 1);
+    
+    if (step === 0 && selectedServiceId) {
+      setStep(2);
+    } else {
+      setStep(step + 1);
+    }
     setError('');
   };
 
@@ -214,7 +219,13 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2 sm:flex sm:items-center">
             {STEPS.slice(0, 4).map((s, i) => (
-              <div key={i} className="sm:flex-1 relative min-w-0">
+              <div 
+                key={i} 
+                className={`sm:flex-1 relative min-w-0 ${i < step ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                onClick={() => {
+                  if (i < step) setStep(i);
+                }}
+              >
                 <div className={`h-1 sm:h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-[var(--pv-gold)] shadow-sm' : 'bg-[var(--pv-marble)]'}`} />
                 <div className={`mt-1.5 flex flex-col items-center gap-0.5 sm:gap-1 ${i <= step ? 'opacity-100' : 'opacity-30'}`}>
                    <s.icon size={12} className={i === step ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-navy)]'} />
@@ -249,7 +260,11 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                       setSelectedLawyerId(lawyer.id);
                       // Auto-advance for better UX
                       setTimeout(() => {
-                        setStep(1);
+                        if (selectedServiceId) {
+                          setStep(2);
+                        } else {
+                          setStep(1);
+                        }
                       }, 400);
                     }}
                     className={`group rounded-[2.5rem] border-4 transition-all duration-500 relative overflow-hidden aspect-[1/2] sm:aspect-[3/4] cursor-pointer ${

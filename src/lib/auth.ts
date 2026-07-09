@@ -65,7 +65,8 @@ export async function verifyPin(pin: string): Promise<boolean> {
   const envPin = process.env.ADMIN_PIN;
   if (!envPin) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('ADMIN_PIN debe estar configurado en produccion.');
+      console.error('ERROR: ADMIN_PIN debe estar configurado en produccion. El inicio de sesión fallará hasta que se configure.');
+      return false;
     }
     return pin === '123456';
   }
