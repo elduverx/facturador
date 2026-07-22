@@ -1,7 +1,7 @@
 'use client';
 
 import { CONSULTATION_DEPOSIT_AMOUNT, formatEuro } from '@/lib/payments';
-import { CheckCircle2, CreditCard, Mail, ExternalLink, ShieldCheck, ArrowRight, RefreshCw } from 'lucide-react';
+import { CheckCircle2, CreditCard, Mail, ExternalLink, ShieldCheck, ArrowRight, RefreshCw, Banknote, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
@@ -12,9 +12,10 @@ interface Props {
   date: string;
   time: string;
   price: number;
+  paymentMethod?: 'CARD' | 'CASH';
 }
 
-export function BookingConfirmation({ appointmentId, clientName, serviceName, lawyerName, date, time, price }: Props) {
+export function BookingConfirmation({ appointmentId, clientName, serviceName, lawyerName, date, time, price, paymentMethod = 'CARD' }: Props) {
   const handlePay = () => {
     window.location.href = `/api/payments/redsys?appointmentId=${appointmentId}`;
   };
@@ -27,9 +28,13 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4 sm:mb-6 shadow-xl shadow-emerald-100/50 animate-bounce-slow">
            <CheckCircle2 className="h-8 w-8 sm:h-12 sm:w-12" />
         </div>
-        <h2 className="text-2xl sm:text-4xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 sm:mb-3 tracking-tighter">Cita registrada</h2>
+        <h2 className="text-2xl sm:text-4xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 sm:mb-3 tracking-tighter">
+           {paymentMethod === 'CASH' ? 'Reserva confirmada' : 'Cita registrada'}
+        </h2>
         <p className="text-sm sm:text-lg text-[var(--pv-navy)] opacity-60 max-w-xl font-medium">
-          Gracias, {clientName}. Tu solicitud de cita se ha registrado correctamente.
+          {paymentMethod === 'CASH'
+            ? `Gracias, ${clientName}. Tu cita queda confirmada. Recuerda traer el pago en efectivo el día de la consulta.`
+            : `Gracias, ${clientName}. Tu solicitud de cita se ha registrado correctamente.`}
         </p>
       </div>
 
@@ -63,45 +68,87 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
         </div>
 
         {/* Payment Card */}
-        <div className="neo-card !p-4 sm:!p-8 bg-[var(--pv-navy)] text-white border-none shadow-2xl relative overflow-hidden group">
-          <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-             <CreditCard size={140} />
-          </div>
-
-          <div className="relative z-10 h-full flex flex-col">
-            <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-4">Pago de reserva</h3>
-            <p className="text-sm font-medium text-white/70 leading-relaxed mb-8">
-              Para confirmar la cita, realiza el pago del anticipo de la consulta.
-            </p>
-            
-            <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
-               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] mb-2">Importe a pagar</p>
-               <div className="text-3xl sm:text-5xl font-black text-white font-roman">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
-               
-               <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
-                  {price > 0 && (
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
-                       <span>Total trámite:</span>
-                       <span>{formatEuro(price)}</span>
-                    </div>
-                  )}
-                  {price > CONSULTATION_DEPOSIT_AMOUNT && (
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--pv-gold)]">
-                       <span>Restante:</span>
-                       <span>{formatEuro(remainingAfterDeposit)}</span>
-                    </div>
-                  )}
-               </div>
+        {paymentMethod === 'CASH' ? (
+          <div className="neo-card !p-4 sm:!p-8 bg-emerald-800 text-white border-none shadow-2xl relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+               <Banknote size={140} />
             </div>
 
-            <button 
-              onClick={handlePay} 
-              className="btn-roman w-full py-4 text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-black/20 mt-auto"
-            >
-              Pagar con Redsys <ArrowRight size={16} />
-            </button>
+            <div className="relative z-10 h-full flex flex-col">
+              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-emerald-300 mb-4">Pago en Efectivo</h3>
+              <p className="text-sm font-medium text-white/70 leading-relaxed mb-8">
+                Tu cita está confirmada. Abona el anticipo directamente en la oficina el día de tu consulta.
+              </p>
+              
+              <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300 mb-2">Importe a abonar en oficina</p>
+                 <div className="text-3xl sm:text-5xl font-black text-white font-roman">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
+                 
+                 {price > 0 && (
+                   <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
+                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                        <span>Total trámite:</span>
+                        <span>{formatEuro(price)}</span>
+                     </div>
+                     {price > CONSULTATION_DEPOSIT_AMOUNT && (
+                       <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+                          <span>Restante:</span>
+                          <span>{formatEuro(remainingAfterDeposit)}</span>
+                       </div>
+                     )}
+                   </div>
+                 )}
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/10 border border-white/10 flex items-start gap-3 mt-auto">
+                 <MapPin size={18} className="text-emerald-300 shrink-0 mt-0.5" />
+                 <p className="text-xs text-white/80 leading-relaxed">
+                   Presenta este comprobante al llegar a la oficina. Recibirás un email con los detalles de tu cita.
+                 </p>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="neo-card !p-4 sm:!p-8 bg-[var(--pv-navy)] text-white border-none shadow-2xl relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+               <CreditCard size={140} />
+            </div>
+
+            <div className="relative z-10 h-full flex flex-col">
+              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-4">Pago de reserva</h3>
+              <p className="text-sm font-medium text-white/70 leading-relaxed mb-8">
+                Para confirmar la cita, realiza el pago del anticipo de la consulta.
+              </p>
+              
+              <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] mb-2">Importe a pagar</p>
+                 <div className="text-3xl sm:text-5xl font-black text-white font-roman">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
+                 
+                 <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
+                    {price > 0 && (
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                         <span>Total trámite:</span>
+                         <span>{formatEuro(price)}</span>
+                      </div>
+                    )}
+                    {price > CONSULTATION_DEPOSIT_AMOUNT && (
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--pv-gold)]">
+                         <span>Restante:</span>
+                         <span>{formatEuro(remainingAfterDeposit)}</span>
+                      </div>
+                    )}
+                 </div>
+              </div>
+
+              <button 
+                onClick={handlePay} 
+                className="btn-roman w-full py-4 text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-black/20 mt-auto"
+              >
+                Pagar con Redsys <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Info Boxes */}

@@ -9,7 +9,7 @@ import { ServiceSelector } from './ServiceSelector';
 import { DateTimePicker } from './DateTimePicker';
 import { ClientForm } from './ClientForm';
 import { BookingConfirmation } from './BookingConfirmation';
-import { ShieldCheck, UserCheck, Calendar, FileText, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, AlertCircle } from 'lucide-react';
+import { ShieldCheck, UserCheck, Calendar, FileText, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, AlertCircle, CreditCard, Banknote } from 'lucide-react';
 
 const LAWYERS = [
   {
@@ -55,6 +55,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     clientNie: '',
     notes: '',
   });
+  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH'>('CARD');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Confirmation data
@@ -66,6 +67,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     date: string;
     time: string;
     price: number;
+    paymentMethod: 'CARD' | 'CASH';
   } | null>(null);
 
   useEffect(() => {
@@ -169,6 +171,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           clientPhone: normalizePhone(clientData.clientPhone),
           clientNie: clientData.clientNie ? normalizeNie(clientData.clientNie) : undefined,
           lawyerId: selectedLawyerId,
+          paymentMethod,
           notes: [
             selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
             clientData.notes || null,
@@ -183,7 +186,23 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
 
       const appointment = await res.json();
 
-      window.location.href = `/api/payments/redsys?appointmentId=${appointment.id}`;
+      if (paymentMethod === 'CASH') {
+        // For cash payments, show confirmation directly
+        setConfirmation({
+          appointmentId: appointment.id,
+          clientName: clientData.clientName.trim(),
+          serviceName: selectedService?.name || '',
+          lawyerName: selectedLawyer?.name || '',
+          date: selectedDate || '',
+          time: selectedTime || '',
+          price: selectedService?.price || 0,
+          paymentMethod: 'CASH',
+        });
+        setStep(4);
+      } else {
+        // For card payments, redirect to Redsys
+        window.location.href = `/api/payments/redsys?appointmentId=${appointment.id}`;
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al procesar la reserva');
     } finally {
@@ -361,6 +380,94 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 onChange={setClientData}
                 errors={formErrors}
               />
+
+              {/* Payment Method Selection */}
+              <div className="mt-6 sm:mt-10">
+                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 tracking-tighter">Método de pago</h3>
+                <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
+                  Elige cómo prefieres abonar el anticipo de la consulta.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {/* Card option */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CARD')}
+                    className={`group relative rounded-2xl border-2 p-4 sm:p-6 text-left transition-all duration-300 cursor-pointer ${
+                      paymentMethod === 'CARD'
+                        ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-lg ring-4 ring-[var(--pv-gold)]/10'
+                        : 'border-[var(--pv-marble)] hover:border-[var(--pv-gold)]/40 hover:shadow-md bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 ${
+                        paymentMethod === 'CARD'
+                          ? 'bg-[var(--pv-gold)] text-white shadow-md'
+                          : 'bg-[var(--pv-marble)] text-[var(--pv-navy)] group-hover:bg-[var(--pv-gold)]/10 group-hover:text-[var(--pv-gold)]'
+                      }`}>
+                        <CreditCard size={22} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`font-bold text-sm sm:text-base uppercase tracking-tight transition-colors ${
+                          paymentMethod === 'CARD' ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-ink)]'
+                        }`}>Tarjeta online</p>
+                        <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
+                          Pago seguro con tarjeta a través de Redsys. Tu cita se confirma al instante.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Selection indicator */}
+                    <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      paymentMethod === 'CARD'
+                        ? 'bg-[var(--pv-gold)] border-[var(--pv-gold)]'
+                        : 'bg-white border-[var(--pv-marble)]'
+                    }`}>
+                      <CheckCircle2 size={14} className={`text-white transition-all duration-300 ${
+                        paymentMethod === 'CARD' ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                      }`} />
+                    </div>
+                  </button>
+
+                  {/* Cash option */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CASH')}
+                    className={`group relative rounded-2xl border-2 p-4 sm:p-6 text-left transition-all duration-300 cursor-pointer ${
+                      paymentMethod === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50/50 shadow-lg ring-4 ring-emerald-500/10'
+                        : 'border-[var(--pv-marble)] hover:border-emerald-400/40 hover:shadow-md bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 ${
+                        paymentMethod === 'CASH'
+                          ? 'bg-emerald-500 text-white shadow-md'
+                          : 'bg-[var(--pv-marble)] text-[var(--pv-navy)] group-hover:bg-emerald-50 group-hover:text-emerald-600'
+                      }`}>
+                        <Banknote size={22} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`font-bold text-sm sm:text-base uppercase tracking-tight transition-colors ${
+                          paymentMethod === 'CASH' ? 'text-emerald-600' : 'text-[var(--pv-ink)]'
+                        }`}>Efectivo en oficina</p>
+                        <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
+                          Paga directamente en la oficina el día de tu cita. Tu reserva queda confirmada.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Selection indicator */}
+                    <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      paymentMethod === 'CASH'
+                        ? 'bg-emerald-500 border-emerald-500'
+                        : 'bg-white border-[var(--pv-marble)]'
+                    }`}>
+                      <CheckCircle2 size={14} className={`text-white transition-all duration-300 ${
+                        paymentMethod === 'CASH' ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                      }`} />
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -374,6 +481,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 date={confirmation.date}
                 time={confirmation.time}
                 price={confirmation.price}
+                paymentMethod={confirmation.paymentMethod}
               />
             </div>
           )}
@@ -404,7 +512,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                     Procesando...
                   </div>
                 ) : step === 3 ? (
-                  'Confirmar y pagar'
+                  paymentMethod === 'CASH' ? 'Confirmar reserva' : 'Confirmar y pagar'
                 ) : (
                   <div className="flex items-center gap-2">Continuar <ChevronRight size={14} /></div>
                 )}
@@ -452,8 +560,18 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                     <div className="p-4 rounded-2xl bg-[var(--pv-marble)] border border-white shadow-inner">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-2">Anticipo de la consulta</p>
                       <p className="text-2xl font-black text-[var(--pv-navy)]">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</p>
+                      <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] ${
+                        paymentMethod === 'CASH'
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                          : 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] border border-[var(--pv-gold)]/20'
+                      }`}>
+                        {paymentMethod === 'CASH' ? <Banknote size={12} /> : <CreditCard size={12} />}
+                        {paymentMethod === 'CASH' ? 'Efectivo' : 'Tarjeta'}
+                      </div>
                       <p className="text-[10px] font-medium text-[var(--pv-navy)] opacity-40 mt-2 leading-relaxed">
-                        Este importe confirma la cita y se descuenta del servicio si continúas el trámite.
+                        {paymentMethod === 'CASH'
+                          ? 'Pagarás directamente en la oficina el día de tu cita.'
+                          : 'Este importe confirma la cita y se descuenta del servicio si continúas el trámite.'}
                       </p>
                     </div>
                   </div>

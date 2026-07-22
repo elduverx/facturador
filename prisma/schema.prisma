@@ -50,6 +50,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentMethod {
+  CARD
+  CASH
+}
+
 enum PaymentTargetType {
   APPOINTMENT
   DOCUMENT
@@ -157,6 +162,7 @@ model Appointment {
   endTime     String
 
   status      AppointmentStatus @default(PENDING)
+  paymentMethod PaymentMethod   @default(CARD)
   paymentStatus PaymentStatus   @default(PENDING)
   paymentId   String?           @unique // Referencia de Redsys u otro
   notes       String?

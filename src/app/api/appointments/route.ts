@@ -11,7 +11,7 @@ import { isAdminAuthenticated } from '@/lib/auth';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { serviceId, date, startTime, clientName, clientEmail, clientPhone, clientNie, notes, lawyerId } = body;
+    const { serviceId, date, startTime, clientName, clientEmail, clientPhone, clientNie, notes, lawyerId, paymentMethod } = body;
 
     if (!serviceId || !date || !startTime || !clientName || !clientEmail || !clientPhone) {
       return NextResponse.json(
@@ -138,6 +138,8 @@ export async function POST(request: Request) {
         throw new Error('SLOT_TAKEN');
       }
 
+      const method = paymentMethod === 'CASH' ? 'CASH' : 'CARD';
+
       return tx.appointment.create({
         data: {
           serviceId,
@@ -151,9 +153,12 @@ export async function POST(request: Request) {
           endTime,
           notes: [
             selectedStaff ? `Abogada asignada: ${selectedStaff.name}` : null,
+            method === 'CASH' ? '💵 Pago en efectivo en oficina' : null,
             notes || null,
           ].filter(Boolean).join('\n\n') || null,
-          status: 'PENDING',
+          status: method === 'CASH' ? 'CONFIRMED' : 'PENDING',
+          paymentMethod: method,
+          paymentStatus: method === 'CASH' ? 'PENDING' : 'PENDING',
         },
         include: { service: true },
       });
@@ -174,11 +179,21 @@ export async function POST(request: Request) {
 
     // Client confirmation removed from here to only send upon payment successful
 
+    // For cash payments, send confirmation email immediately
+    if (appointment.paymentMethod === 'CASH') {
+      const { cashReservationEmail } = await import('@/lib/email-templates');
+      sendEmail({
+        to: normalizedEmail,
+        subject: `Reserva Confirmada (Pago en Oficina) - ${firmName}`,
+        html: cashReservationEmail(emailData),
+      }).catch(console.error);
+    }
+
     // Admin notification
     if (dayConfig.settings?.firmEmail) {
       sendEmail({
         to: dayConfig.settings.firmEmail,
-        subject: `Nueva reserva: ${clientName} - ${service.name}`,
+        subject: `Nueva reserva${appointment.paymentMethod === 'CASH' ? ' (EFECTIVO)' : ''}: ${clientName} - ${service.name}`,
         html: adminNewBookingEmail({
           ...emailData,
           clientEmail: normalizedEmail,
