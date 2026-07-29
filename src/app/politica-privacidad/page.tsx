@@ -52,7 +52,7 @@ export default function PoliticaPrivacidadPage() {
               <li><strong>Portabilidad</strong> y limitación u oposición a su tratamiento.</li>
             </ul>
             <p>
-              Puede ejercer estos derechos contactando con nosotros en nuestro domicilio o a través del correo electrónico <a href="mailto:info@pvabogadas.com">info@pvabogadas.com</a>.
+              Puede ejercer estos derechos contactando con nosotros en nuestro domicilio o a través del correo electrónico <a href="mailto:info@pvabogadas.es">info@pvabogadas.es</a>.
             </p>
           </div>
         </div>

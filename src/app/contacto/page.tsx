@@ -19,7 +19,7 @@ export default function ContactoPage() {
             </div>
             <h2 className="font-roman font-bold text-xl uppercase tracking-widest text-[var(--pv-navy)] mb-2">Email</h2>
             <p className="text-[var(--pv-ink)] opacity-70 mb-4">Para consultas generales y soporte.</p>
-            <a href="mailto:info@pvabogadas.com" className="text-[var(--pv-gold)] font-bold hover:underline">info@pvabogadas.com</a>
+            <a href="mailto:info@pvabogadas.es" className="text-[var(--pv-gold)] font-bold hover:underline">info@pvabogadas.es</a>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-lg border border-[var(--glass-border)] text-center flex flex-col items-center">

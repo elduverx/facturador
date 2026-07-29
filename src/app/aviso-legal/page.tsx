@@ -28,7 +28,7 @@ export default function AvisoLegalPage() {
             <ul className="bg-[var(--pv-marble)] p-6 rounded-2xl list-none space-y-3">
               <li><strong className="text-[var(--pv-navy)] uppercase tracking-widest text-xs">Titular:</strong> PV Abogadas</li>
               <li><strong className="text-[var(--pv-navy)] uppercase tracking-widest text-xs">Domicilio:</strong> C/ de Sant Ignasi de Loiola, 21, Entresuelo, Extramurs, 46008 València, Valencia</li>
-              <li><strong className="text-[var(--pv-navy)] uppercase tracking-widest text-xs">Email:</strong> <a href="mailto:info@pvabogadas.com" className="no-underline hover:underline font-bold">info@pvabogadas.com</a></li>
+              <li><strong className="text-[var(--pv-navy)] uppercase tracking-widest text-xs">Email:</strong> <a href="mailto:info@pvabogadas.es" className="no-underline hover:underline font-bold">info@pvabogadas.es</a></li>
             </ul>
 
             <h2 className="flex items-center gap-3"><span className="text-[var(--pv-gold)]">2.</span> Propiedad Intelectual e Industrial</h2>

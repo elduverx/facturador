@@ -3,6 +3,7 @@ import './globals.css';
 import { PWARegister } from '@/components/PWARegister';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://pvabogadas.es'),
   title: 'PV Abogadas - expertas en Extranjeria | Laboral | Familia',
   description: 'Despacho de abogadas expertas en extranjería, laboral y familia. Reserva tu cita online.',
   manifest: '/manifest.json',

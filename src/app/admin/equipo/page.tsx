@@ -103,7 +103,7 @@ export default function EquipoPage() {
               <label className="text-[10px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-4">Email Corporativo</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pv-gold)]" size={16} />
-                <input className="neo-input pl-12" placeholder="marcus@pvabogadas.com" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+                <input className="neo-input pl-12" placeholder="marcus@pvabogadas.es" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
               </div>
             </div>
 
