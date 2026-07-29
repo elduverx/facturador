@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { Menu, X, BookOpen, Users, Calendar, HelpCircle, ArrowRight, UserCircle } from 'lucide-react';
 
 const NAV_LINKS = [
-  { label: 'Servicios', href: '#servicios', icon: BookOpen },
-  { label: 'Testimonios', href: '#testimonios', icon: Users },
-  { label: 'Reserva', href: '#reservar', icon: Calendar },
-  { label: 'FAQ', href: '#faq', icon: HelpCircle },
+  { label: 'Servicios', href: '/#servicios', icon: BookOpen },
+  { label: 'Testimonios', href: '/#testimonios', icon: Users },
+  { label: 'Reserva', href: '/#reservar', icon: Calendar },
+  { label: 'FAQ', href: '/#faq', icon: HelpCircle },
 ];
 
 export function HomeNavbar() {
@@ -45,7 +45,7 @@ export function HomeNavbar() {
 
       <div className="px-8 flex flex-col space-y-8 mt-12 relative z-10">
         {NAV_LINKS.map((link, index) => (
-          <a
+          <Link
             key={link.href}
             href={link.href}
             onClick={() => setOpen(false)}
@@ -60,7 +60,7 @@ export function HomeNavbar() {
             <span className="text-2xl sm:text-3xl font-bold font-roman uppercase tracking-widest text-white group-hover:text-[var(--pv-gold)] transition-colors">
               {link.label}
             </span>
-          </a>
+          </Link>
         ))}
         
         <div 
@@ -97,14 +97,14 @@ export function HomeNavbar() {
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center gap-8 text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--pv-navy)]">
         {NAV_LINKS.map((link) => (
-          <a 
+          <Link 
             key={link.href} 
             href={link.href} 
             className="hover:text-[var(--pv-gold)] transition-colors relative group"
           >
             {link.label}
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--pv-gold)] transition-all group-hover:w-full"></span>
-          </a>
+          </Link>
         ))}
         <Link 
           href="/portal" 
