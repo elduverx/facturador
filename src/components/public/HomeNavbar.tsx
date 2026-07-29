@@ -8,8 +8,8 @@ import { Menu, X, BookOpen, Users, Calendar, HelpCircle, ArrowRight, UserCircle 
 const NAV_LINKS = [
   { label: 'Servicios', href: '/#servicios', icon: BookOpen },
   { label: 'Testimonios', href: '/#testimonios', icon: Users },
-  { label: 'Reserva', href: '/#reservar', icon: Calendar },
-  { label: 'FAQ', href: '/#faq', icon: HelpCircle },
+  { label: 'Reserva', href: '/reservar', icon: Calendar },
+  { label: 'FAQ', href: '/faq', icon: HelpCircle },
 ];
 
 export function HomeNavbar() {
