@@ -55,8 +55,9 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     clientNie: '',
     notes: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH'>('CARD');
+  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH'>('CASH');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isExistingMatterConsultation, setIsExistingMatterConsultation] = useState(false);
 
   // Confirmation data
   const [confirmation, setConfirmation] = useState<{
@@ -96,12 +97,17 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     const params = new URLSearchParams(window.location.search);
     if (params.get('portalBooking') !== '1') return;
 
+    if (params.get('type') === 'existing') {
+      setIsExistingMatterConsultation(true);
+      setPaymentMethod('CASH'); // Internally represented as CASH so it doesn't trigger Redsys
+    }
+
     const nextClientData = {
       clientName: params.get('name') || '',
       clientEmail: normalizeEmail(params.get('email') || ''),
       clientPhone: normalizePhone(params.get('phone') || ''),
       clientNie: normalizeNie(params.get('nie') || ''),
-      notes: 'Nueva cita solicitada desde Mi Portal.',
+      notes: params.get('type') === 'existing' ? 'Cita sobre expediente en curso (gratuita)' : 'Nueva cita solicitada desde Mi Portal.',
     };
 
     setClientData((current) => ({
@@ -383,90 +389,41 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
 
               {/* Payment Method Selection */}
               <div className="mt-6 sm:mt-10">
-                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 tracking-tighter">Método de pago</h3>
-                <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
-                  Elige cómo prefieres abonar el anticipo de la consulta.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {/* Card option */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('CARD')}
-                    className={`group relative rounded-2xl border-2 p-4 sm:p-6 text-left transition-all duration-300 cursor-pointer ${
-                      paymentMethod === 'CARD'
-                        ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-lg ring-4 ring-[var(--pv-gold)]/10'
-                        : 'border-[var(--pv-marble)] hover:border-[var(--pv-gold)]/40 hover:shadow-md bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 ${
-                        paymentMethod === 'CARD'
-                          ? 'bg-[var(--pv-gold)] text-white shadow-md'
-                          : 'bg-[var(--pv-marble)] text-[var(--pv-navy)] group-hover:bg-[var(--pv-gold)]/10 group-hover:text-[var(--pv-gold)]'
-                      }`}>
-                        <CreditCard size={22} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`font-bold text-sm sm:text-base uppercase tracking-tight transition-colors ${
-                          paymentMethod === 'CARD' ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-ink)]'
-                        }`}>Tarjeta online</p>
-                        <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
-                          Pago seguro con tarjeta a través de Redsys. Tu cita se confirma al instante.
-                        </p>
-                      </div>
+                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 tracking-tighter">
+                  {isExistingMatterConsultation ? 'Cita sobre tu expediente' : 'Método de pago'}
+                </h3>
+                
+                {isExistingMatterConsultation ? (
+                  <div className="rounded-2xl border-2 border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-lg">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--pv-gold)] flex items-center justify-center text-white shrink-0">
+                      <CheckCircle2 size={22} />
                     </div>
-                    {/* Selection indicator */}
-                    <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                      paymentMethod === 'CARD'
-                        ? 'bg-[var(--pv-gold)] border-[var(--pv-gold)]'
-                        : 'bg-white border-[var(--pv-marble)]'
-                    }`}>
-                      <CheckCircle2 size={14} className={`text-white transition-all duration-300 ${
-                        paymentMethod === 'CARD' ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                      }`} />
+                    <div>
+                      <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-[var(--pv-gold)]">Consulta Incluida</p>
+                      <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-80 mt-1 leading-relaxed font-medium">
+                        Esta cita está vinculada a tu expediente en curso y no tiene coste adicional. Haz clic en "Confirmar reserva" para terminar.
+                      </p>
                     </div>
-                  </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
+                      El pago del anticipo de la consulta se realizará de forma presencial.
+                    </p>
 
-                  {/* Cash option */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('CASH')}
-                    className={`group relative rounded-2xl border-2 p-4 sm:p-6 text-left transition-all duration-300 cursor-pointer ${
-                      paymentMethod === 'CASH'
-                        ? 'border-emerald-500 bg-emerald-50/50 shadow-lg ring-4 ring-emerald-500/10'
-                        : 'border-[var(--pv-marble)] hover:border-emerald-400/40 hover:shadow-md bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 ${
-                        paymentMethod === 'CASH'
-                          ? 'bg-emerald-500 text-white shadow-md'
-                          : 'bg-[var(--pv-marble)] text-[var(--pv-navy)] group-hover:bg-emerald-50 group-hover:text-emerald-600'
-                      }`}>
+                    <div className="rounded-2xl border-2 border-[var(--pv-marble)] bg-white p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-sm">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
                         <Banknote size={22} />
                       </div>
-                      <div className="min-w-0">
-                        <p className={`font-bold text-sm sm:text-base uppercase tracking-tight transition-colors ${
-                          paymentMethod === 'CASH' ? 'text-emerald-600' : 'text-[var(--pv-ink)]'
-                        }`}>Efectivo en oficina</p>
+                      <div>
+                        <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">Efectivo en oficina</p>
                         <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
-                          Paga directamente en la oficina el día de tu cita. Tu reserva queda confirmada.
+                          Paga directamente en la oficina el día de tu cita. Al confirmar la reserva, tu cita quedará agendada.
                         </p>
                       </div>
                     </div>
-                    {/* Selection indicator */}
-                    <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                      paymentMethod === 'CASH'
-                        ? 'bg-emerald-500 border-emerald-500'
-                        : 'bg-white border-[var(--pv-marble)]'
-                    }`}>
-                      <CheckCircle2 size={14} className={`text-white transition-all duration-300 ${
-                        paymentMethod === 'CASH' ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                      }`} />
-                    </div>
-                  </button>
-                </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -559,19 +516,17 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                   <div className="pt-4 sm:pt-0 xl:pt-6 sm:border-t-0 xl:border-t border-[var(--pv-marble)] sm:col-span-3 xl:col-span-1">
                     <div className="p-4 rounded-2xl bg-[var(--pv-marble)] border border-white shadow-inner">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-2">Anticipo de la consulta</p>
-                      <p className="text-2xl font-black text-[var(--pv-navy)]">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</p>
-                      <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] ${
-                        paymentMethod === 'CASH'
-                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                          : 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] border border-[var(--pv-gold)]/20'
-                      }`}>
-                        {paymentMethod === 'CASH' ? <Banknote size={12} /> : <CreditCard size={12} />}
-                        {paymentMethod === 'CASH' ? 'Efectivo' : 'Tarjeta'}
-                      </div>
+                      <p className="text-2xl font-black text-[var(--pv-navy)]">{isExistingMatterConsultation ? 'Gratis' : formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</p>
+                      {!isExistingMatterConsultation && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          <Banknote size={12} />
+                          Efectivo
+                        </div>
+                      )}
                       <p className="text-[10px] font-medium text-[var(--pv-navy)] opacity-40 mt-2 leading-relaxed">
-                        {paymentMethod === 'CASH'
-                          ? 'Pagarás directamente en la oficina el día de tu cita.'
-                          : 'Este importe confirma la cita y se descuenta del servicio si continúas el trámite.'}
+                        {isExistingMatterConsultation
+                          ? 'Incluido como seguimiento de tu expediente actual.'
+                          : 'Pagarás directamente en la oficina el día de tu cita.'}
                       </p>
                     </div>
                   </div>

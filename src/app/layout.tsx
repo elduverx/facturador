@@ -20,9 +20,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logopv.jpeg', type: 'image/jpeg' },
     ],
     apple: '/logopv.jpeg',
+    shortcut: '/logopv.jpeg',
   },
 };
 

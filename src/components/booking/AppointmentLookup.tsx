@@ -237,9 +237,11 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
   const latestMatter = matters[0] || null;
   const knownClientName = latestMatter?.clientName || results[0]?.clientName || '';
   const knownClientNie = latestMatter?.clientNie || results[0]?.clientNie || '';
-  const newAppointmentUrl = lastQuery
+  const basePath = lastQuery
     ? `/reservar?portalBooking=1&email=${encodeURIComponent(lastQuery.email)}&phone=${encodeURIComponent(lastQuery.phone)}&name=${encodeURIComponent(knownClientName)}&nie=${encodeURIComponent(knownClientNie || '')}`
     : '/reservar';
+  const newAppointmentUrl = lastQuery ? `${basePath}&type=new` : '/reservar';
+  const existingMatterAppointmentUrl = lastQuery ? `${basePath}&type=existing` : '/reservar';
 
   return (
     <div className={`${compact ? 'min-h-0 space-y-4' : 'space-y-8'} animate-fade-in ${glass ? 'theme-glass' : ''}`}>
@@ -315,10 +317,22 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                 </div>
              </div>
              <div className="flex flex-wrap items-center gap-2">
-               <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
-                 <CalendarPlus size={14} />
-                 Nueva cita
-               </a>
+               {matters.length > 0 ? (
+                 <>
+                   <a href={existingMatterAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest !bg-[var(--pv-navy)] !text-white hover:!bg-[var(--pv-ink)]">
+                     <CalendarPlus size={14} />
+                     Cita de expediente
+                   </a>
+                   <a href={newAppointmentUrl} className="rounded-lg bg-[var(--pv-marble)] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)] opacity-70 hover:opacity-100 transition-opacity">
+                     Nuevo caso
+                   </a>
+                 </>
+               ) : (
+                 <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
+                   <CalendarPlus size={14} />
+                   Nueva cita
+                 </a>
+               )}
                <button onClick={() => { setSearched(false); setEmail(''); setPhone(''); }} className="rounded-lg bg-[var(--pv-marble)] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)] opacity-70 hover:opacity-100 transition-opacity">Cambiar datos</button>
              </div>
           </div>
@@ -444,16 +458,27 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
 
             {/* Citas */}
             <section className="neo-card !p-4 sm:!p-6 shadow-xl">
-              <div className="mb-6 flex items-center justify-between border-b border-[var(--glass-border)] pb-4">
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--glass-border)] pb-4">
                 <h3 className="font-roman text-lg font-bold uppercase tracking-widest text-[var(--pv-ink)] flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <Clock size={20} />
                   </div>
                   Tus Citas
                 </h3>
-                <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
-                  <CalendarPlus size={14} /> Nueva
-                </a>
+                {matters.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a href={existingMatterAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest !bg-[var(--pv-navy)] !text-white hover:!bg-[var(--pv-ink)]">
+                      <CalendarPlus size={14} /> Cita de expediente
+                    </a>
+                    <a href={newAppointmentUrl} className="rounded-lg bg-[var(--pv-marble)] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)] opacity-70 hover:opacity-100 transition-opacity">
+                      Nuevo caso
+                    </a>
+                  </div>
+                ) : (
+                  <a href={newAppointmentUrl} className="btn-roman !py-2.5 !px-4 !text-[10px] !uppercase !tracking-widest">
+                    <CalendarPlus size={14} /> Nueva
+                  </a>
+                )}
               </div>
               
               {results.length === 0 ? (

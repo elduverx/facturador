@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { AppointmentData } from '@/types/booking';
 import { MONTHS, DAYS_OF_WEEK, STATUS_LABELS, STATUS_COLORS } from '@/lib/constants';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin, UserSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin, UserSquare, CalendarPlus } from 'lucide-react';
 import Link from 'next/link';
+import { AdminBookingModal } from '@/components/admin/AdminBookingModal';
 
 export default function CalendarPage() {
   const today = new Date();
@@ -13,6 +14,7 @@ export default function CalendarPage() {
   const [appointments, setAppointments] = useState<AppointmentData[]>([]);
   const [selectedDay, setSelectedDay] = useState<string | null>(today.toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     loadMonth();
@@ -79,12 +81,18 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold font-roman uppercase text-[var(--pv-ink)] tracking-tight">Agenda</h1>
           <p className="text-sm text-[var(--pv-navy)] opacity-60">Revisa citas, pagos y estados del día.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+           <button 
+            onClick={() => setIsBookingModalOpen(true)}
+            className="p-3 px-4 flex items-center gap-2 rounded-xl bg-[var(--pv-gold)] text-white hover:brightness-110 font-bold text-xs uppercase tracking-widest transition-all shadow-md mr-2"
+           >
+             <CalendarPlus size={18} /> Nueva Cita
+           </button>
            <button
             onClick={() => {
               if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
@@ -94,8 +102,8 @@ export default function CalendarPage() {
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="neo-card !p-3 !px-8 flex items-center justify-center min-w-[200px]">
-             <h2 className="font-roman font-bold uppercase tracking-widest text-[var(--pv-ink)]">{MONTHS[currentMonth]} {currentYear}</h2>
+          <div className="neo-card !p-3 !px-4 sm:!px-8 flex items-center justify-center min-w-[140px] sm:min-w-[200px]">
+             <h2 className="font-roman font-bold uppercase tracking-widest text-xs sm:text-base text-[var(--pv-ink)]">{MONTHS[currentMonth]} {currentYear}</h2>
           </div>
           <button
             onClick={() => {
@@ -109,6 +117,18 @@ export default function CalendarPage() {
         </div>
       </div>
 
+      {isBookingModalOpen ? (
+        <div className="w-full">
+          <AdminBookingModal 
+            isOpen={true} 
+            onClose={() => setIsBookingModalOpen(false)} 
+            onSuccess={() => {
+              setIsBookingModalOpen(false);
+              loadMonth();
+            }}
+          />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-8 items-start">
         {/* Calendar Grid */}
         <div className="neo-card !p-4 lg:!p-6 shadow-2xl">
@@ -247,6 +267,7 @@ export default function CalendarPage() {
            </div>
         </div>
       </div>
+      )}
 
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
