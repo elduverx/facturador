@@ -45,8 +45,6 @@ export default function CalendarPage() {
     }
   };
 
-  };
-
   const updateStatus = async (id: string, status: string) => {
     try {
       await fetch(`/api/appointments/${id}`, {
