@@ -12,9 +12,10 @@ interface Props {
   selectedTime: string | null;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string) => void;
+  onModalityFetched?: (modality: string | null) => void;
 }
 
-export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime, onDateSelect, onTimeSelect }: Props) {
+export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime, onDateSelect, onTimeSelect, onModalityFetched }: Props) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -26,7 +27,15 @@ export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime
     setLoadingSlots(true);
     fetch(`/api/available-slots?date=${selectedDate}&serviceId=${serviceId}${lawyerId ? `&lawyerId=${encodeURIComponent(lawyerId)}` : ''}`)
       .then((r) => r.json())
-      .then((data) => setSlots(data))
+      .then((data) => {
+        if (data && typeof data === 'object' && 'slots' in data) {
+          setSlots(data.slots);
+          if (onModalityFetched) onModalityFetched(data.allowedModality);
+        } else {
+          setSlots(Array.isArray(data) ? data : []);
+          if (onModalityFetched) onModalityFetched(null);
+        }
+      })
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
   }, [selectedDate, serviceId, lawyerId]);

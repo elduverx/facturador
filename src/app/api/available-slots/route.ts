@@ -30,5 +30,18 @@ export async function GET(request: Request) {
     : null;
 
   const slots = await getAvailableSlots(date, serviceId, staff?.id);
-  return NextResponse.json(slots);
+
+  const prisma = await import('@/lib/prisma').then(m => m.prisma);
+  const startOfDay = new Date(date + 'T00:00:00.000Z');
+  const daySchedule = await prisma.daySchedule.findFirst({
+    where: { date: startOfDay }
+  });
+
+  const isAugust = date.split('-')[1] === '08';
+  let allowedModality = isAugust ? 'VIDEO_CALL' : null;
+  if (daySchedule?.allowedModality) {
+    allowedModality = daySchedule.allowedModality;
+  }
+
+  return NextResponse.json({ slots, allowedModality });
 }

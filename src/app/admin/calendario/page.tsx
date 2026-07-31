@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AppointmentData } from '@/types/booking';
 import { MONTHS, DAYS_OF_WEEK, STATUS_LABELS, STATUS_COLORS } from '@/lib/constants';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin, UserSquare, CalendarPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Check, X, AlertCircle, MapPin, UserSquare, CalendarPlus, Lock, Unlock } from 'lucide-react';
 import Link from 'next/link';
 import { AdminBookingModal } from '@/components/admin/AdminBookingModal';
 
@@ -12,9 +12,11 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [appointments, setAppointments] = useState<AppointmentData[]>([]);
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<string | null>(today.toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [togglingBlock, setTogglingBlock] = useState(false);
 
   useEffect(() => {
     loadMonth();
@@ -27,14 +29,22 @@ export default function CalendarPage() {
     const to = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${lastDay}`;
 
     try {
-      const res = await fetch(`/api/appointments?from=${from}&to=${to}`);
-      const data = await res.json();
+      const [apptRes, blockedRes] = await Promise.all([
+        fetch(`/api/appointments?from=${from}&to=${to}`),
+        fetch(`/api/admin/blocked-dates`)
+      ]);
+      const data = await apptRes.json();
       setAppointments(Array.isArray(data) ? data : []);
+      const blocked = await blockedRes.json();
+      setBlockedDates(Array.isArray(blocked) ? blocked : []);
     } catch {
       setAppointments([]);
+      setBlockedDates([]);
     } finally {
       setLoading(false);
     }
+  };
+
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -150,6 +160,7 @@ export default function CalendarPage() {
                 const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                 const isToday = dateStr === today.toISOString().split('T')[0];
                 const isSelected = selectedDay === dateStr;
+                const isBlocked = blockedDates.some(b => b.date.startsWith(dateStr));
 
                 return (
                   <button
@@ -158,11 +169,14 @@ export default function CalendarPage() {
                     className={`aspect-square p-4 rounded-3xl text-sm relative transition-all duration-500 group border flex flex-col items-center justify-center ${
                       isSelected
                         ? 'bg-[var(--pv-gold)] text-white border-[var(--pv-gold)] shadow-xl shadow-[var(--pv-gold)]/30 scale-[1.05] z-10'
+                        : isBlocked
+                        ? 'bg-red-50/50 border-red-100 text-red-300'
                         : isToday
                         ? 'bg-[var(--pv-gold)]/10 border-[var(--pv-gold)]/40 font-black text-[var(--pv-gold)]'
                         : 'bg-white border-white/50 hover:border-[var(--pv-gold)] hover:shadow-lg'
                     }`}
                   >
+                    {isBlocked && <Lock size={10} className="absolute top-2 right-2 opacity-50 text-red-400" />}
                     <span className={`text-xl font-roman ${isSelected ? 'text-white' : 'text-[var(--pv-ink)]'}`}>{day}</span>
                     
                     <div className="flex gap-1 mt-2 min-h-[6px]">

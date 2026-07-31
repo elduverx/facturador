@@ -38,6 +38,7 @@ export async function POST(request: Request) {
 
     const maxAppointmentsPerDay = body?.maxAppointmentsPerDay ?? null;
     const slotDurationMin = body?.slotDurationMin ?? null;
+    const allowedModality = typeof body?.allowedModality === 'string' ? body.allowedModality : null;
 
     if (!date || !isValidDate(date)) {
       return NextResponse.json({ error: 'Fecha invalida' }, { status: 400 });
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
         lunchEndTime,
         maxAppointmentsPerDay: parsedMax,
         slotDurationMin: parsedSlot,
+        allowedModality,
       },
       create: {
         date: scheduleDate,
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
         lunchEndTime,
         maxAppointmentsPerDay: parsedMax,
         slotDurationMin: parsedSlot,
+        allowedModality,
       },
     });
 

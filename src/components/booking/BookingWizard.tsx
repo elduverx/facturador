@@ -58,6 +58,13 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH'>('CASH');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isExistingMatterConsultation, setIsExistingMatterConsultation] = useState(false);
+  const [allowedModality, setAllowedModality] = useState<string | null>(null);
+  const [selectedModality, setSelectedModality] = useState<'OFFICE' | 'VIDEO_CALL'>('VIDEO_CALL');
+
+  useEffect(() => {
+    if (allowedModality === 'VIDEO_CALL') setSelectedModality('VIDEO_CALL');
+    if (allowedModality === 'OFFICE') setSelectedModality('OFFICE');
+  }, [allowedModality]);
 
   // Confirmation data
   const [confirmation, setConfirmation] = useState<{
@@ -115,6 +122,14 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
       ...nextClientData,
     }));
   }, []);
+
+  useEffect(() => {
+    if (selectedModality === 'VIDEO_CALL') {
+      setPaymentMethod('CARD');
+    } else if (selectedModality === 'OFFICE') {
+      setPaymentMethod('CASH');
+    }
+  }, [selectedModality]);
 
   const selectedService = services.find((s) => s.id === selectedServiceId);
   const selectedLawyer = LAWYERS.find((lawyer) => lawyer.id === selectedLawyerId);
@@ -178,6 +193,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           clientNie: clientData.clientNie ? normalizeNie(clientData.clientNie) : undefined,
           lawyerId: selectedLawyerId,
           paymentMethod,
+          modality: selectedModality,
           notes: [
             selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
             clientData.notes || null,
@@ -192,23 +208,18 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
 
       const appointment = await res.json();
 
-      if (paymentMethod === 'CASH') {
-        // For cash payments, show confirmation directly
-        setConfirmation({
-          appointmentId: appointment.id,
-          clientName: clientData.clientName.trim(),
-          serviceName: selectedService?.name || '',
-          lawyerName: selectedLawyer?.name || '',
-          date: selectedDate || '',
-          time: selectedTime || '',
-          price: selectedService?.price || 0,
-          paymentMethod: 'CASH',
-        });
-        setStep(4);
-      } else {
-        // For card payments, redirect to Redsys
-        window.location.href = `/api/payments/redsys?appointmentId=${appointment.id}`;
-      }
+      // Temporalmente omitimos Redsys para Bizum
+      setConfirmation({
+        appointmentId: appointment.id,
+        clientName: clientData.clientName.trim(),
+        serviceName: selectedService?.name || '',
+        lawyerName: selectedLawyer?.name || '',
+        date: selectedDate || '',
+        time: selectedTime || '',
+        price: selectedService?.price || 0,
+        paymentMethod: paymentMethod,
+      });
+      setStep(4);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al procesar la reserva');
     } finally {
@@ -372,10 +383,11 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                   serviceId={selectedServiceId}
                   lawyerId={selectedLawyerId}
                   selectedDate={selectedDate}
-                selectedTime={selectedTime}
-                onDateSelect={setSelectedDate}
-                onTimeSelect={(t) => setSelectedTime(t || null)}
-              />
+                  selectedTime={selectedTime}
+                  onDateSelect={setSelectedDate}
+                  onTimeSelect={(t) => setSelectedTime(t || null)}
+                  onModalityFetched={setAllowedModality}
+                />
             </div>
           )}
 
@@ -386,6 +398,40 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 onChange={setClientData}
                 errors={formErrors}
               />
+
+              {/* Modality Selection */}
+              <div className="mt-6 sm:mt-10">
+                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 tracking-tighter">
+                  Modalidad de la Cita
+                </h3>
+                {allowedModality ? (
+                   <div className="p-4 rounded-xl bg-white border border-stone-200 shadow-sm flex items-center justify-between">
+                     <div>
+                       <p className="text-sm font-bold uppercase text-[var(--pv-ink)]">
+                         {allowedModality === 'VIDEO_CALL' ? 'Video Llamada' : 'En Despacho'}
+                       </p>
+                       <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60">
+                         {allowedModality === 'VIDEO_CALL' ? 'Para esta fecha solo están disponibles citas online.' : 'Para esta fecha solo están disponibles citas presenciales.'}
+                       </p>
+                     </div>
+                   </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setSelectedModality('OFFICE')}
+                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedModality === 'OFFICE' ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-md' : 'border-stone-200 bg-white hover:border-[var(--pv-gold)]/50'}`}
+                    >
+                      <span className={`text-sm font-bold uppercase tracking-wider ${selectedModality === 'OFFICE' ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-ink)]'}`}>En Despacho</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedModality('VIDEO_CALL')}
+                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedModality === 'VIDEO_CALL' ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-md' : 'border-stone-200 bg-white hover:border-[var(--pv-gold)]/50'}`}
+                    >
+                      <span className={`text-sm font-bold uppercase tracking-wider ${selectedModality === 'VIDEO_CALL' ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-ink)]'}`}>Video Llamada</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Payment Method Selection */}
               <div className="mt-6 sm:mt-10">
@@ -408,17 +454,23 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 ) : (
                   <>
                     <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
-                      El pago del anticipo de la consulta se realizará de forma presencial.
+                      {selectedModality === 'VIDEO_CALL' 
+                        ? 'El pago de la cita online se realizará mediante Bizum o Transferencia.'
+                        : 'El pago del anticipo de la consulta presencial se concretará en la oficina.'}
                     </p>
 
                     <div className="rounded-2xl border-2 border-[var(--pv-marble)] bg-white p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-sm">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
-                        <Banknote size={22} />
+                        {selectedModality === 'VIDEO_CALL' ? <CreditCard size={22} /> : <Banknote size={22} />}
                       </div>
                       <div>
-                        <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">Efectivo en oficina</p>
+                        <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">
+                          {selectedModality === 'VIDEO_CALL' ? 'Pago Online (Bizum)' : 'A Concretar'}
+                        </p>
                         <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
-                          Paga directamente en la oficina el día de tu cita. Al confirmar la reserva, tu cita quedará agendada.
+                          {selectedModality === 'VIDEO_CALL'
+                            ? 'Al confirmar, tu cita quedará agendada y nos pondremos en contacto contigo para realizar el Bizum.'
+                            : 'El método de pago se acordará tras confirmar la reserva o al acudir al despacho. Al confirmar, tu cita quedará agendada.'}
                         </p>
                       </div>
                     </div>

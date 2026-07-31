@@ -87,6 +87,7 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
 
   const { appointment, documents, matters, pendingAppointments } = data;
   const isPast = new Date(`${appointment.date.split('T')[0]}T${appointment.startTime}:00`) < new Date();
+  const isAugust = appointment.date.split('T')[0].split('-')[1] === '08';
   
   // Get latest matter
   const latestMatter = matters?.[0] || null;
@@ -141,8 +142,9 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <button 
                     onClick={() => setSelectedModality('OFFICE')}
-                    disabled={savingModality}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 ${selectedModality === 'OFFICE' ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/10 shadow-[0_0_15px_rgba(196,161,115,0.15)] scale-[1.02]' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                    disabled={savingModality || isAugust}
+                    title={isAugust ? 'En agosto solo atendemos online' : ''}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 ${selectedModality === 'OFFICE' ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/10 shadow-[0_0_15px_rgba(196,161,115,0.15)] scale-[1.02]' : 'border-white/10 bg-white/5 hover:bg-white/10'} ${isAugust ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
                   >
                     <MapPin size={20} className={`mb-1.5 transition-colors duration-300 ${selectedModality === 'OFFICE' ? 'text-[var(--pv-gold)]' : 'text-white/40'}`} />
                     <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${selectedModality === 'OFFICE' ? 'text-[var(--pv-gold)]' : 'text-white/40'}`}>En Despacho</span>
@@ -156,6 +158,7 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
                     <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${selectedModality === 'VIDEO_CALL' ? 'text-[var(--pv-gold)]' : 'text-white/40'}`}>Video Llamada</span>
                   </button>
                 </div>
+                {isAugust && <p className="text-[9px] font-bold text-white/50 text-center mb-3 tracking-wider">En agosto todas las citas son exclusivamente online.</p>}
                 <button
                   onClick={handleSaveModality}
                   disabled={savingModality || !selectedModality}

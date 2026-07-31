@@ -429,6 +429,7 @@ model DaySchedule {
   lunchEndTime          String?
   slotDurationMin       Int?
   maxAppointmentsPerDay Int?
+  allowedModality       String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

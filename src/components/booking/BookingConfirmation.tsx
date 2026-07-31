@@ -111,17 +111,17 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
         ) : (
           <div className="neo-card !p-4 sm:!p-8 bg-[var(--pv-navy)] text-white border-none shadow-2xl relative overflow-hidden group">
             <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-               <CreditCard size={140} />
+               <Banknote size={140} />
             </div>
 
             <div className="relative z-10 h-full flex flex-col">
-              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-4">Pago de reserva</h3>
+              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-4">Pago por Bizum</h3>
               <p className="text-sm font-medium text-white/70 leading-relaxed mb-8">
-                Para confirmar la cita, realiza el pago del anticipo de la consulta.
+                Tu cita está reservada. Nos pondremos en contacto contigo para facilitarte los detalles y abonar el anticipo mediante Bizum.
               </p>
               
               <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] mb-2">Importe a pagar</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] mb-2">Importe del anticipo</p>
                  <div className="text-3xl sm:text-5xl font-black text-white font-roman">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
                  
                  <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
@@ -140,12 +140,12 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
                  </div>
               </div>
 
-              <button 
-                onClick={handlePay} 
-                className="btn-roman w-full py-4 text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-black/20 mt-auto"
-              >
-                Pagar con Redsys <ArrowRight size={16} />
-              </button>
+              <div className="p-4 rounded-xl bg-[var(--pv-gold)]/10 border border-[var(--pv-gold)]/20 flex items-start gap-3 mt-auto">
+                 <CheckCircle2 size={18} className="text-[var(--pv-gold)] shrink-0 mt-0.5" />
+                 <p className="text-xs text-[var(--pv-gold)] leading-relaxed">
+                   Hemos enviado un email a tu correo con los detalles de tu cita. Revisa tu bandeja de entrada.
+                 </p>
+              </div>
             </div>
           </div>
         )}

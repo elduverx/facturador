@@ -91,17 +91,17 @@ export function paymentConfirmationEmail(data: AppointmentEmailData & { amount: 
 export function cashReservationEmail(data: AppointmentEmailData): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>
-    <p>Su cita ha sido <strong style="color:#16a34a;">confirmada</strong> con pago en efectivo en la oficina.</p>
+    <p>Su cita ha sido <strong style="color:#16a34a;">confirmada</strong>. El método de pago se concretará en la oficina el día de su cita.</p>
     ${appointmentDetails(data)}
     <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:20px;margin:25px 0;">
-      <p style="margin:0 0 8px;font-weight:700;color:#C2410C;font-size:15px;">💵 Pago en Efectivo</p>
-      <p style="margin:0;font-size:14px;color:#57534E;">Recuerde traer el importe de la consulta en efectivo el día de su cita. El pago se realizará directamente en la oficina antes de la consulta.</p>
+      <p style="margin:0 0 8px;font-weight:700;color:#C2410C;font-size:15px;">💵 Pago A Concretar en Oficina</p>
+      <p style="margin:0;font-size:14px;color:#57534E;">Recuerde que el pago del anticipo de la consulta se acordará o abonará directamente en el despacho antes de la consulta presencial.</p>
     </div>
     ${data.firmAddress ? `<p style="font-size:14px;color:#57534E;"><strong>Dirección:</strong> ${data.firmAddress}</p>` : ''}
     ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Si necesita cancelar o modificar su cita, contáctenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
     <p style="font-size:14px;color:#57534E;">Le recomendamos traer toda la documentación relacionada con su caso.</p>
   `;
-  return baseTemplate('Reserva Confirmada — Pago en Oficina', body, data.firmName);
+  return baseTemplate('Reserva Confirmada', body, data.firmName);
 }
 
 export function cancellationEmail(data: AppointmentEmailData): string {

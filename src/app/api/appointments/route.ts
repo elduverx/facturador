@@ -151,9 +151,10 @@ export async function POST(request: Request) {
           date: startOfDay,
           startTime,
           endTime,
+          modality: date.split('-')[1] === '08' ? 'VIDEO_CALL' : (body.modality || 'OFFICE'),
           notes: [
             selectedStaff ? `Abogada asignada: ${selectedStaff.name}` : null,
-            method === 'CASH' ? '💵 Pago en efectivo en oficina' : null,
+            method === 'CASH' ? '💵 Método de pago a concretar en oficina' : '💳 Pago Online (Bizum)',
             notes || null,
           ].filter(Boolean).join('\n\n') || null,
           status: method === 'CASH' ? 'CONFIRMED' : 'PENDING',

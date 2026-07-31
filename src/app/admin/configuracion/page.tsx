@@ -16,7 +16,9 @@ import {
   Save, 
   Trash2, 
   AlertCircle,
-  Hash
+  Hash,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
 interface Settings {
@@ -42,6 +44,7 @@ interface DaySchedule {
   lunchEndTime: string | null;
   slotDurationMin: number | null;
   maxAppointmentsPerDay: number | null;
+  allowedModality: string | null;
 }
 
 export default function ConfiguracionPage() {
@@ -62,6 +65,8 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
+  const [togglingBlock, setTogglingBlock] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     date: '',
     startTime: '09:00',
@@ -70,6 +75,7 @@ export default function ConfiguracionPage() {
     lunchEndTime: '',
     maxAppointmentsPerDay: '',
     slotDurationMin: '',
+    allowedModality: '',
   });
   const [scheduleMessage, setScheduleMessage] = useState('');
   const [scheduleSaving, setScheduleSaving] = useState(false);
@@ -104,11 +110,39 @@ export default function ConfiguracionPage() {
 
   const loadDaySchedules = async () => {
     try {
-      const res = await fetch('/api/admin/day-schedules');
-      const data = await res.json();
+      const [resSchedules, resBlocked] = await Promise.all([
+        fetch('/api/admin/day-schedules'),
+        fetch('/api/admin/blocked-dates')
+      ]);
+      const data = await resSchedules.json();
       setDaySchedules(Array.isArray(data) ? data : []);
+      const blocked = await resBlocked.json();
+      setBlockedDates(Array.isArray(blocked) ? blocked : []);
     } catch {
       setDaySchedules([]);
+      setBlockedDates([]);
+    }
+  };
+
+  const toggleBlockDay = async () => {
+    if (!selectedDate) return;
+    setTogglingBlock(true);
+    try {
+      const existingBlock = blockedDates.find(b => b.date.startsWith(selectedDate));
+      if (existingBlock) {
+        await fetch(`/api/admin/blocked-dates?id=${existingBlock.id}`, { method: 'DELETE' });
+      } else {
+        await fetch(`/api/admin/blocked-dates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: selectedDate, reason: 'Cerrado por administrador desde ajustes' })
+        });
+      }
+      await loadDaySchedules();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setTogglingBlock(false);
     }
   };
 
@@ -125,6 +159,7 @@ export default function ConfiguracionPage() {
         lunchEndTime: schedule.lunchEndTime || '',
         maxAppointmentsPerDay: schedule.maxAppointmentsPerDay === null ? '' : String(schedule.maxAppointmentsPerDay),
         slotDurationMin: schedule.slotDurationMin === null ? '' : String(schedule.slotDurationMin),
+        allowedModality: schedule.allowedModality || '',
       });
     } else {
       const hasLunch = settings.lunchStartHour < settings.lunchEndHour;
@@ -136,6 +171,7 @@ export default function ConfiguracionPage() {
         lunchEndTime: hasLunch ? hourToTime(settings.lunchEndHour) : '',
         maxAppointmentsPerDay: '',
         slotDurationMin: '',
+        allowedModality: '',
       });
     }
   }, [
@@ -222,6 +258,7 @@ export default function ConfiguracionPage() {
         lunchEndTime: scheduleForm.lunchEndTime || null,
         maxAppointmentsPerDay: scheduleForm.maxAppointmentsPerDay,
         slotDurationMin: scheduleForm.slotDurationMin,
+        allowedModality: scheduleForm.allowedModality || null,
       };
 
       const res = await fetch('/api/admin/day-schedules', {
@@ -445,16 +482,18 @@ export default function ConfiguracionPage() {
                         const dateStr = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(day)}`;
                         const isSelected = selectedDate === dateStr;
                         const hasOverride = !!getScheduleForDate(dateStr);
+                        const isBlocked = blockedDates.some(b => b.date.startsWith(dateStr));
                         return (
                           <button
                             key={dateStr}
                             onClick={() => setSelectedDate(dateStr)}
                             className={`aspect-square rounded-xl text-xs font-bold transition-all relative ${
-                              isSelected ? 'bg-[var(--pv-gold)] text-white shadow-lg' : hasOverride ? 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] border border-[var(--pv-gold)]/20' : 'bg-white border border-white/50 hover:border-[var(--pv-gold)]'
+                              isSelected ? 'bg-[var(--pv-gold)] text-white shadow-lg' : isBlocked ? 'bg-red-50/50 border border-red-100 text-red-300' : hasOverride ? 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] border border-[var(--pv-gold)]/20' : 'bg-white border border-white/50 hover:border-[var(--pv-gold)]'
                             }`}
                           >
+                            {isBlocked && <Lock size={10} className="absolute top-1 right-1 opacity-50 text-red-400" />}
                             {day}
-                            {hasOverride && !isSelected && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--pv-gold)] rounded-full"></span>}
+                            {hasOverride && !isSelected && !isBlocked && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--pv-gold)] rounded-full"></span>}
                           </button>
                         );
                       })}
@@ -473,7 +512,20 @@ export default function ConfiguracionPage() {
                        </div>
                     ) : (
                       <div className="space-y-4 animate-fade-in">
-                        <div className="text-sm font-bold text-[var(--pv-ink)] mb-4">{selectedDate}</div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-sm font-bold text-[var(--pv-ink)]">{selectedDate}</div>
+                          <button
+                            onClick={toggleBlockDay}
+                            disabled={togglingBlock}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                              blockedDates.some(b => b.date.startsWith(selectedDate))
+                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                            }`}
+                          >
+                            {togglingBlock ? '...' : blockedDates.some(b => b.date.startsWith(selectedDate)) ? <><Unlock size={12} /> Abrir Día</> : <><Lock size={12} /> Cerrar Día</>}
+                          </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-1">
                              <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Cupos</label>
@@ -490,6 +542,14 @@ export default function ConfiguracionPage() {
                            <div className="space-y-1">
                              <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Fin</label>
                              <input type="time" className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.endTime} onChange={e => setScheduleForm({...scheduleForm, endTime: e.target.value})} />
+                           </div>
+                           <div className="space-y-1 col-span-2">
+                             <label className="text-[9px] font-bold text-[var(--pv-gold)] uppercase tracking-widest ml-2">Modalidad Especial</label>
+                             <select className="neo-input !py-2 !bg-white !text-xs" value={scheduleForm.allowedModality} onChange={e => setScheduleForm({...scheduleForm, allowedModality: e.target.value})}>
+                                <option value="">Cualquiera</option>
+                                <option value="OFFICE">Solo En Despacho</option>
+                                <option value="VIDEO_CALL">Solo Video Llamada</option>
+                             </select>
                            </div>
                         </div>
                         <button onClick={handleSaveSchedule} disabled={scheduleSaving} className="w-full btn-roman !py-3 !text-[10px] !uppercase !tracking-[0.2em] mt-4">
