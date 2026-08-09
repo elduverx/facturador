@@ -168,7 +168,29 @@ export function HomeShell() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#servicios' || hash === '#metodo' || hash === '#reservar' || hash === '#faq') {
+        setClientType('new');
+        setTimeout(() => {
+          const el = document.querySelector(hash);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    };
+    
+    // Check initial hash
+    if (typeof window !== 'undefined' && window.location.hash) {
+      handleHashChange();
+    }
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   const handlePillarClick = (id: string) => {
@@ -350,25 +372,28 @@ export function HomeShell() {
                         <button
                           key={idx}
                           onClick={() => handleServiceClick(service.name)}
-                          className={`text-left p-5 sm:p-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 flex flex-col justify-between h-full relative group
+                          className={`text-left p-5 sm:p-6 rounded-2xl border transition-all duration-500 flex flex-col justify-between h-full relative group overflow-hidden
                             ${activeService === service.name 
-                              ? 'bg-[var(--pv-navy)] border-[var(--pv-navy)] text-white shadow-xl transform scale-[1.02]' 
-                              : 'bg-white border-[var(--pv-navy)]/10 hover:border-[var(--pv-gold)]/50 hover:shadow-md text-[var(--pv-navy)]'}`}
+                              ? 'bg-[var(--pv-navy)] text-white shadow-2xl scale-[1.02] border-[var(--pv-gold)]' 
+                              : 'bg-white border-[var(--pv-navy)]/10 hover:bg-[var(--pv-navy)] hover:border-[var(--pv-navy)] hover:shadow-2xl hover:-translate-y-1'}`}
                         >
-                          <div>
-                            <h4 className={`font-bold text-base sm:text-lg mb-2 sm:mb-3 pr-8 leading-tight transition-colors duration-300 ${activeService === service.name ? 'text-white' : 'text-[var(--pv-navy)]'}`}>
+                          <div className="relative z-10">
+                            <h4 className={`font-bold text-base sm:text-lg mb-2 sm:mb-3 pr-8 leading-tight transition-colors duration-500 ${activeService === service.name ? 'text-[var(--pv-gold)]' : 'text-[var(--pv-navy)] group-hover:text-[var(--pv-gold)]'}`}>
                               {service.name}
                             </h4>
-                            <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-300 ${activeService === service.name ? 'opacity-80 text-white' : 'opacity-60 text-[var(--pv-navy)] group-hover:opacity-100'}`}>
+                            <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-500 ${activeService === service.name ? 'text-white/90' : 'text-[var(--pv-navy)]/60 group-hover:text-white/80'}`}>
                               {service.desc}
                             </p>
                           </div>
                           
-                          {/* Checkbox Icon */}
-                          <div className={`absolute top-5 right-5 transition-opacity duration-300 
-                            ${activeService === service.name ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}`}>
-                            <CheckCircle2 size={24} className={activeService === service.name ? "text-[var(--pv-gold)]" : "text-[var(--pv-navy)]"} />
+                          {/* Highlight Icon */}
+                          <div className={`absolute top-5 right-5 transition-all duration-500 z-10
+                            ${activeService === service.name ? 'opacity-100 scale-110' : 'opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100'}`}>
+                            <CheckCircle2 size={24} className="text-[var(--pv-gold)]" />
                           </div>
+                          
+                          {/* Background Glow */}
+                          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[var(--pv-gold)]/10 rounded-full blur-2xl group-hover:bg-[var(--pv-gold)]/20 transition-all duration-500 z-0"></div>
                         </button>
                       ))}
                     </div>
@@ -428,28 +453,33 @@ export function HomeShell() {
               </div>
             </section>
 
-            {/* Testimonials */}
-            <section id="testimonios" className="py-12 sm:py-20 lg:py-32 relative">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="text-center mb-10 sm:mb-16">
-                  <h2 className="text-2xl sm:text-4xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight">Nuestras clientas PV Abogadas</h2>
-                  <div className="w-16 sm:w-24 h-1 bg-[var(--pv-gold)] mx-auto mt-4 sm:mt-6"></div>
+            {/* Our Method */}
+            <section id="metodo" className="py-12 sm:py-20 lg:py-32 relative overflow-hidden bg-white/50 border-y border-[var(--glass-border)]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+                <div className="text-center mb-16 sm:mb-24">
+                  <h2 className="text-3xl sm:text-5xl font-bold font-roman text-[var(--pv-navy)] uppercase tracking-tight drop-shadow-sm">Nuestro Método</h2>
+                  <p className="text-[var(--pv-gold)] font-bold tracking-[0.2em] uppercase text-xs sm:text-sm mt-4">Claridad de principio a fin</p>
+                  <div className="w-16 sm:w-24 h-1 bg-[var(--pv-gold)] mx-auto mt-6"></div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                  {TESTIMONIALS.map((t, i) => (
-                    <div key={i} className="neo-card bg-white p-6 sm:p-8 hover:-translate-y-2 transition-all duration-300">
-                       <MessageSquareQuote size={24} className="sm:w-8 sm:h-8 text-[var(--pv-gold)] mb-4 sm:mb-6 opacity-80" />
-                       <p className="text-sm sm:text-base italic text-[var(--pv-navy)] opacity-80 leading-relaxed mb-6 sm:mb-8">"{t.quote}"</p>
-                       <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--pv-gold)]/10 flex items-center justify-center font-bold text-[var(--pv-gold)] font-roman shadow-inner text-sm sm:text-base">
-                             {t.initials}
-                          </div>
-                          <div>
-                             <h4 className="font-bold text-[var(--pv-navy)] uppercase text-xs sm:text-sm">{t.name}</h4>
-                             <p className="text-[9px] sm:text-[10px] text-[var(--pv-navy)]/50 tracking-widest uppercase">{t.origin}</p>
-                          </div>
-                       </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
+                  {[
+                    { step: '01', title: 'Reserva', desc: 'Agenda tu cita fácilmente desde esta misma web, eligiendo modalidad presencial u online.' },
+                    { step: '02', title: 'Asesoría', desc: 'Evaluamos tu caso en profundidad, revisamos tu documentación y trazamos la estrategia legal.' },
+                    { step: '03', title: 'Trámite', desc: 'Iniciamos el proceso y gestionamos toda la burocracia para que tú no tengas que preocuparte.' },
+                    { step: '04', title: 'Resolución', desc: 'Te mantenemos informado en todo momento a través de tu Portal Privado hasta alcanzar el éxito.' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="relative bg-white border border-[var(--pv-navy)]/10 p-8 rounded-3xl hover:-translate-y-3 hover:shadow-2xl hover:border-[var(--pv-gold)]/50 transition-all duration-500 group overflow-hidden">
+                      <div className="absolute -top-4 -right-4 text-7xl font-roman font-black text-[var(--pv-navy)]/5 group-hover:text-[var(--pv-gold)]/10 transition-colors duration-500 z-0">
+                        {item.step}
+                      </div>
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-[var(--pv-navy)] group-hover:bg-[var(--pv-gold)] transition-colors flex items-center justify-center mb-6 shadow-lg text-white font-black text-xl font-roman">
+                          {idx + 1}
+                        </div>
+                        <h4 className="font-bold text-[var(--pv-navy)] uppercase text-lg mb-3 tracking-wider">{item.title}</h4>
+                        <p className="text-sm text-[var(--pv-navy)]/70 leading-relaxed group-hover:text-[var(--pv-navy)]/90 transition-colors">{item.desc}</p>
+                      </div>
                     </div>
                   ))}
                 </div>

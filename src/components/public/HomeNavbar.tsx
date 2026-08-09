@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Menu, X, BookOpen, Users, Calendar, HelpCircle, ArrowRight, UserCircle } from 'lucide-react';
+import { Menu, X, BookOpen, Target, Calendar, HelpCircle, ArrowRight, UserCircle } from 'lucide-react';
 
 const NAV_LINKS = [
-  { label: 'Servicios', href: '/#servicios', icon: BookOpen },
-  { label: 'Testimonios', href: '/#testimonios', icon: Users },
+  { label: 'Servicios', href: '/servicios', icon: BookOpen },
+  { label: 'Método', href: '/metodo', icon: Target },
   { label: 'Reserva', href: '/reservar', icon: Calendar },
   { label: 'FAQ', href: '/faq', icon: HelpCircle },
 ];

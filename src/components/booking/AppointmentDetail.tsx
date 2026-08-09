@@ -85,12 +85,9 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
   if (error) return <div className="p-4 bg-red-50 text-red-700 rounded-xl m-4">{error}</div>;
   if (!data?.appointment) return <div className="p-4 bg-red-50 text-red-700 rounded-xl m-4">Cita no encontrada</div>;
 
-  const { appointment, documents, matters, pendingAppointments } = data;
+  const { appointment, pendingAppointments } = data;
   const isPast = new Date(`${appointment.date.split('T')[0]}T${appointment.startTime}:00`) < new Date();
   const isAugust = appointment.date.split('T')[0].split('-')[1] === '08';
-  
-  // Get latest matter
-  const latestMatter = matters?.[0] || null;
 
   return (
     <div className="space-y-4 animate-fade-in pb-4">
@@ -187,64 +184,16 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
       </div>
 
       {isPast && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-3 border-t border-white/10">
-          {/* Timeline / Matter status */}
-          <section>
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 mb-3 flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-[var(--pv-gold)]/20 flex items-center justify-center">
-                <Briefcase size={10} className="text-[var(--pv-gold)]" />
-              </div>
-              Seguimiento del Caso
-            </h3>
-            {latestMatter ? (
-              <div className="space-y-3 pl-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[8px] font-black uppercase tracking-[0.3em] text-[var(--pv-gold)] mb-0.5">{latestMatter.reference}</div>
-                    <div className="font-roman text-sm font-bold uppercase text-white">{latestMatter.title}</div>
-                  </div>
-                  <div className="inline-flex rounded-full bg-white/10 border border-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-white/80">
-                    {STATUS_LABELS[latestMatter.status] || latestMatter.status}
-                  </div>
-                </div>
-                {latestMatter.timeline && latestMatter.timeline.length > 0 && (
-                  <div className="pl-3 border-l border-white/10 space-y-3 pt-2">
-                    {latestMatter.timeline.map((item: any) => (
-                      <div key={item.id} className="relative group">
-                        <div className="absolute -left-[15px] top-1 w-2 h-2 rounded-full bg-[var(--pv-gold)] shadow-[0_0_8px_rgba(196,161,115,0.5)]"></div>
-                        <div className="text-[8px] font-bold text-[var(--pv-gold)]/80 uppercase tracking-widest mb-0.5">
-                          {formatDateShort(item.createdAt.split('T')[0])}
-                        </div>
-                        <div className="font-bold text-xs text-white/90 leading-tight">{item.title}</div>
-                        {item.content && <p className="text-[9px] text-white/50 leading-tight mt-1">{item.content}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-               <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-center backdrop-blur-sm">
-                 <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Se actualizará pronto.</p>
-               </div>
-            )}
-          </section>
-
-          {/* Documents */}
-          {documents && documents.length > 0 && (
-            <section>
-              <div className="mb-3">
-                <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 flex items-center gap-2">
-                   <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center">
-                     <FileText size={10} className="text-blue-400" />
-                   </div>
-                   Documentos
-                </h3>
-              </div>
-              <div className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-sm">
-                 <ClientDocumentUploader documents={documents} compact={true} />
-              </div>
-            </section>
-          )}
+        <div className="pt-3 border-t border-white/10">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-white relative overflow-hidden backdrop-blur-md">
+             <div className="w-12 h-12 mx-auto rounded-full bg-[var(--pv-gold)]/10 flex items-center justify-center border border-[var(--pv-gold)]/20 mb-3">
+               <Briefcase size={24} className="text-[var(--pv-gold)]" />
+             </div>
+             <h3 className="text-sm font-roman uppercase tracking-[0.2em] font-bold text-white mb-2">Cita Finalizada</h3>
+             <p className="text-xs text-white/50 leading-snug">
+               El equipo legal está revisando los detalles. Podrás ver el estado del expediente en la sección correspondiente de tu portal.
+             </p>
+          </div>
         </div>
       )}
 

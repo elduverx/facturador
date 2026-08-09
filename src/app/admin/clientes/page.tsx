@@ -25,6 +25,10 @@ function ClientesPageContent() {
   const [selectedClient, setSelectedClient] = useState<string | null>(emailParam || null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [newClientData, setNewClientData] = useState({ name: '', email: '', phone: '', nie: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (emailParam && !selectedClient) {
@@ -34,45 +38,46 @@ function ClientesPageContent() {
 
   const loadClients = async () => {
     try {
-      const res = await fetch('/api/appointments');
-      const data: AppointmentData[] = await res.json();
+      const res = await fetch('/api/admin/clients');
+      const data = await res.json();
 
       if (!Array.isArray(data)) {
         setClients([]);
         return;
       }
-
-      const clientMap = new Map<string, ClientInfo>();
-      data.forEach((appt) => {
-        const existing = clientMap.get(appt.clientEmail);
-        const apptDate = typeof appt.date === 'string' ? appt.date.split('T')[0] : new Date(appt.date).toISOString().split('T')[0];
-
-        if (!existing) {
-          clientMap.set(appt.clientEmail, {
-            name: appt.clientName,
-            email: appt.clientEmail,
-            phone: appt.clientPhone,
-            nie: appt.clientNie,
-            totalAppointments: 1,
-            lastVisit: apptDate,
-          });
-        } else {
-          existing.totalAppointments++;
-          if (apptDate > existing.lastVisit) {
-            existing.lastVisit = apptDate;
-            existing.name = appt.clientName;
-            existing.phone = appt.clientPhone;
-            if (appt.clientNie) existing.nie = appt.clientNie;
-          }
-        }
-      });
-
-      const sorted = Array.from(clientMap.values()).sort((a, b) => b.lastVisit.localeCompare(a.lastVisit));
-      setClients(sorted);
+      setClients(data);
     } catch {
       setClients([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/admin/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClientData)
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al crear cliente');
+      }
+
+      await loadClients();
+      setShowNewClientModal(false);
+      setNewClientData({ name: '', email: '', phone: '', nie: '' });
+      setSelectedClient(data.email); // Auto-open the new client profile
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -126,17 +131,58 @@ function ClientesPageContent() {
             Gestiona los perfiles, documentos y expedientes de todos los clientes.
           </p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--pv-navy)]/40" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, email, teléfono o NIE..."
-            className="neo-input !py-2.5 !pl-10 !text-sm w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--pv-navy)]/40" />
+            <input
+              type="text"
+              placeholder="Buscar cliente..."
+              className="neo-input !py-2.5 !pl-10 !text-sm w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={() => setShowNewClientModal(true)}
+            className="btn-roman !py-2.5 !px-5 w-full sm:w-auto"
+          >
+            Nuevo Cliente
+          </button>
         </div>
       </div>
+
+      {showNewClientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--pv-navy)]/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative">
+            <h2 className="font-roman text-xl font-bold text-[var(--pv-ink)] uppercase mb-6">Añadir Nuevo Cliente</h2>
+            <form onSubmit={handleCreateClient} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/50 mb-1 ml-2">Nombre completo</label>
+                <input required type="text" className="neo-input w-full" value={newClientData.name} onChange={e => setNewClientData({...newClientData, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/50 mb-1 ml-2">Email</label>
+                <input required type="email" className="neo-input w-full" value={newClientData.email} onChange={e => setNewClientData({...newClientData, email: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/50 mb-1 ml-2">Teléfono</label>
+                <input required type="tel" className="neo-input w-full" value={newClientData.phone} onChange={e => setNewClientData({...newClientData, phone: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)]/50 mb-1 ml-2">NIE / DNI (Opcional)</label>
+                <input type="text" className="neo-input w-full" value={newClientData.nie} onChange={e => setNewClientData({...newClientData, nie: e.target.value})} />
+              </div>
+              
+              {errorMsg && <p className="text-red-500 text-xs font-bold">{errorMsg}</p>}
+
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setShowNewClientModal(false)} className="flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-widest text-[var(--pv-navy)] bg-[var(--pv-marble)] hover:bg-stone-200 transition-colors">Cancelar</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-widest text-white bg-[var(--pv-gold)] hover:bg-[#b8914b] transition-colors">{isSubmitting ? 'Guardando...' : 'Guardar'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="p-12 text-center text-sm font-bold uppercase tracking-widest text-[var(--pv-navy)]/40 animate-pulse">

@@ -33,7 +33,6 @@ export async function POST(request: Request) {
       where: {
         id: appointmentId,
         clientEmail: { equals: session.email, mode: 'insensitive' },
-        clientPhone: session.phone,
       },
       select: { id: true, paymentStatus: true },
     });
@@ -76,7 +75,6 @@ export async function POST(request: Request) {
       where: {
         id: documentId,
         clientEmail: { equals: session.email, mode: 'insensitive' },
-        OR: [{ clientPhone: session.phone }, { clientPhone: '' }],
       },
       select: { id: true },
     });
@@ -111,6 +109,50 @@ export async function POST(request: Request) {
     ]);
 
     return NextResponse.json({ ok: true, type: 'document' });
+  }
+
+  const paymentLinkId = typeof body?.paymentLinkId === 'string' && body.paymentLinkId 
+    ? body.paymentLinkId 
+    : undefined;
+
+  if (paymentLinkId) {
+    const paymentLink = await prisma.paymentLink.findFirst({
+      where: {
+        id: paymentLinkId,
+        clientEmail: { equals: session.email, mode: 'insensitive' },
+      }
+    });
+
+    if (!paymentLink) {
+      return NextResponse.json({ error: 'Cobro no encontrado' }, { status: 404 });
+    }
+
+    const attempt = await prisma.paymentAttempt.findFirst({
+      where: {
+        targetType: 'PAYMENT_LINK',
+        targetId: paymentLink.id,
+        status: 'PENDING',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    await prisma.$transaction([
+      prisma.paymentLink.update({
+        where: { id: paymentLink.id },
+        data: {
+          status: 'PAID',
+          ...(attempt ? { paymentId: attempt.orderId } : {}),
+        }
+      }),
+      ...(attempt
+        ? [prisma.paymentAttempt.update({
+            where: { id: attempt.id },
+            data: { status: 'PAID', rawResponse: { source: 'browser_return_dev' } },
+          })]
+        : []),
+    ]);
+
+    return NextResponse.json({ ok: true, type: 'payment_link' });
   }
 
   return NextResponse.json({ error: 'Sin pago que confirmar' }, { status: 400 });

@@ -56,6 +56,7 @@ enum PaymentMethod {
 }
 
 enum PaymentTargetType {
+  PAYMENT_LINK
   APPOINTMENT
   DOCUMENT
 }
@@ -146,31 +147,31 @@ enum StaffRole {
 }
 
 model Appointment {
-  id          String            @id @default(cuid())
+  id          String     @id @default(cuid())
   serviceId   String
-  service     Service           @relation(fields: [serviceId], references: [id])
+  service     Service    @relation(fields: [serviceId], references: [id])
   staffUserId String?
-  staffUser   StaffUser?        @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
+  staffUser   StaffUser? @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
 
   clientName  String
   clientEmail String
   clientPhone String
   clientNie   String?
 
-  date        DateTime
-  startTime   String
-  endTime     String
+  date      DateTime
+  startTime String
+  endTime   String
 
-  status      AppointmentStatus @default(PENDING)
-  paymentMethod PaymentMethod   @default(CARD)
-  paymentStatus PaymentStatus   @default(PENDING)
-  paymentId   String?           @unique // Referencia de Redsys u otro
-  notes       String?
-  adminNotes  String?
-  modality    String            @default("OFFICE")
+  status        AppointmentStatus @default(PENDING)
+  paymentMethod PaymentMethod     @default(CARD)
+  paymentStatus PaymentStatus     @default(PENDING)
+  paymentId     String?           @unique // Referencia de Redsys u otro
+  notes         String?
+  adminNotes    String?
+  modality      String            @default("OFFICE")
 
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([date])
   @@index([status])
@@ -179,17 +180,17 @@ model Appointment {
 }
 
 model PaymentAttempt {
-  id           String            @id @default(cuid())
-  orderId      String            @unique
-  targetType   PaymentTargetType
-  targetId     String
-  amountCents  Int
-  currency     String            @default("978")
-  status       PaymentStatus     @default(PENDING)
-  provider     String            @default("REDSYS")
-  rawResponse  Json?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id          String            @id @default(cuid())
+  orderId     String            @unique
+  targetType  PaymentTargetType
+  targetId    String
+  amountCents Int
+  currency    String            @default("978")
+  status      PaymentStatus     @default(PENDING)
+  provider    String            @default("REDSYS")
+  rawResponse Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@index([targetType, targetId])
   @@index([status])
@@ -197,14 +198,14 @@ model PaymentAttempt {
 }
 
 model ClientNote {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   clientEmail String
   content     String
   status      ClientNoteStatus @default(PENDING)
   tags        String[]
-  isPublic    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isPublic    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([clientEmail])
 }
@@ -225,7 +226,7 @@ model ClientDocument {
   aiAnalysis   Json?
   matchedEmail String?
   matchedScore Float?
-  amountDue    Float?               // Cobro extra requerido para descargar
+  amountDue    Float? // Cobro extra requerido para descargar
   isPaid       Boolean              @default(false)
   paymentId    String?              @unique
   createdAt    DateTime             @default(now())
@@ -272,16 +273,16 @@ model Matter {
 }
 
 model MatterTimeline {
-  id          String            @id @default(cuid())
-  matterId    String
-  matter      Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  type        TimelineEventType @default(NOTE)
-  title       String
-  content     String?
-  actor       String?
-  isPublic    Boolean           @default(false)
-  metadata    Json?
-  createdAt   DateTime          @default(now())
+  id        String            @id @default(cuid())
+  matterId  String
+  matter    Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  type      TimelineEventType @default(NOTE)
+  title     String
+  content   String?
+  actor     String?
+  isPublic  Boolean           @default(false)
+  metadata  Json?
+  createdAt DateTime          @default(now())
 
   @@index([matterId])
   @@index([type])
@@ -308,25 +309,25 @@ model LegalDeadline {
 }
 
 model BillingDocument {
-  id              String                @id @default(cuid())
-  matterId        String?
-  matter          Matter?               @relation(fields: [matterId], references: [id], onDelete: SetNull)
-  type            BillingDocumentType   @default(INVOICE)
-  status          BillingDocumentStatus @default(DRAFT)
-  number          String?
-  concept         String
-  baseAmount      Float                 @default(0)
-  vatPercent      Float                 @default(21)
-  irpfPercent     Float                 @default(0)
-  expenseAmount   Float                 @default(0)
-  totalAmount     Float                 @default(0)
-  paidAmount      Float                 @default(0)
-  issuedAt        DateTime              @default(now())
-  dueAt           DateTime?
-  notes           String?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  installments    PaymentPlanInstallment[]
+  id            String                   @id @default(cuid())
+  matterId      String?
+  matter        Matter?                  @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  type          BillingDocumentType      @default(INVOICE)
+  status        BillingDocumentStatus    @default(DRAFT)
+  number        String?
+  concept       String
+  baseAmount    Float                    @default(0)
+  vatPercent    Float                    @default(21)
+  irpfPercent   Float                    @default(0)
+  expenseAmount Float                    @default(0)
+  totalAmount   Float                    @default(0)
+  paidAmount    Float                    @default(0)
+  issuedAt      DateTime                 @default(now())
+  dueAt         DateTime?
+  notes         String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  installments  PaymentPlanInstallment[]
 
   @@index([matterId])
   @@index([status])
@@ -403,21 +404,21 @@ model BlockedDate {
 }
 
 model OfficeSettings {
-  id              String   @id @default("default")
-  firmName        String   @default("Consultorio de Extranjeria")
-  firmEmail       String   @default("")
-  firmPhone       String   @default("")
-  firmAddress     String   @default("")
-  startHour       Int      @default(9)
-  endHour         Int      @default(18)
-  slotDurationMin Int      @default(30)
-  lunchStartHour  Int      @default(14)
-  lunchEndHour    Int      @default(15)
-  workDays        Json     @default("[1,2,3,4,5]")
-  maxAppointmentsPerDay Int @default(0)
-  adminPinHash    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default("default")
+  firmName              String   @default("Consultorio de Extranjeria")
+  firmEmail             String   @default("")
+  firmPhone             String   @default("")
+  firmAddress           String   @default("")
+  startHour             Int      @default(9)
+  endHour               Int      @default(18)
+  slotDurationMin       Int      @default(30)
+  lunchStartHour        Int      @default(14)
+  lunchEndHour          Int      @default(15)
+  workDays              Json     @default("[1,2,3,4,5]")
+  maxAppointmentsPerDay Int      @default(0)
+  adminPinHash          String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model DaySchedule {
@@ -438,20 +439,20 @@ model DaySchedule {
 }
 
 model BlogPost {
-  id             String     @id @default(cuid())
-  title          String
-  slug           String     @unique
-  excerpt        String?
-  content        String
-  coverImageUrl  String?
-  imageUrls      String[]
-  linkUrls       String[]
-  embedUrls      String[]
-  status         BlogStatus @default(DRAFT)
-  publishedAt    DateTime?
+  id               String     @id @default(cuid())
+  title            String
+  slug             String     @unique
+  excerpt          String?
+  content          String
+  coverImageUrl    String?
+  imageUrls        String[]
+  linkUrls         String[]
+  embedUrls        String[]
+  status           BlogStatus @default(DRAFT)
+  publishedAt      DateTime?
   newsletterSentAt DateTime?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@index([status])
   @@index([publishedAt])
@@ -480,7 +481,24 @@ model ChatMessage {
   id        String      @id @default(cuid())
   sessionId String
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role      String      // 'user' | 'assistant' | 'system'
+  role      String // 'user' | 'assistant' | 'system'
   content   String
   createdAt DateTime    @default(now())
+}
+
+model PaymentLink {
+  id          String        @id @default(cuid())
+  reference   String?       @unique // "orden"
+  concept     String
+  amount      Float
+  clientName  String
+  clientEmail String
+  clientPhone String
+  status      PaymentStatus @default(PENDING)
+  paymentId   String?       @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([clientEmail])
+  @@index([status])
 }

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { formatDateShort } from '@/lib/constants';
 import Link from 'next/link';
-import { Wallet, Search, Filter, CalendarCheck, FileText, FileSpreadsheet, ArrowRight } from 'lucide-react';
+import { Wallet, Search, Filter, CalendarCheck, FileText, FileSpreadsheet, ArrowRight, Plus } from 'lucide-react';
+import { GeneratePaymentModal } from '@/components/admin/GeneratePaymentModal';
 
-type IncomeType = 'APPOINTMENT' | 'DOCUMENT' | 'INVOICE';
+type IncomeType = 'APPOINTMENT' | 'DOCUMENT' | 'INVOICE' | 'PAYMENT_LINK';
 
 interface IncomeItem {
   id: string;
@@ -23,19 +24,21 @@ export default function IngresosPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<IncomeType | 'ALL'>('ALL');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchIncomes = async () => {
+    try {
+      const res = await fetch('/api/admin/income');
+      const data = await res.json();
+      setIncomes(data);
+    } catch (err) {
+      console.error('Error cargando ingresos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchIncomes = async () => {
-      try {
-        const res = await fetch('/api/admin/income');
-        const data = await res.json();
-        setIncomes(data);
-      } catch (err) {
-        console.error('Error cargando ingresos:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchIncomes();
   }, []);
 
@@ -44,6 +47,7 @@ export default function IngresosPage() {
       case 'APPOINTMENT': return <CalendarCheck size={16} className="text-emerald-500" />;
       case 'DOCUMENT': return <FileText size={16} className="text-blue-500" />;
       case 'INVOICE': return <FileSpreadsheet size={16} className="text-[var(--pv-gold)]" />;
+      case 'PAYMENT_LINK': return <Wallet size={16} className="text-purple-500" />;
     }
   };
 
@@ -52,6 +56,7 @@ export default function IngresosPage() {
       case 'APPOINTMENT': return 'CITA';
       case 'DOCUMENT': return 'DOC';
       case 'INVOICE': return 'FACTURA';
+      case 'PAYMENT_LINK': return 'COBRO';
     }
   };
 
@@ -77,6 +82,13 @@ export default function IngresosPage() {
           </div>
           <p className="text-3xl font-black text-[var(--pv-ink)]">{totalAmount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
           <p className="text-xs font-medium text-[var(--pv-navy)]/60 mt-1 uppercase tracking-widest">{filteredIncomes.length} transacciones listadas</p>
+        </div>
+        
+        <div className="sm:col-span-2 flex items-center justify-end">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-[var(--pv-ink)] text-white font-bold text-sm uppercase tracking-widest hover:bg-[var(--pv-gold)] transition-colors shadow-lg group">
+            <Plus size={20} className="group-hover:scale-125 transition-transform duration-300" />
+            Nuevo Cobro
+          </button>
         </div>
       </div>
 
@@ -116,6 +128,12 @@ export default function IngresosPage() {
             className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${typeFilter === 'INVOICE' ? 'bg-[var(--pv-gold)] text-white' : 'bg-[var(--pv-gold)]/10 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)]/20'}`}
           >
             Facturas
+          </button>
+          <button 
+            onClick={() => setTypeFilter('PAYMENT_LINK')}
+            className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${typeFilter === 'PAYMENT_LINK' ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
+          >
+            Cobros
           </button>
         </div>
       </div>
@@ -171,6 +189,16 @@ export default function IngresosPage() {
           </div>
         )}
       </div>
+
+      {isModalOpen && (
+        <GeneratePaymentModal 
+          onClose={() => setIsModalOpen(false)} 
+          onSuccess={() => {
+            setIsModalOpen(false);
+            fetchIncomes();
+          }} 
+        />
+      )}
     </div>
   );
 }

@@ -129,6 +129,34 @@ export async function POST(request: Request) {
 
         return new Response('OK', { status: 200 });
 
+      } else if (attempt.targetType === 'PAYMENT_LINK') {
+        const paymentLink = await prisma.paymentLink.findUnique({
+          where: { id: attempt.targetId }
+        });
+
+        if (!paymentLink) return new Response('OK', { status: 200 });
+        if (paymentLink.status === 'PAID') return new Response('OK', { status: 200 });
+
+        if (attempt.amountCents !== Math.round(paymentLink.amount * 100)) {
+          await prisma.paymentAttempt.update({
+            where: { id: attempt.id },
+            data: { status: 'FAILED', rawResponse },
+          });
+          return new Response('OK', { status: 200 });
+        }
+
+        await prisma.$transaction([
+          prisma.paymentLink.update({
+            where: { id: paymentLink.id },
+            data: { status: 'PAID', paymentId: attempt.orderId },
+          }),
+          prisma.paymentAttempt.update({
+            where: { id: attempt.id },
+            data: { status: 'PAID', rawResponse },
+          }),
+        ]);
+
+        return new Response('OK', { status: 200 });
       } else {
         const appointment = await prisma.appointment.findUnique({
           where: { id: attempt.targetId },

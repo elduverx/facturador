@@ -5,7 +5,7 @@ export type PortalSessionPayload = {
   appointmentId?: string;
   documentId?: string;
   email: string;
-  phone: string;
+  nie: string;
   expiresAt?: number;
 };
 
@@ -46,7 +46,7 @@ export async function parsePortalSessionCookie(value?: string | null): Promise<P
 
   try {
     const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as PortalSessionPayload;
-    if (!session.email || typeof session.phone !== 'string' || !session.expiresAt) return null;
+    if (!session.email || typeof session.nie !== 'string' || !session.expiresAt) return null;
     if (Date.now() > session.expiresAt) return null;
     return session;
   } catch {

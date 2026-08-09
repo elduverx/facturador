@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { readClientDocument } from '@/lib/client-documents';
 import { parsePortalSessionCookie } from '@/lib/portal-session';
-import { normalizePhone } from '@/lib/validation';
 
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
 
@@ -25,8 +24,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const sameEmail = document.clientEmail.toLowerCase() === session.email.toLowerCase();
-    const samePhone = document.clientPhone === '' || normalizePhone(document.clientPhone) === normalizePhone(session.phone);
-    if (!sameEmail || !samePhone) {
+    if (!sameEmail) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 

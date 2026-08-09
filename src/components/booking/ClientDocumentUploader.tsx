@@ -52,7 +52,7 @@ export function ClientDocumentUploader({ documents, compact = false }: ClientDoc
   return (
     <div className="space-y-4">
       {documents.length === 0 ? (
-        <div className="p-6 bg-[var(--pv-marble)]/60 rounded-xl border-2 border-dashed border-[var(--pv-gold)]/20 text-xs text-[var(--pv-navy)]/50 text-center font-bold tracking-widest uppercase">
+        <div className="p-6 bg-white/5 rounded-2xl border-2 border-dashed border-white/20 text-xs text-white/40 text-center font-bold tracking-widest uppercase backdrop-blur-sm">
           Aún no tienes documentos de la abogada.
         </div>
       ) : (
@@ -61,33 +61,33 @@ export function ClientDocumentUploader({ documents, compact = false }: ClientDoc
             const requiresPayment = document.amountDue && document.amountDue > 0 && !document.isPaid;
             
             return (
-            <div key={document.id} className="group relative rounded-[20px] bg-white border border-[var(--pv-marble)] shadow-sm hover:shadow-xl hover:border-[var(--pv-gold)]/30 transition-all duration-500 overflow-hidden p-4 sm:p-5">
+            <div key={document.id} className="group relative rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl hover:border-white/30 transition-all duration-500 overflow-hidden p-4 sm:p-5">
               {/* Decorative Background */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--pv-gold)]/5 rounded-bl-[100px] -z-10 transition-transform duration-700 group-hover:scale-110"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--pv-gold)]/10 rounded-bl-[100px] -z-10 transition-transform duration-700 group-hover:scale-110"></div>
               
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--pv-marble)] border border-white shadow-inner flex items-center justify-center shrink-0 group-hover:bg-[var(--pv-gold)] transition-colors duration-500">
-                    <FileText size={20} className="text-[var(--pv-navy)] group-hover:text-white transition-colors duration-500" />
+                  <div className="w-12 h-12 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-[var(--pv-gold)]/20 transition-colors duration-500">
+                    <FileText size={20} className="text-white/70 group-hover:text-[var(--pv-gold)] transition-colors duration-500" />
                   </div>
                   
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-roman text-sm font-bold text-[var(--pv-ink)] truncate mb-1.5">{document.fileName}</h4>
-                    <div className="flex flex-wrap items-center gap-2 text-[9px] font-black text-[var(--pv-navy)]/50 uppercase tracking-[0.2em]">
-                      <span className="bg-[var(--pv-marble)] px-2 py-1 rounded-md">{formatDateShort(document.createdAt.split('T')[0])}</span>
+                    <h4 className="font-roman text-sm font-bold text-white truncate mb-1.5">{document.fileName}</h4>
+                    <div className="flex flex-wrap items-center gap-2 text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">
+                      <span className="bg-black/20 px-2 py-1.5 rounded-lg border border-white/5">{formatDateShort(document.createdAt.split('T')[0])}</span>
                       <span>·</span>
-                      <span className="bg-[var(--pv-marble)] px-2 py-1 rounded-md">{formatSize(document.sizeBytes)}</span>
+                      <span className="bg-black/20 px-2 py-1.5 rounded-lg border border-white/5">{formatSize(document.sizeBytes)}</span>
                       {requiresPayment && (
                         <>
                           <span>·</span>
-                          <span className="bg-red-50 text-red-600 border border-red-100 px-2 py-1 rounded-md">Pago requerido: {document.amountDue!.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                          <span className="bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-1.5 rounded-lg">Pago requerido: {document.amountDue!.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
                         </>
                       )}
                     </div>
 
                     {document.description && (
-                      <p className="text-xs text-[var(--pv-navy)]/80 mt-3.5 font-medium leading-relaxed">
+                      <p className="text-xs text-white/70 mt-3.5 font-medium leading-relaxed">
                         {document.description}
                       </p>
                     )}
@@ -97,7 +97,7 @@ export function ClientDocumentUploader({ documents, compact = false }: ClientDoc
                 {requiresPayment ? (
                   <button 
                     onClick={() => handlePay(document.id)}
-                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 hover:-translate-y-0.5 transition-all shadow-md active:scale-95"
+                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all shadow-md active:scale-95"
                     title="Pagar para descargar"
                   >
                     <span className="text-[10px] font-black uppercase tracking-widest">Pagar</span>
@@ -105,7 +105,7 @@ export function ClientDocumentUploader({ documents, compact = false }: ClientDoc
                 ) : (
                   <button 
                     onClick={() => handleDownload(document.id)}
-                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[var(--pv-navy)] text-white hover:bg-[var(--pv-gold)] hover:-translate-y-0.5 transition-all shadow-md active:scale-95"
+                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[var(--pv-gold)] text-white hover:bg-[#b8914b] hover:-translate-y-0.5 transition-all shadow-md active:scale-95"
                     title="Descargar documento"
                   >
                     <Download size={14} />
@@ -117,9 +117,9 @@ export function ClientDocumentUploader({ documents, compact = false }: ClientDoc
               {document.adminNotes && (
                 <div className="mt-4 sm:ml-16 relative animate-fade-in-up">
                   {/* Speech bubble arrow */}
-                  <div className="absolute -top-2 left-4 w-4 h-4 bg-[var(--pv-gold)]/10 border-t border-l border-[var(--pv-gold)]/20 rotate-45"></div>
+                  <div className="absolute -top-2 left-4 w-4 h-4 bg-[var(--pv-gold)]/20 border-t border-l border-[var(--pv-gold)]/30 rotate-45"></div>
                   
-                  <div className="relative text-[11px] text-[var(--pv-ink)] bg-[var(--pv-gold)]/10 border border-[var(--pv-gold)]/20 rounded-xl rounded-tl-none p-4 whitespace-pre-wrap font-medium">
+                  <div className="relative text-[11px] text-white/90 bg-[var(--pv-gold)]/20 border border-[var(--pv-gold)]/30 rounded-xl rounded-tl-none p-4 whitespace-pre-wrap font-medium shadow-inner">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-5 h-5 rounded-full bg-[var(--pv-gold)] flex items-center justify-center text-white text-[9px] font-black font-roman shadow-sm">PV</div>
                       <span className="text-[9px] uppercase tracking-widest text-[var(--pv-gold)] font-black">Nota de la abogada</span>

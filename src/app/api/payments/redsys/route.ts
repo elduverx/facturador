@@ -13,14 +13,14 @@ const getBaseUrl = (request: Request) => {
   return new URL(request.url).origin;
 };
 
-async function createPaymentAttempt(targetId: string, amount: number) {
+async function createPaymentAttempt(targetType: 'APPOINTMENT' | 'PAYMENT_LINK', targetId: string, amount: number) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const orderId = createRedsysOrderId();
     try {
       await prisma.paymentAttempt.create({
         data: {
           orderId,
-          targetType: 'APPOINTMENT',
+          targetType: targetType as any,
           targetId,
           amountCents: amountToCents(amount),
         },
@@ -36,50 +36,92 @@ async function createPaymentAttempt(targetId: string, amount: number) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const appointmentId = searchParams.get('appointmentId');
+  const paymentLinkId = searchParams.get('paymentLinkId');
 
-  if (!appointmentId) {
-    return NextResponse.json({ error: 'Falta appointmentId' }, { status: 400 });
+  if (!appointmentId && !paymentLinkId) {
+    return NextResponse.json({ error: 'Falta ID de pago' }, { status: 400 });
   }
 
-  const appointment = await prisma.appointment.findUnique({
-    where: { id: appointmentId },
-    include: { service: true },
-  });
+  let orderId: string;
+  let amount: number;
+  let concept: string;
+  let portalSessionParams: { email: string; nie: string; appointmentId?: string; };
+  let successUrl: string;
+  let errorUrl: string;
 
-  if (!appointment) {
-    return NextResponse.json({ error: 'Cita no encontrada' }, { status: 404 });
+  if (appointmentId) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { service: true },
+    });
+
+    if (!appointment) {
+      return NextResponse.json({ error: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    if (appointment.paymentStatus === 'PAID') {
+      return NextResponse.json({ error: 'Esta cita ya ha sido pagada' }, { status: 400 });
+    }
+
+    amount = CONSULTATION_DEPOSIT_AMOUNT;
+    orderId = await createPaymentAttempt('APPOINTMENT', appointment.id, amount);
+    
+    await prisma.appointment.update({
+      where: { id: appointment.id },
+      data: { paymentId: orderId },
+    });
+
+    concept = `Anticipo consulta: ${appointment.service.name}`;
+    portalSessionParams = {
+      appointmentId: appointment.id,
+      email: appointment.clientEmail,
+      nie: appointment.clientNie || '',
+    };
+    successUrl = `${getBaseUrl(request)}/portal?payment=success&appointmentId=${appointment.id}`;
+    errorUrl = `${getBaseUrl(request)}/portal?payment=error&appointmentId=${appointment.id}`;
+  } else {
+    // PaymentLink
+    const paymentLink = await prisma.paymentLink.findUnique({
+      where: { id: paymentLinkId! }
+    });
+
+    if (!paymentLink) {
+      return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 });
+    }
+
+    if (paymentLink.status === 'PAID') {
+      return NextResponse.json({ error: 'Este cobro ya ha sido pagado' }, { status: 400 });
+    }
+
+    amount = paymentLink.amount;
+    orderId = await createPaymentAttempt('PAYMENT_LINK', paymentLink.id, amount);
+
+    await prisma.paymentLink.update({
+      where: { id: paymentLink.id },
+      data: { paymentId: orderId },
+    });
+
+    concept = paymentLink.concept;
+    portalSessionParams = {
+      email: paymentLink.clientEmail,
+      nie: '',
+    };
+    successUrl = `${getBaseUrl(request)}/portal?payment=success&paymentLinkId=${paymentLink.id}`;
+    errorUrl = `${getBaseUrl(request)}/portal?payment=error&paymentLinkId=${paymentLink.id}`;
   }
-
-  if (appointment.paymentStatus === 'PAID') {
-    return NextResponse.json({ error: 'Esta cita ya ha sido pagada' }, { status: 400 });
-  }
-
-  const amount = CONSULTATION_DEPOSIT_AMOUNT;
-
-  const orderId = await createPaymentAttempt(appointment.id, amount);
-
-  // Guardar el orderId en la cita para poder recuperarla en el callback
-  await prisma.appointment.update({
-    where: { id: appointment.id },
-    data: { paymentId: orderId },
-  });
 
   const paymentData = createRedsysPayment(
     orderId,
     amount,
-    `Anticipo consulta: ${appointment.service.name}`,
+    concept,
     {
       callbackUrl: `${getBaseUrl(request)}/api/payments/redsys/callback`,
-      successUrl: `${getBaseUrl(request)}/portal?payment=success&appointmentId=${appointment.id}`,
-      errorUrl: `${getBaseUrl(request)}/portal?payment=error&appointmentId=${appointment.id}`,
+      successUrl,
+      errorUrl,
     }
   );
 
-  const portalSession = await createPortalSessionCookie({
-    appointmentId: appointment.id,
-    email: appointment.clientEmail,
-    phone: appointment.clientPhone,
-  });
+  const portalSession = await createPortalSessionCookie(portalSessionParams);
 
   // Devolver un formulario que se auto-envía
   const formHtml = `

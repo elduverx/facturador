@@ -17,73 +17,43 @@ export async function GET() {
     return NextResponse.json({ authenticated: false });
   }
 
-  const appointment = session.appointmentId
-    ? await prisma.appointment.findFirst({
-        where: {
-          id: session.appointmentId,
-          clientEmail: { equals: session.email, mode: 'insensitive' },
-          clientPhone: session.phone,
-        },
-        select: {
-          id: true,
-          clientName: true,
-          clientEmail: true,
-          clientPhone: true,
-          paymentStatus: true,
-          status: true,
-        },
-      })
-    : await prisma.appointment.findFirst({
-        where: {
-          clientEmail: { equals: session.email, mode: 'insensitive' },
-          clientPhone: session.phone,
-        },
-        select: {
-          id: true,
-          clientName: true,
-          clientEmail: true,
-          clientPhone: true,
-          paymentStatus: true,
-          status: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-
-  if (!appointment && session.documentId) {
-    const document = await prisma.clientDocument.findFirst({
-      where: {
-        id: session.documentId,
-        clientEmail: { equals: session.email, mode: 'insensitive' },
-        OR: [{ clientPhone: session.phone }, { clientPhone: '' }],
-      },
-      select: {
-        id: true,
-        clientEmail: true,
-        clientPhone: true,
-      },
-    });
-
-    if (document) {
-      return NextResponse.json({
-        authenticated: true,
-        email: document.clientEmail,
-        phone: session.phone || document.clientPhone,
-        documentId: document.id,
-      });
+  const hasMatchingNie = await prisma.appointment.findFirst({
+    where: {
+      clientEmail: { equals: session.email, mode: 'insensitive' },
+      clientNie: { equals: session.nie, mode: 'insensitive' }
     }
-  }
+  }) || await prisma.matter.findFirst({
+    where: {
+      clientEmail: { equals: session.email, mode: 'insensitive' },
+      clientNie: { equals: session.nie, mode: 'insensitive' }
+    }
+  });
 
-  if (!appointment) {
-    return NextResponse.json({ authenticated: false });
+  if (!hasMatchingNie) {
+    // Intentar buscar sin case sensitive y quitando espacios extras por si acaso
+    const allAppts = await prisma.appointment.findMany({ where: { clientEmail: { equals: session.email, mode: 'insensitive' } } });
+    const allMatters = await prisma.matter.findMany({ where: { clientEmail: { equals: session.email, mode: 'insensitive' } } });
+    
+    const matchFound = 
+      allAppts.some(a => a.clientNie && a.clientNie.trim().toUpperCase().replace(/\s+/g, '') === session.nie) ||
+      allMatters.some(m => m.clientNie && m.clientNie.trim().toUpperCase().replace(/\s+/g, '') === session.nie);
+
+    if (!matchFound) {
+      return NextResponse.json({ authenticated: false });
+    }
   }
 
   return NextResponse.json({
     authenticated: true,
-    email: appointment.clientEmail,
-    phone: appointment.clientPhone,
-    clientName: appointment.clientName,
-    appointmentId: appointment.id,
-    appointmentStatus: appointment.status,
-    paymentStatus: appointment.paymentStatus,
+    email: session.email,
+    nie: session.nie,
+    appointmentId: session.appointmentId,
+    documentId: session.documentId,
   });
+}
+
+export async function DELETE() {
+  const cookieStore = await cookies();
+  cookieStore.delete(PORTAL_SESSION_COOKIE);
+  return NextResponse.json({ success: true });
 }

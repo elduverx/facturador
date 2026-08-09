@@ -35,10 +35,19 @@ export async function GET(request: Request) {
       take: 200,
     });
 
-    // 3. Get Billing Documents (Invoices, Provisions with paid amount)
     const invoices = await prisma.billingDocument.findMany({
       where: { paidAmount: { gt: 0 } },
       include: { matter: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 200,
+    });
+
+    // 4. Get Payment Links (paid via Redsys)
+    const paymentLinks = await prisma.paymentLink.findMany({
+      where: {
+        status: 'PAID',
+        ...(scopedClientEmails ? { clientEmail: { in: scopedClientEmails } } : {}),
+      },
       orderBy: { updatedAt: 'desc' },
       take: 200,
     });
@@ -81,6 +90,19 @@ export async function GET(request: Request) {
         clientName: inv.matter?.clientName || 'Cliente',
         clientEmail: inv.matter?.clientEmail || '',
         paymentMethod: 'TRANSFER/OTHER',
+      });
+    }
+
+    for (const link of paymentLinks) {
+      incomeItems.push({
+        id: link.id,
+        type: 'PAYMENT_LINK',
+        date: link.updatedAt.toISOString(),
+        amount: link.amount,
+        concept: `Cobro Personalizado: ${link.concept} (${link.reference || 'Sin Ref'})`,
+        clientName: link.clientName,
+        clientEmail: link.clientEmail,
+        paymentMethod: 'REDSYS',
       });
     }
 

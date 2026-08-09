@@ -8,6 +8,8 @@ import { ClientMattersPanel } from './ClientMattersPanel';
 import { ClientNotesPanel } from './ClientNotesPanel';
 
 import { ClientAppointmentsPanel } from './ClientAppointmentsPanel';
+import { ClientPaymentsPanel } from './ClientPaymentsPanel';
+import { ClientEditModal } from './ClientEditModal';
 
 interface ClientInfo {
   name: string;
@@ -25,7 +27,8 @@ interface ClientProfile360Props {
 }
 
 export function ClientProfile360({ client, onBack, onClientUpdated }: ClientProfile360Props) {
-  const [activeTab, setActiveTab] = useState<'RESUMEN' | 'EXPEDIENTES' | 'DOCUMENTOS' | 'NOTAS'>('RESUMEN');
+  const [activeTab, setActiveTab] = useState<'RESUMEN' | 'EXPEDIENTES' | 'DOCUMENTOS' | 'NOTAS' | 'PAGOS'>('RESUMEN');
+  const [isEditing, setIsEditing] = useState(false);
   
   return (
     <div className="flex flex-col h-full bg-[var(--pv-marble)] animate-fade-in">
@@ -55,7 +58,10 @@ export function ClientProfile360({ client, onBack, onClientUpdated }: ClientProf
             </div>
           </div>
           
-          <button className="btn-roman !py-2 !px-4 !text-[10px] whitespace-nowrap">
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="btn-roman !py-2 !px-4 !text-[10px] whitespace-nowrap"
+          >
             Editar Ficha
           </button>
         </div>
@@ -66,7 +72,8 @@ export function ClientProfile360({ client, onBack, onClientUpdated }: ClientProf
             { id: 'RESUMEN', label: 'Historial', icon: Calendar },
             { id: 'EXPEDIENTES', label: 'Expedientes', icon: FolderKanban },
             { id: 'DOCUMENTOS', label: 'Documentos', icon: FileText },
-            { id: 'NOTAS', label: 'Notas', icon: MessageSquare }
+            { id: 'NOTAS', label: 'Notas', icon: MessageSquare },
+            { id: 'PAGOS', label: 'Pagos', icon: FileText }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -111,7 +118,22 @@ export function ClientProfile360({ client, onBack, onClientUpdated }: ClientProf
         {activeTab === 'NOTAS' && (
            <ClientNotesPanel clientEmail={client.email} />
         )}
+
+        {activeTab === 'PAGOS' && (
+          <ClientPaymentsPanel clientEmail={client.email} />
+        )}
       </div>
+      
+      {isEditing && (
+        <ClientEditModal
+          client={client}
+          onClose={() => setIsEditing(false)}
+          onSuccess={(updatedClient) => {
+            setIsEditing(false);
+            onClientUpdated();
+          }}
+        />
+      )}
     </div>
   );
 }

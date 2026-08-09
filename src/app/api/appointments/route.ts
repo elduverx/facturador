@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const selectedStaff = typeof lawyerId === 'string' && lawyerId.trim()
       ? await prisma.staffUser.findFirst({
           where: { loginSlug: lawyerId.trim().toLowerCase(), active: true },
-          select: { id: true, name: true },
+          select: { id: true, name: true, email: true, loginSlug: true },
         })
       : null;
 
@@ -191,9 +191,21 @@ export async function POST(request: Request) {
     }
 
     // Admin notification
-    if (dayConfig.settings?.firmEmail) {
+    let adminEmail = dayConfig.settings?.firmEmail;
+    
+    if (selectedStaff?.loginSlug) {
+      const slug = selectedStaff.loginSlug.toUpperCase();
+      const envEmail = process.env[`EMAIL_NOTIFICACIONES_${slug}`];
+      if (envEmail) {
+        adminEmail = envEmail;
+      } else if (selectedStaff.email) {
+        adminEmail = selectedStaff.email;
+      }
+    }
+
+    if (adminEmail) {
       sendEmail({
-        to: dayConfig.settings.firmEmail,
+        to: adminEmail,
         subject: `Nueva reserva${appointment.paymentMethod === 'CASH' ? ' (EFECTIVO)' : ''}: ${clientName} - ${service.name}`,
         html: adminNewBookingEmail({
           ...emailData,

@@ -53,8 +53,7 @@ export async function GET(request: Request) {
   }
 
   const sameEmail = session && document.clientEmail.toLowerCase() === session.email.toLowerCase();
-  const samePhone = session && (document.clientPhone === '' || normalizePhone(document.clientPhone) === normalizePhone(session.phone));
-  if (!sameEmail || !samePhone) {
+  if (!sameEmail) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
@@ -69,7 +68,7 @@ export async function GET(request: Request) {
   const amount = document.amountDue;
 
   const orderId = await createPaymentAttempt(document.id, amount);
-  const sessionPhone = document.clientPhone || session?.phone || '';
+  const sessionNie = session?.nie || '';
 
   await prisma.clientDocument.update({
     where: { id: document.id },
@@ -90,7 +89,7 @@ export async function GET(request: Request) {
   const portalSession = await createPortalSessionCookie({
     documentId: document.id,
     email: document.clientEmail,
-    phone: sessionPhone,
+    nie: sessionNie,
   });
 
   const formHtml = `

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone } from '@/lib/validation';
+import { isValidEmail, normalizeEmail, normalizeNie } from '@/lib/validation';
 import { createPortalSessionCookie } from '@/lib/portal-session';
 
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
@@ -10,25 +10,53 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const emailRaw = typeof body?.email === 'string' ? body.email : '';
-    const phoneRaw = typeof body?.phone === 'string' ? body.phone : '';
+    const nieRaw = typeof body?.nie === 'string' ? body.nie : '';
 
-    if (!emailRaw || !phoneRaw) {
-      return NextResponse.json({ error: 'Email y telefono son obligatorios' }, { status: 400 });
+    if (!emailRaw || !nieRaw) {
+      return NextResponse.json({ error: 'Email y documento de identidad son obligatorios' }, { status: 400 });
     }
 
     const normalizedEmail = normalizeEmail(emailRaw);
-    const normalizedPhone = normalizePhone(phoneRaw);
+    const normalizedNie = normalizeNie(nieRaw);
 
     if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
-      return NextResponse.json({ error: 'Email no valido' }, { status: 400 });
+      return NextResponse.json({ error: 'Email no válido' }, { status: 400 });
     }
-    if (!normalizedPhone || !isValidPhone(normalizedPhone)) {
-      return NextResponse.json({ error: 'Telefono no valido (9 digitos, empieza con 6, 7, 8 o 9)' }, { status: 400 });
+    if (!normalizedNie || normalizedNie.length < 5) {
+      return NextResponse.json({ error: 'Documento de identidad no válido' }, { status: 400 });
     }
 
     const page = Number(body?.page) || 1;
     const pageSize = Math.min(10, Math.max(1, Number(body?.pageSize) || 4));
 
+    // Verificar si el NIE pertenece al email en alguna cita o expediente
+    const hasMatchingNie = await prisma.appointment.findFirst({
+      where: {
+        clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+        clientNie: { equals: normalizedNie, mode: 'insensitive' }
+      }
+    }) || await prisma.matter.findFirst({
+      where: {
+        clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+        clientNie: { equals: normalizedNie, mode: 'insensitive' }
+      }
+    });
+
+    if (!hasMatchingNie) {
+      // Intentar buscar sin case sensitive y quitando espacios extras por si acaso
+      const allAppts = await prisma.appointment.findMany({ where: { clientEmail: { equals: normalizedEmail, mode: 'insensitive' } } });
+      const allMatters = await prisma.matter.findMany({ where: { clientEmail: { equals: normalizedEmail, mode: 'insensitive' } } });
+      
+      const matchFound = 
+        allAppts.some(a => a.clientNie && normalizeNie(a.clientNie) === normalizedNie) ||
+        allMatters.some(m => m.clientNie && normalizeNie(m.clientNie) === normalizedNie);
+
+      if (!matchFound) {
+        return NextResponse.json({ error: 'No se encontraron registros que coincidan con ese email y documento' }, { status: 404 });
+      }
+    }
+
+    // Al autenticar por NIE+Email, traemos TODOS los registros de ese email
     const allAppointments = await prisma.appointment.findMany({
       where: {
         clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
@@ -38,17 +66,14 @@ export async function POST(request: Request) {
       take: 200,
     });
 
-    const filtered = allAppointments.filter((appt) => normalizePhone(appt.clientPhone) === normalizedPhone);
-
-    const total = filtered.length;
+    const total = allAppointments.length;
     const startIndex = (Math.max(1, page) - 1) * pageSize;
-    const paged = filtered.slice(startIndex, startIndex + pageSize);
+    const paged = allAppointments.slice(startIndex, startIndex + pageSize);
 
-    const [documents, matters] = await Promise.all([
+    const [documents, matters, paymentLinks, notes] = await Promise.all([
       prisma.clientDocument.findMany({
         where: {
           clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-          OR: [{ clientPhone: normalizedPhone }, { clientPhone: '' }],
         },
         orderBy: { createdAt: 'desc' },
         select: {
@@ -58,7 +83,6 @@ export async function POST(request: Request) {
           sizeBytes: true,
           description: true,
           status: true,
-          clientPhone: true,
           adminNotes: true,
           amountDue: true,
           isPaid: true,
@@ -68,7 +92,6 @@ export async function POST(request: Request) {
       prisma.matter.findMany({
         where: {
           clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-          clientPhone: normalizedPhone,
         },
         include: {
           timeline: {
@@ -98,20 +121,26 @@ export async function POST(request: Request) {
             },
           },
         },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.paymentLink.findMany({
+        where: {
+          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+          status: 'PENDING',
+        },
         orderBy: { createdAt: 'desc' },
       }),
+      prisma.clientNote.findMany({
+        where: {
+          clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
+          isPublic: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
     ]);
 
-    const hasPortalMatch = filtered.length > 0 || documents.length > 0 || matters.length > 0;
-    const publicNotes = hasPortalMatch
-      ? await prisma.clientNote.findMany({
-          where: {
-            clientEmail: { equals: normalizedEmail, mode: 'insensitive' },
-            isPublic: true,
-          },
-          orderBy: { createdAt: 'desc' },
-        })
-      : [];
+    const hasPortalMatch = allAppointments.length > 0 || matters.length > 0 || documents.length > 0 || paymentLinks.length > 0;
 
     const response = NextResponse.json({
       appointments: paged.map((appt) => ({
@@ -126,7 +155,7 @@ export async function POST(request: Request) {
         serviceName: appt.service?.name || 'Servicio',
         price: appt.service?.price || 0,
       })),
-      notes: publicNotes.map(note => ({
+      notes: notes.map(note => ({
         id: note.id,
         content: note.content,
         status: note.status,
@@ -134,9 +163,16 @@ export async function POST(request: Request) {
       })),
       documents: documents.map(document => ({
         ...document,
-        adminNotes: document.clientPhone === '' ? document.adminNotes : null,
-        clientPhone: undefined,
+        adminNotes: document.adminNotes,
         createdAt: document.createdAt.toISOString(),
+      })),
+      paymentLinks: paymentLinks.map(link => ({
+        id: link.id,
+        concept: link.concept,
+        amount: link.amount,
+        reference: link.reference,
+        status: link.status,
+        createdAt: link.createdAt.toISOString(),
       })),
       matters: matters.map((matter) => ({
         id: matter.id,
@@ -176,9 +212,9 @@ export async function POST(request: Request) {
 
     if (hasPortalMatch) {
       response.cookies.set(PORTAL_SESSION_COOKIE, await createPortalSessionCookie({
-        appointmentId: filtered[0]?.id,
+        appointmentId: allAppointments[0]?.id,
         email: normalizedEmail,
-        phone: normalizedPhone,
+        nie: normalizedNie,
       }), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
