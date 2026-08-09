@@ -377,7 +377,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                   {loading ? 'Accediendo...' : 'Entrar'}
                 </button>
                 <div className="mt-4 text-center">
-                  <a href="/reservar" className="text-[11px] font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors">
+                  <a href="/registro" className="text-[11px] font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors">
                     Crear cuenta
                   </a>
                 </div>
