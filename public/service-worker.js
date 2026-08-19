@@ -1,12 +1,9 @@
-const CACHE_NAME = 'facturador-v2';
+const CACHE_NAME = 'facturador-v3';
 
 self.addEventListener('install', (event) => {
   const assets = [
     '/',
     '/manifest.json',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
-    '/icons/icon-180.png',
     '/favicon.ico',
   ];
 
