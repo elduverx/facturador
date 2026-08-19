@@ -32,6 +32,8 @@ function clearAttempts(key: string) {
   attempts.delete(key);
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const staff = await prisma.staffUser.findMany({
@@ -51,9 +53,9 @@ export async function GET() {
       role: user.role,
       hasPin: Boolean(user.pinHash),
     })));
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error cargando usuarios de login:', error);
-    return NextResponse.json({ error: 'Error cargando usuarios' }, { status: 500 });
+    return NextResponse.json({ error: 'Error cargando usuarios', details: error.message }, { status: 500 });
   }
 }
 

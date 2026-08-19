@@ -15,6 +15,13 @@ docker-compose build --no-cache
 echo "🚀 Levantando servicios (Web + Base de datos)..."
 docker-compose up -d
 
+# Esperar unos segundos a que la DB esté lista (opcional pero recomendado)
+sleep 5
+
+# 3.5. Actualizar esquema de base de datos
+echo "🔄 Actualizando esquema de base de datos..."
+docker-compose exec -T pvabogadas-web npx prisma db push
+
 # 4. Limpiar imágenes huérfanas o viejas para liberar espacio
 echo "🧹 Limpiando imágenes antiguas de Docker..."
 docker image prune -f
