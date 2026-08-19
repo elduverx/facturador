@@ -5,8 +5,14 @@ dev:
 	npm run dev
 
 deploy:
+	@echo "🛑 Deteniendo contenedores antiguos..."
+	docker compose down
+	@echo "🚀 Construyendo y levantando servicios..."
 	docker compose up -d --build
-	@echo "Deployed successfully! Application is running on port 3000."
+	@echo "🔄 Esperando a que la DB esté lista y aplicando migraciones..."
+	sleep 5
+	docker compose exec -T pvabogadas-web npx prisma migrate deploy
+	@echo "✅ Deployed successfully! Application is running on port 3000."
 
 build:
 	docker compose build
