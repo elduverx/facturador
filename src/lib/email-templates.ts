@@ -143,6 +143,18 @@ export function statusChangeEmail(data: AppointmentEmailData, newStatus: string)
   return baseTemplate('Actualizacion de Cita', body, data.firmName);
 }
 
+export function dayClosedEmail(data: AppointmentEmailData): string {
+  const body = `
+    <p>Estimado/a <strong>${data.clientName}</strong>,</p>
+    <p>Le informamos que por motivos excepcionales nuestra oficina permanecera cerrada el dia <strong>${data.date}</strong>, fecha en la que usted tenia programada una cita con nosotros.</p>
+    <p>Por lo tanto, nos vemos en la necesidad de cancelar su cita.</p>
+    ${appointmentDetails(data)}
+    <p style="font-size:14px;color:#57534E;">Le pedimos disculpas por los inconvenientes y le solicitamos que, por favor, vuelva a agendar su cita para otro dia disponible.</p>
+    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Para reagendar, visite nuestra pagina web o contactenos al <strong>${data.firmPhone}</strong>.</p>` : '<p style="font-size:14px;color:#57534E;">Para reagendar, visite nuestra pagina web y reserve una nueva cita.</p>'}
+  `;
+  return baseTemplate('Cita Cancelada - Oficina Cerrada', body, data.firmName);
+}
+
 export function adminNewBookingEmail(data: AppointmentEmailData & { clientEmail: string; clientPhone: string; clientNie?: string; notes?: string }): string {
   const body = `
     <p><strong>Nueva cita registrada:</strong></p>

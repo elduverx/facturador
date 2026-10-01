@@ -250,26 +250,36 @@ export default function CalendarPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 mt-6 pt-4 border-t border-[var(--pv-marble)]">
+                      <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-[var(--pv-marble)]">
                         {appt.status === 'PENDING' && (
-                          <>
+                          <div className="flex items-center gap-2">
                             <button onClick={() => updateStatus(appt.id, 'CONFIRMED')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all">
                               <Check size={14} /> Confirmar
                             </button>
                             <button onClick={() => updateStatus(appt.id, 'CANCELLED')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-all">
                               <X size={14} /> Anular
                             </button>
-                          </>
+                          </div>
                         )}
                         {appt.status === 'CONFIRMED' && (
-                          <>
-                            <button onClick={() => updateStatus(appt.id, 'COMPLETED')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-[var(--pv-gold)] text-white hover:brightness-110 shadow-md shadow-[var(--pv-gold)]/20 transition-all">
-                               Finalizar
-                            </button>
-                            <button onClick={() => updateStatus(appt.id, 'NO_SHOW')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-[var(--pv-marble)] text-[var(--pv-navy)] hover:bg-stone-200 transition-all">
-                               No Asistió
-                            </button>
-                          </>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => updateStatus(appt.id, 'COMPLETED')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-[var(--pv-gold)] text-white hover:brightness-110 shadow-md shadow-[var(--pv-gold)]/20 transition-all">
+                                 Finalizar
+                              </button>
+                              <button onClick={() => updateStatus(appt.id, 'NO_SHOW')} className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl bg-[var(--pv-marble)] text-[var(--pv-navy)] hover:bg-stone-200 transition-all">
+                                 No Asistió
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => updateStatus(appt.id, 'PENDING')} className="flex-1 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest py-2 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all border border-orange-100">
+                                <Clock size={12} /> A Pendiente
+                              </button>
+                              <button onClick={() => updateStatus(appt.id, 'CANCELLED')} className="flex-1 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all border border-red-100">
+                                <X size={12} /> Anular
+                              </button>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { TipsonBadge } from './TipsonBadge';
 
 export function HomeFooter() {
   return (
@@ -9,7 +10,10 @@ export function HomeFooter() {
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg border-2 border-[var(--pv-gold)] overflow-hidden shrink-0 bg-white">
               <img src="/logopv.jpeg" alt="PV Abogadas" className="w-full h-full object-cover" />
             </div>
-            <div className="font-roman text-lg sm:text-xl font-bold tracking-tight text-white uppercase mt-2">PV Abogadas</div>
+            <div className="font-roman text-lg sm:text-xl font-bold tracking-tight text-white uppercase mt-2 mb-1">PV Abogadas</div>
+            <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed max-w-[280px]">
+              <strong>Despacho de abogados en Valencia.</strong> Somos especialistas en extranjería, laboral y familia, ofreciendo asesoramiento legal integral.
+            </p>
           </div>
           
           <div className="flex flex-col items-center md:items-start">
@@ -42,8 +46,14 @@ export function HomeFooter() {
             </div>
           </div>
         </div>
+
+        {/* Tipson Partner */}
+        <div className="pt-8 border-t border-white/10 flex flex-col items-center gap-3 mb-6">
+          <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-white/25">Nuestro Partner Tecnológico</p>
+          <TipsonBadge variant="hero" />
+        </div>
         
-        <div className="pt-8 border-t border-white/10 text-center">
+        <div className="pt-6 border-t border-white/10 text-center">
           <div className="text-[9px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-40 font-bold text-white">
             &copy; {new Date().getFullYear()} PV Abogadas - Todos los derechos reservados
           </div>

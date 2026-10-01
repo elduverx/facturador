@@ -5,6 +5,7 @@ import { BookingWizard } from '@/components/booking/BookingWizard';
 import { HomeNavbar } from '@/components/public/HomeNavbar';
 import { HomeFooter } from '@/components/public/HomeFooter';
 import { WhatsAppButton } from '@/components/public/WhatsAppButton';
+import { TipsonBadge } from '@/components/public/TipsonBadge';
 import { 
   ShieldCheck, 
   Users, 
@@ -251,7 +252,7 @@ export function HomeShell() {
                 <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
                   <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[var(--pv-gold)]/20 text-[var(--pv-gold)] text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 sm:mb-6 border border-[var(--pv-gold)]/30 backdrop-blur-sm shadow-lg">
                     <ShieldCheck size={14} className="sm:w-4 sm:h-4" />
-                    Tu tranquilidad legal
+                    Despacho de Abogados
                   </div>
                   <h1 className="text-4xl sm:text-6xl lg:text-8xl font-bold text-white font-roman leading-tight mb-4 sm:mb-6 uppercase tracking-tighter drop-shadow-xl">
                     PV <span className="text-[var(--pv-gold)]">Abogadas</span>
@@ -294,7 +295,7 @@ export function HomeShell() {
                 <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
                   <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[var(--pv-gold)]/20 text-[var(--pv-gold)] text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 sm:mb-6 border border-[var(--pv-gold)]/30 backdrop-blur-sm shadow-lg">
                     <ShieldCheck size={14} className="sm:w-4 sm:h-4" />
-                    Tu tranquilidad legal
+                    Despacho de Abogados
                   </div>
                   <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-white font-roman leading-tight mb-4 sm:mb-6 uppercase tracking-tighter drop-shadow-xl">
                     ¿En qué podemos <span className="text-[var(--pv-gold)]">ayudarte hoy?</span>

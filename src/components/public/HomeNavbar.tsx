@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X, BookOpen, Target, Calendar, HelpCircle, ArrowRight, UserCircle } from 'lucide-react';
+import { TipsonBadge } from './TipsonBadge';
 
 const NAV_LINKS = [
   { label: 'Servicios', href: '/servicios', icon: BookOpen },
@@ -106,6 +107,7 @@ export function HomeNavbar() {
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--pv-gold)] transition-all group-hover:w-full"></span>
           </Link>
         ))}
+        <TipsonBadge variant="navbar" />
         <Link 
           href="/portal" 
           className="btn-roman !px-5 !py-2 !text-[10px]"
