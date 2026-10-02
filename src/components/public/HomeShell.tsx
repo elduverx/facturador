@@ -149,7 +149,7 @@ const FAQS = [
 ];
 
 export function HomeShell() {
-  const [clientType, setClientType] = useState<'new' | 'existing' | null>(null);
+  const [clientType, setClientType] = useState<'new' | 'existing' | null>('new');
   const [activePillar, setActivePillar] = useState<string | null>(null);
   const [activeService, setActiveService] = useState<string | null>(null);
   const bookingRef = useRef<HTMLElement>(null);
@@ -216,7 +216,7 @@ export function HomeShell() {
       {/* Header */}
       <header className={`fixed w-full z-50 bg-[var(--glass-bg)] backdrop-blur-md border-b border-[var(--glass-border)] shadow-sm transition-transform duration-500 ease-in-out ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 sm:gap-3" onClick={(e) => { e.preventDefault(); setClientType(null); window.scrollTo(0, 0); }}>
+          <a href="/" className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-10 h-10 sm:w-12 sm:h-12 rounded-full items-center justify-center shadow-lg border-2 border-white overflow-hidden shrink-0">
               <img src="/logopv.jpeg" alt="PV Abogadas" className="w-full h-full object-cover" />
             </div>

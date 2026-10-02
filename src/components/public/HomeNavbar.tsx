@@ -7,7 +7,7 @@ import { Menu, X, BookOpen, Target, Calendar, HelpCircle, ArrowRight, UserCircle
 import { TipsonBadge } from './TipsonBadge';
 
 const NAV_LINKS = [
-  { label: 'Servicios', href: '/servicios', icon: BookOpen },
+  { label: 'Guías', href: '/servicios', icon: BookOpen },
   { label: 'Método', href: '/metodo', icon: Target },
   { label: 'Reserva', href: '/reservar', icon: Calendar },
   { label: 'FAQ', href: '/faq', icon: HelpCircle },
@@ -87,7 +87,7 @@ export function HomeNavbar() {
           }`}
           style={{ transitionDelay: '400ms' }}
         >
-          <UserCircle size={18} /> Acceder a Mi Portal
+          <UserCircle size={18} /> Ya soy cliente
         </Link>
       </div>
     </div>
@@ -112,7 +112,7 @@ export function HomeNavbar() {
           href="/portal" 
           className="btn-roman !px-5 !py-2 !text-[10px]"
         >
-          Mi Portal
+          Ya soy cliente
         </Link>
       </div>
 
