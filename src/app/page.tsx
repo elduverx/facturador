@@ -178,7 +178,7 @@ export default function HomePage() {
           
           <div className="max-w-7xl mx-auto px-6 relative z-10 w-full flex flex-col items-start mt-20">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--pv-gold)]/50 text-[var(--pv-gold)] text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-6 backdrop-blur-md bg-white/5 shadow-2xl">
-              <Award size={14} /> Soluciones Legales de Alto Nivel
+              <Award size={14} /> Despacho de Extranjería, Laboral y Familia
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white font-roman uppercase tracking-tight drop-shadow-2xl mb-6 max-w-4xl leading-[0.9]">
               Nuestras <br/><span className="text-[var(--pv-gold)]">Especialidades</span>

@@ -1230,6 +1230,49 @@ export default function ServiciosPage() {
             );
           })()}
         </section>
+
+        {/* Descargas / Documentos de interés */}
+        <section id="documentos" className="bg-[var(--pv-navy)] py-16 sm:py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col items-center text-center mb-10">
+              <span className="inline-block px-4 py-1.5 rounded-full border border-[var(--pv-gold)]/40 text-[var(--pv-gold)] text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+                Documentos de Interés
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold font-roman text-white uppercase tracking-tight">
+                Descarga de <span className="text-[var(--pv-gold)]">Criterios y Normativas</span>
+              </h2>
+              <p className="text-white/70 mt-4 max-w-2xl text-sm sm:text-base">
+                Ponemos a tu disposición documentos oficiales e interpretaciones de la Dirección General de Gestión Migratoria para facilitar la comprensión de tus derechos.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <a 
+                href="/documentos/criterio-interpretativo-derecho-trabajar.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="bg-white/5 border border-white/10 hover:border-[var(--pv-gold)]/50 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 transition-all duration-300 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-[var(--pv-gold)]/20 flex items-center justify-center shrink-0">
+                  <FileText size={24} className="text-[var(--pv-gold)] group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-bold text-lg leading-tight mb-2 group-hover:text-[var(--pv-gold)] transition-colors">
+                    Criterio Interpretativo: Regularización del Derecho a Trabajar
+                  </h3>
+                  <p className="text-white/60 text-xs sm:text-sm leading-relaxed">
+                    Documento oficial de la Dirección General de Gestión Migratoria relativo a la vigencia de la habilitación provisional prevista en las disposiciones adicionales vigésima y vigesimoprimera del Reglamento de la Ley Orgánica 4/2000.
+                  </p>
+                </div>
+                <div className="mt-4 sm:mt-0 shrink-0 w-full sm:w-auto">
+                  <span className="btn-roman w-full sm:w-auto px-6 py-2.5 text-xs flex justify-center items-center gap-2">
+                    Descargar PDF <ArrowRight size={14} />
+                  </span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
 
       <HomeFooter />
