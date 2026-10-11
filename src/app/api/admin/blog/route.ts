@@ -1,22 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendNewsletterForPost } from '@/lib/newsletter';
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-
-const normalizeList = (value: unknown): string[] => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => typeof item === 'string')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-};
+import { composeContent, normalizeAttachments, normalizeList, normalizeSections, slugify } from '@/lib/blog-template';
 
 export async function GET() {
   const posts = await prisma.blogPost.findMany({
@@ -38,7 +23,13 @@ export async function POST(request: Request) {
     if (!slug) slug = `post-${Date.now()}`;
 
     const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : null;
-    const content = typeof body?.content === 'string' ? body.content.trim() : '';
+    const sections = Array.isArray(body?.sections) ? normalizeSections(body.sections) : null;
+    const content = sections
+      ? composeContent(sections)
+      : typeof body?.content === 'string'
+        ? body.content.trim()
+        : '';
+    const category = typeof body?.category === 'string' && body.category.trim() ? body.category.trim() : null;
     const coverImageUrl = typeof body?.coverImageUrl === 'string' ? body.coverImageUrl.trim() : null;
     const status = body?.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
     const publishedAt = status === 'PUBLISHED' ? new Date() : null;
@@ -49,6 +40,9 @@ export async function POST(request: Request) {
         slug,
         excerpt,
         content,
+        category,
+        sections: sections ?? undefined,
+        attachments: normalizeAttachments(body?.attachments),
         coverImageUrl,
         imageUrls: normalizeList(body?.imageUrls),
         linkUrls: normalizeList(body?.linkUrls),

@@ -1,24 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendNewsletterForPost } from '@/lib/newsletter';
+import { composeContent, normalizeAttachments, normalizeList, normalizeSections, slugify } from '@/lib/blog-template';
 
 type RouteParams = { params: Promise<{ id: string }> };
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-
-const normalizeList = (value: unknown): string[] => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => typeof item === 'string')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-};
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const { id } = await params;
@@ -35,6 +20,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (typeof body?.title === 'string') data.title = body.title.trim();
     if (typeof body?.excerpt === 'string') data.excerpt = body.excerpt.trim();
     if (typeof body?.content === 'string') data.content = body.content.trim();
+    if (Array.isArray(body?.sections)) {
+      const sections = normalizeSections(body.sections);
+      data.sections = sections;
+      data.content = composeContent(sections);
+    }
+    if (typeof body?.category === 'string') data.category = body.category.trim() || null;
+    if (Array.isArray(body?.attachments)) data.attachments = normalizeAttachments(body.attachments);
     if (typeof body?.coverImageUrl === 'string') data.coverImageUrl = body.coverImageUrl.trim() || null;
     if (Array.isArray(body?.imageUrls)) data.imageUrls = normalizeList(body.imageUrls);
     if (Array.isArray(body?.linkUrls)) data.linkUrls = normalizeList(body.linkUrls);
@@ -47,7 +39,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     if (body?.status === 'PUBLISHED' || body?.status === 'DRAFT') {
       data.status = body.status;
-      data.publishedAt = body.status === 'PUBLISHED' ? new Date() : null;
+      if (body.status !== existing.status) {
+        data.publishedAt = body.status === 'PUBLISHED' ? new Date() : null;
+      }
     }
 
     const updated = await prisma.blogPost.update({

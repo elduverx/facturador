@@ -448,6 +448,9 @@ model BlogPost {
   imageUrls        String[]
   linkUrls         String[]
   embedUrls        String[]
+  category         String?
+  sections         Json?
+  attachments      Json       @default("[]")
   status           BlogStatus @default(DRAFT)
   publishedAt      DateTime?
   newsletterSentAt DateTime?

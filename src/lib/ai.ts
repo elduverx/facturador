@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ARTICLE_CATEGORIES, ARTICLE_SECTIONS, normalizeSections, type ArticleSection } from '@/lib/blog-template';
 
 const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 
@@ -307,4 +308,130 @@ Responde siempre en español, de forma profesional y amable.`;
   });
 
   return extractTextBlock(response);
+}
+
+export type BlogArticleState = {
+  title: string;
+  excerpt: string;
+  category: string;
+  sections: ArticleSection[];
+  coverImageUrl: string;
+  attachments: Array<{ name: string }>;
+  status: 'DRAFT' | 'PUBLISHED';
+};
+
+export type BlogChatTurn = {
+  reply: string;
+  suggestions: string[];
+  article: Pick<BlogArticleState, 'title' | 'excerpt' | 'category' | 'sections'> | null;
+  coverSvg: string | null;
+};
+
+const BLOG_TOOL_NAME = 'responder_admin';
+
+export async function generateBlogChatTurn(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  article: BlogArticleState
+): Promise<BlogChatTurn> {
+  assertApiKey();
+
+  const sectionGuide = ARTICLE_SECTIONS.map((section) => `- "${section.key}": ${section.heading}`).join('\n');
+
+  const systemPrompt = `Eres la redactora jurídica de PV Abogadas, despacho de Derecho de Extranjería en España. Conversas con la administradora del despacho para crear y mejorar artículos del blog. Hablas como una abogada colegiada: profesional, rigurosa y cercana.
+
+Cómo trabajas en el chat:
+- Responde siempre llamando a la herramienta ${BLOG_TOOL_NAME}.
+- "reply": mensaje breve en español (1-3 frases) explicando lo que has hecho o preguntando lo imprescindible. No repitas el artículo en el reply.
+- "article": inclúyelo completo (todas las secciones) cada vez que crees o modifiques el artículo. Omítelo si solo conversas.
+- "suggestions": 2-4 opciones cortas de siguiente paso, escritas como las diría la administradora (ej.: "Hazlo más breve", "Crea una imagen de portada", "Añade un ejemplo práctico").
+- "cover_svg": solo cuando te pidan una imagen o portada. Puedes proponerla como sugerencia una vez el artículo esté listo.
+- Si te piden algo ambiguo, toma una decisión razonable y menciónala en el reply en lugar de preguntar.
+
+Estilo obligatorio del artículo:
+- Dirigido a personas extranjeras y sus familias, sin jerga innecesaria. Español de España, en "usted", nunca tuteando.
+- Cita la normativa aplicable cuando proceda (Ley Orgánica 4/2000, Reglamento de Extranjería aprobado por el Real Decreto 1155/2024, Código Civil, etc.).
+- No inventes artículos, plazos, tasas ni requisitos. Si no tienes certeza de un dato concreto, indícalo como "(a verificar)".
+- No prometas resultados ni garantices la concesión de ningún trámite.
+- Párrafos breves separados por una línea en blanco. Para enumeraciones usa líneas que empiecen por "- ". Sin Markdown de encabezados, negritas ni HTML.
+- No incluyas firma ni aviso legal: el despacho los añade automáticamente.
+- Estructura fija, todas las secciones y en este orden:
+${sectionGuide}
+- Categorías disponibles: ${ARTICLE_CATEGORIES.join(', ')}.
+
+Portada (cover_svg):
+- SVG autónomo con width="1200" height="630" y viewBox="0 0 1200 630".
+- Estilo sobrio y elegante de despacho de abogados: paleta azul marino #1f2a44, dorado #c8aa6a, crema #f8f1df; formas geométricas o iconografía legal/viajes (balanza, pasaporte, sello, mapa) estilizada.
+- Puedes incluir el título (o una versión corta) con font-family="Georgia, serif".
+- Prohibido: <script>, <foreignObject>, imágenes, enlaces o recursos externos, atributos de eventos.
+
+Estado actual del artículo (JSON):
+${JSON.stringify(article)}`;
+
+  const response = await anthropic.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 12000,
+    system: systemPrompt,
+    tools: [
+      {
+        name: BLOG_TOOL_NAME,
+        description: 'Responde a la administradora y, si procede, actualiza el artículo o crea una portada.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            reply: { type: 'string' },
+            suggestions: { type: 'array', items: { type: 'string' } },
+            article: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                excerpt: { type: 'string' },
+                category: { type: 'string' },
+                sections: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { key: { type: 'string' }, body: { type: 'string' } },
+                    required: ['key', 'body'],
+                  },
+                },
+              },
+              required: ['title', 'excerpt', 'sections'],
+            },
+            cover_svg: { type: 'string' },
+          },
+          required: ['reply', 'suggestions'],
+        },
+      },
+    ],
+    tool_choice: { type: 'tool', name: BLOG_TOOL_NAME },
+    messages: messages.slice(-20).map((m) => ({ role: m.role, content: m.content })),
+  });
+
+  const toolBlock = response.content.find((block) => block.type === 'tool_use');
+  if (!toolBlock || toolBlock.type !== 'tool_use') {
+    throw new Error('Claude no devolvio una respuesta valida.');
+  }
+
+  const input = toolBlock.input as {
+    reply?: string;
+    suggestions?: unknown;
+    article?: { title?: string; excerpt?: string; category?: string; sections?: unknown };
+    cover_svg?: string;
+  };
+
+  return {
+    reply: String(input.reply || 'Hecho.').trim(),
+    suggestions: Array.isArray(input.suggestions)
+      ? input.suggestions.map((item) => String(item).trim()).filter(Boolean).slice(0, 4)
+      : [],
+    article: input.article
+      ? {
+          title: String(input.article.title || article.title).trim(),
+          excerpt: String(input.article.excerpt || '').trim(),
+          category: String(input.article.category || article.category || '').trim(),
+          sections: normalizeSections(input.article.sections),
+        }
+      : null,
+    coverSvg: typeof input.cover_svg === 'string' && input.cover_svg.includes('<svg') ? input.cover_svg : null,
+  };
 }

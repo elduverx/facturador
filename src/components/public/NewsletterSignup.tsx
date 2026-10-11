@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import { Mail } from 'lucide-react';
 import { isValidEmail, normalizeEmail } from '@/lib/validation';
 
 export function NewsletterSignup() {
@@ -47,42 +48,49 @@ export function NewsletterSignup() {
   };
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-2xl border border-[var(--pv-gold)]/30 bg-white p-6 sm:p-8 shadow-sm">
+      <div className="flex items-start gap-4">
+        <span className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--pv-marble)] text-[var(--pv-gold)]">
+          <Mail size={20} />
+        </span>
         <div>
-          <h3 className="text-base font-semibold">Recibe novedades por email</h3>
-          <p className="text-xs text-stone-500">Te enviaremos las nuevas publicaciones del blog.</p>
+          <h3 className="font-roman text-lg font-bold uppercase text-[var(--pv-navy)]">Novedades de extranjería</h3>
+          <p className="text-sm text-stone-500 mt-1">Reciba en su email los nuevos artículos y cambios normativos que le afectan.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+      <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
         <input
           type="email"
-          placeholder="tu@email.com"
-          className="form-input text-sm"
+          placeholder="su@email.com"
+          className="neo-input text-sm"
           value={email}
           onChange={(e) => setEmail(normalizeEmail(e.target.value))}
           required
         />
-        <button type="submit" className="btn btn-primary text-sm" disabled={loading}>
+        <button type="submit" className="btn-roman text-sm" disabled={loading}>
           {loading ? 'Enviando...' : 'Suscribirme'}
         </button>
       </form>
 
-      <label className="flex items-start gap-2 text-[11px] text-stone-500 mt-3">
+      <label className="flex items-start gap-2 text-xs text-stone-500 mt-4">
         <input
           type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
-          className="mt-0.5"
+          className="mt-0.5 accent-[var(--pv-gold)]"
         />
         <span>
-          Acepto recibir comunicaciones y la politica de privacidad.
+          Acepto recibir comunicaciones y la{' '}
+          <a href="/politica-privacidad" className="underline hover:text-[var(--pv-navy)]">
+            política de privacidad
+          </a>
+          .
         </span>
       </label>
 
-      {error && <div className="mt-2 text-xs text-red-600">{error}</div>}
-      {!error && message && <div className="mt-2 text-xs text-stone-500">{message}</div>}
+      {error && <div className="mt-3 text-xs text-red-600">{error}</div>}
+      {!error && message && <div className="mt-3 text-xs text-emerald-700">{message}</div>}
     </div>
   );
 }

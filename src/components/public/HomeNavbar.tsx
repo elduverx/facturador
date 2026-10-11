@@ -3,15 +3,10 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Menu, X, BookOpen, Target, Calendar, HelpCircle, ArrowRight, UserCircle } from 'lucide-react';
+import { Menu, X, BookOpen, ArrowRight, UserCircle } from 'lucide-react';
+import { NAV_LINKS } from './nav-links';
 import { TipsonBadge } from './TipsonBadge';
 
-const NAV_LINKS = [
-  { label: 'Guías', href: '/servicios', icon: BookOpen },
-  { label: 'Método', href: '/metodo', icon: Target },
-  { label: 'Reserva', href: '/reservar', icon: Calendar },
-  { label: 'FAQ', href: '/faq', icon: HelpCircle },
-];
 
 export function HomeNavbar() {
   const [open, setOpen] = useState(false);

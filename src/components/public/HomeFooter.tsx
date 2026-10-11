@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { TipsonBadge } from './TipsonBadge';
+import { NAV_LINKS } from './nav-links';
 
 export function HomeFooter() {
   return (
     <footer className="bg-[var(--pv-navy)] text-white py-12 sm:py-16 border-t border-[var(--pv-gold)]/30">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-center md:items-start mb-10 text-center md:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 items-center md:items-start mb-10 text-center md:text-left">
           <div className="flex flex-col items-center md:items-start gap-3 opacity-90">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg border-2 border-[var(--pv-gold)] overflow-hidden shrink-0 bg-white">
               <img src="/logopv.jpeg" alt="PV Abogadas" className="w-full h-full object-cover" />
@@ -33,6 +34,19 @@ export function HomeFooter() {
                 </span>
               </span>
             </a>
+          </div>
+
+          <div className="flex flex-col items-center md:items-start">
+            <h4 className="text-[10px] uppercase tracking-widest text-[var(--pv-gold)] font-bold mb-3">Navegación</h4>
+            <div className="flex flex-col gap-2 opacity-60 text-sm items-center md:items-start">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-[var(--pv-gold)] transition-colors text-white">
+                  {link.label}
+                </Link>
+              ))}
+              <Link href="/blog" className="hover:text-[var(--pv-gold)] transition-colors text-white">Noticias</Link>
+              <Link href="/portal" className="hover:text-[var(--pv-gold)] transition-colors text-white mt-2">Ya soy cliente</Link>
+            </div>
           </div>
 
           <div className="flex flex-col items-center md:items-end md:text-right">
