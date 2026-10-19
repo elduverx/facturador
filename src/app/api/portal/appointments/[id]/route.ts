@@ -13,28 +13,36 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     
     if (!appointment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // Also fetch documents related to this client's email
-    const documents = await prisma.clientDocument.findMany({
-      where: { clientEmail: appointment.clientEmail },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const matters = await prisma.matter.findMany({
-      where: { clientEmail: appointment.clientEmail },
-      include: {
-        timeline: { where: { isPublic: true }, orderBy: { createdAt: 'desc' } }
-      }
-    });
-
-    // Also fetch pending payments if any
-    const pendingAppointments = await prisma.appointment.findMany({
-      where: { 
-        clientEmail: appointment.clientEmail,
-        paymentStatus: 'PENDING',
-        status: { not: 'CANCELLED' }
-      },
-      include: { service: true }
-    });
+    // Also fetch documents related to this client's email safely
+    const [documents, matters, pendingAppointments] = await Promise.all([
+      prisma.clientDocument.findMany({
+        where: { clientEmail: appointment.clientEmail },
+        orderBy: { createdAt: 'desc' }
+      }).catch((err) => {
+        console.error('Error fetching documents in portal appointment:', err);
+        return [];
+      }),
+      prisma.matter.findMany({
+        where: { clientEmail: appointment.clientEmail },
+        include: {
+          timeline: { where: { isPublic: true }, orderBy: { createdAt: 'desc' } }
+        }
+      }).catch((err) => {
+        console.error('Error fetching matters in portal appointment:', err);
+        return [];
+      }),
+      prisma.appointment.findMany({
+        where: { 
+          clientEmail: appointment.clientEmail,
+          paymentStatus: 'PENDING',
+          status: { not: 'CANCELLED' }
+        },
+        include: { service: true }
+      }).catch((err) => {
+        console.error('Error fetching pending appointments in portal appointment:', err);
+        return [];
+      }),
+    ]);
 
     return NextResponse.json({
       appointment,

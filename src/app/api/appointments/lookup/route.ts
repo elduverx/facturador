@@ -6,6 +6,12 @@ import { createPortalSessionCookie } from '@/lib/portal-session';
 const PORTAL_SESSION_COOKIE = 'pv_portal_session';
 const SESSION_MAX_AGE = 60 * 60 * 2;
 
+const toIsoSafe = (val: any): string => {
+  if (!val) return '';
+  const date = val instanceof Date ? val : new Date(val);
+  return isNaN(date.getTime()) ? '' : date.toISOString();
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -88,6 +94,9 @@ export async function POST(request: Request) {
           isPaid: true,
           createdAt: true,
         },
+      }).catch((err) => {
+        console.error('Error fetching client documents for lookup:', err);
+        return [];
       }),
       prisma.matter.findMany({
         where: {
@@ -122,6 +131,9 @@ export async function POST(request: Request) {
           },
         },
         orderBy: { updatedAt: 'desc' },
+      }).catch((err) => {
+        console.error('Error fetching matters for lookup:', err);
+        return [];
       }),
       prisma.paymentLink.findMany({
         where: {
@@ -129,6 +141,9 @@ export async function POST(request: Request) {
           status: 'PENDING',
         },
         orderBy: { createdAt: 'desc' },
+      }).catch((err) => {
+        console.error('Error fetching payment links for lookup:', err);
+        return [];
       }),
       prisma.clientNote.findMany({
         where: {
@@ -137,7 +152,10 @@ export async function POST(request: Request) {
         },
         orderBy: { createdAt: 'desc' },
         take: 50,
-      })
+      }).catch((err) => {
+        console.error('Error fetching client notes for lookup:', err);
+        return [];
+      }),
     ]);
 
     const hasPortalMatch = allAppointments.length > 0 || matters.length > 0 || documents.length > 0 || paymentLinks.length > 0;
@@ -147,7 +165,7 @@ export async function POST(request: Request) {
         id: appt.id,
         clientName: appt.clientName,
         clientNie: appt.clientNie,
-        date: appt.date.toISOString(),
+        date: toIsoSafe(appt.date),
         startTime: appt.startTime,
         endTime: appt.endTime,
         status: appt.status,
@@ -159,12 +177,12 @@ export async function POST(request: Request) {
         id: note.id,
         content: note.content,
         status: note.status,
-        createdAt: note.createdAt.toISOString(),
+        createdAt: toIsoSafe(note.createdAt),
       })),
       documents: documents.map(document => ({
         ...document,
         adminNotes: document.adminNotes,
-        createdAt: document.createdAt.toISOString(),
+        createdAt: toIsoSafe(document.createdAt),
       })),
       paymentLinks: paymentLinks.map(link => ({
         id: link.id,
@@ -172,7 +190,7 @@ export async function POST(request: Request) {
         amount: link.amount,
         reference: link.reference,
         status: link.status,
-        createdAt: link.createdAt.toISOString(),
+        createdAt: toIsoSafe(link.createdAt),
       })),
       matters: matters.map((matter) => ({
         id: matter.id,
@@ -183,26 +201,26 @@ export async function POST(request: Request) {
         procedureType: matter.procedureType,
         status: matter.status,
         priority: matter.priority,
-        openedAt: matter.openedAt.toISOString(),
-        nextActionAt: matter.nextActionAt?.toISOString() || null,
+        openedAt: toIsoSafe(matter.openedAt),
+        nextActionAt: toIsoSafe(matter.nextActionAt) || null,
         summary: matter.summary,
         timeline: matter.timeline.map((entry) => ({
           id: entry.id,
           type: entry.type,
           title: entry.title,
           content: entry.content,
-          createdAt: entry.createdAt.toISOString(),
+          createdAt: toIsoSafe(entry.createdAt),
         })),
         deadlines: matter.deadlines.map((deadline) => ({
           id: deadline.id,
           title: deadline.title,
-          dueAt: deadline.dueAt.toISOString(),
+          dueAt: toIsoSafe(deadline.dueAt),
           kind: deadline.kind,
         })),
         billingDocuments: matter.billingDocuments.map((document) => ({
           ...document,
-          issuedAt: document.issuedAt.toISOString(),
-          dueAt: document.dueAt?.toISOString() || null,
+          issuedAt: toIsoSafe(document.issuedAt),
+          dueAt: toIsoSafe(document.dueAt) || null,
         })),
       })),
       total,
@@ -211,22 +229,27 @@ export async function POST(request: Request) {
     });
 
     if (hasPortalMatch) {
-      response.cookies.set(PORTAL_SESSION_COOKIE, await createPortalSessionCookie({
-        appointmentId: allAppointments[0]?.id,
-        email: normalizedEmail,
-        nie: normalizedNie,
-      }), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: SESSION_MAX_AGE,
-        path: '/',
-      });
+      try {
+        const sessionCookie = await createPortalSessionCookie({
+          appointmentId: allAppointments[0]?.id,
+          email: normalizedEmail,
+          nie: normalizedNie,
+        });
+        response.cookies.set(PORTAL_SESSION_COOKIE, sessionCookie, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: SESSION_MAX_AGE,
+          path: '/',
+        });
+      } catch (cookieErr) {
+        console.error('Error setting portal session cookie in lookup:', cookieErr);
+      }
     }
 
     return response;
   } catch (error) {
     console.error('Error consultando cita:', error);
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno al consultar sus registros' }, { status: 500 });
   }
 }
