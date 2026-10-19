@@ -338,6 +338,8 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
   const newAppointmentUrl = lastQuery ? `${basePath}&type=new` : '/reservar';
   const existingMatterAppointmentUrl = lastQuery ? `${basePath}&type=existing` : '/reservar';
 
+  const hasAnyData = results.length > 0 || documents.length > 0 || matters.length > 0 || paymentLinks.length > 0;
+
   if (appointmentId) {
     return (
       <div className="max-w-2xl mx-auto w-full relative">
@@ -372,7 +374,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
       {/* Login / Access Form */}
       <div className="relative">
 
-        {!searched || error || results.length === 0 ? (
+        {!searched || error || !hasAnyData ? (
             <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in-up">
               <div className="w-16 h-16 bg-[var(--pv-gold)] rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(196,161,115,0.3)]">
                 <ShieldCheck size={32} className="text-white" />
@@ -431,7 +433,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
         )}
       </div>
 
-      {searched && !error && results.length === 0 && (
+      {searched && !error && !hasAnyData && (
         <div className="w-full max-w-md mx-auto p-12 text-center border-2 border-dashed border-white/20 rounded-3xl animate-fade-in mt-12">
            <AlertCircle size={40} className="mx-auto text-white/30 mb-4" />
            <p className="text-sm font-bold text-white/50 uppercase tracking-widest">No encontramos registros con esos datos.</p>
@@ -439,7 +441,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
         </div>
       )}
 
-      {searched && (results.length > 0 || documents.length > 0 || matters.length > 0 || paymentLinks.length > 0) && lastQuery && (
+      {searched && !error && hasAnyData && lastQuery && (
         <div className="animate-fade-in mt-6 max-w-2xl mx-auto">
           
           {activeTab === 'menu' ? (

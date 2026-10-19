@@ -60,13 +60,25 @@ export async function POST(request: Request) {
       }
     });
 
-    // Create session
-    await createPortalSessionCookie({
-      email: normalizedEmail,
-      nie: normalizedNie,
-    });
+    // Create session and set cookie
+    const response = NextResponse.json({ success: true });
+    try {
+      const sessionCookie = await createPortalSessionCookie({
+        email: normalizedEmail,
+        nie: normalizedNie,
+      });
+      response.cookies.set('pv_portal_session', sessionCookie, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 2,
+        path: '/',
+      });
+    } catch (cookieErr) {
+      console.error('Error setting session cookie on registro:', cookieErr);
+    }
 
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error: any) {
     console.error('Error en registro:', error);
     return NextResponse.json({ error: 'Error al procesar el registro' }, { status: 500 });
