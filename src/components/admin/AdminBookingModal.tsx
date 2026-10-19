@@ -18,10 +18,11 @@ interface Staff {
 interface AdminBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (bookedDate?: string) => void;
+  initialDate?: string | null;
 }
 
-export function AdminBookingModal({ isOpen, onClose, onSuccess }: AdminBookingModalProps) {
+export function AdminBookingModal({ isOpen, onClose, onSuccess, initialDate }: AdminBookingModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -37,7 +38,7 @@ export function AdminBookingModal({ isOpen, onClose, onSuccess }: AdminBookingMo
     clientEmail: '',
     clientPhone: '',
     clientNie: '',
-    date: '',
+    date: initialDate || '',
     startTime: '',
     serviceId: '',
     lawyerId: '',
@@ -47,6 +48,9 @@ export function AdminBookingModal({ isOpen, onClose, onSuccess }: AdminBookingMo
 
   useEffect(() => {
     if (isOpen) {
+      if (initialDate) {
+        setFormData(prev => ({ ...prev, date: initialDate }));
+      }
       fetch('/api/services').then(res => res.json()).then(data => setServices(data || []));
       fetch('/api/admin/staff').then(res => res.json()).then(data => setStaff(data || []));
       fetch('/api/appointments').then(res => res.json()).then(data => {
@@ -64,7 +68,7 @@ export function AdminBookingModal({ isOpen, onClose, onSuccess }: AdminBookingMo
         setExistingClients(Array.from(clientsMap.values()));
       });
     }
-  }, [isOpen]);
+  }, [isOpen, initialDate]);
 
   if (!isOpen) return null;
 
@@ -86,7 +90,7 @@ export function AdminBookingModal({ isOpen, onClose, onSuccess }: AdminBookingMo
         throw new Error(data.error || 'Error al crear la cita');
       }
       
-      onSuccess();
+      onSuccess(formData.date);
       onClose();
     } catch (err: any) {
       setError(err.message);

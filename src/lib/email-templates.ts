@@ -143,6 +143,25 @@ export function statusChangeEmail(data: AppointmentEmailData, newStatus: string)
   return baseTemplate('Actualizacion de Cita', body, data.firmName);
 }
 
+export function adminAppointmentCancelledEmail(data: AppointmentEmailData & { clientEmail: string; clientPhone: string; clientNie?: string; reason?: string }): string {
+  const body = `
+    <p><strong>Un cliente ha cancelado su cita:</strong></p>
+    ${appointmentDetails(data)}
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:16px;margin:16px 0;">
+      <p style="margin:0 0 8px;font-weight:600;font-size:14px;color:#991B1B;">Datos del cliente:</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:4px 0;color:#57534E;">Nombre:</td><td style="padding:4px 0;">${data.clientName}</td></tr>
+        <tr><td style="padding:4px 0;color:#57534E;">Email:</td><td style="padding:4px 0;">${data.clientEmail}</td></tr>
+        <tr><td style="padding:4px 0;color:#57534E;">Telefono:</td><td style="padding:4px 0;">${data.clientPhone}</td></tr>
+        ${data.clientNie ? `<tr><td style="padding:4px 0;color:#57534E;">NIE/Pasaporte:</td><td style="padding:4px 0;">${data.clientNie}</td></tr>` : ''}
+      </table>
+      ${data.reason ? `<p style="margin:12px 0 0;font-size:14px;color:#991B1B;"><strong>Motivo indicado:</strong> ${escapeHtml(data.reason)}</p>` : ''}
+    </div>
+    <p style="font-size:14px;color:#57534E;">El horario de la cita ha quedado liberado automáticamente para nuevos clientes.</p>
+  `;
+  return baseTemplate('Cita Cancelada por Cliente', body, data.firmName);
+}
+
 export function dayClosedEmail(data: AppointmentEmailData): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>

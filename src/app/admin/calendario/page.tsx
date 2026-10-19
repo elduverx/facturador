@@ -85,6 +85,41 @@ export default function CalendarPage() {
       })
     : [];
 
+  const updateSelectedDayForMonth = (year: number, month: number) => {
+    const todayStr = today.toISOString().split('T')[0];
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth();
+    if (year === todayYear && month === todayMonth) {
+      setSelectedDay(todayStr);
+    } else {
+      setSelectedDay(`${year}-${(month + 1).toString().padStart(2, '0')}-01`);
+    }
+  };
+
+  const goToPrevMonth = () => {
+    let newMonth = currentMonth - 1;
+    let newYear = currentYear;
+    if (currentMonth === 0) {
+      newMonth = 11;
+      newYear = currentYear - 1;
+    }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    updateSelectedDayForMonth(newYear, newMonth);
+  };
+
+  const goToNextMonth = () => {
+    let newMonth = currentMonth + 1;
+    let newYear = currentYear;
+    if (currentMonth === 11) {
+      newMonth = 0;
+      newYear = currentYear + 1;
+    }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    updateSelectedDayForMonth(newYear, newMonth);
+  };
+
   const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
   return (
@@ -102,10 +137,7 @@ export default function CalendarPage() {
              <CalendarPlus size={18} /> Nueva Cita
            </button>
            <button
-            onClick={() => {
-              if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
-              else setCurrentMonth(currentMonth - 1);
-            }}
+            onClick={goToPrevMonth}
             className="p-3 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
           >
             <ChevronLeft size={20} />
@@ -114,10 +146,7 @@ export default function CalendarPage() {
              <h2 className="font-roman font-bold uppercase tracking-widest text-xs sm:text-base text-[var(--pv-ink)]">{MONTHS[currentMonth]} {currentYear}</h2>
           </div>
           <button
-            onClick={() => {
-              if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); }
-              else setCurrentMonth(currentMonth + 1);
-            }}
+            onClick={goToNextMonth}
             className="p-3 rounded-xl bg-white border border-[var(--pv-gold)]/20 text-[var(--pv-gold)] hover:bg-[var(--pv-gold)] hover:text-white transition-all shadow-sm"
           >
             <ChevronRight size={20} />
@@ -129,9 +158,18 @@ export default function CalendarPage() {
         <div className="w-full">
           <AdminBookingModal 
             isOpen={true} 
+            initialDate={selectedDay}
             onClose={() => setIsBookingModalOpen(false)} 
-            onSuccess={() => {
+            onSuccess={(bookedDate?: string) => {
               setIsBookingModalOpen(false);
+              if (bookedDate) {
+                const parts = bookedDate.split('-').map(Number);
+                if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                  setCurrentYear(parts[0]);
+                  setCurrentMonth(parts[1] - 1);
+                  setSelectedDay(bookedDate);
+                }
+              }
               loadMonth();
             }}
           />

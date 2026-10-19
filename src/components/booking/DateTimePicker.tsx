@@ -17,10 +17,22 @@ interface Props {
 
 export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime, onDateSelect, onTimeSelect, onModalityFetched }: Props) {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const initialYear = selectedDate ? parseInt(selectedDate.split('-')[0], 10) : today.getFullYear();
+  const initialMonth = selectedDate ? parseInt(selectedDate.split('-')[1], 10) - 1 : today.getMonth();
+  const [currentMonth, setCurrentMonth] = useState(isNaN(initialMonth) ? today.getMonth() : initialMonth);
+  const [currentYear, setCurrentYear] = useState(isNaN(initialYear) ? today.getFullYear() : initialYear);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  useEffect(() => {
+    if (selectedDate) {
+      const parts = selectedDate.split('-').map(Number);
+      if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        setCurrentYear(parts[0]);
+        setCurrentMonth(parts[1] - 1);
+      }
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     if (!selectedDate || !serviceId) return;
@@ -46,18 +58,18 @@ export function DateTimePicker({ serviceId, lawyerId, selectedDate, selectedTime
   const goToPrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
+      setCurrentYear((prev) => prev - 1);
     } else {
-      setCurrentMonth(currentMonth - 1);
+      setCurrentMonth((prev) => prev - 1);
     }
   };
 
   const goToNextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
+      setCurrentYear((prev) => prev + 1);
     } else {
-      setCurrentMonth(currentMonth + 1);
+      setCurrentMonth((prev) => prev + 1);
     }
   };
 

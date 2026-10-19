@@ -31,14 +31,31 @@ export const MONTHS = [
 ];
 
 export function formatDateES(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
+  if (!dateStr) return '';
+  const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+  const parts = cleanDateStr.split('-').map(Number);
+  if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+    const [year, monthNum, day] = parts;
+    const month = (MONTHS[monthNum - 1] || '').toLowerCase();
+    return `${day} de ${month} de ${year}`;
+  }
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
   const day = date.getDate();
-  const month = MONTHS[date.getMonth()].toLowerCase();
+  const month = (MONTHS[date.getMonth()] || '').toLowerCase();
   const year = date.getFullYear();
   return `${day} de ${month} de ${year}`;
 }
 
 export function formatDateShort(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
+  if (!dateStr) return '';
+  const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+  const parts = cleanDateStr.split('-').map(Number);
+  if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+    const [year, monthNum, day] = parts;
+    return `${day.toString().padStart(2, '0')}/${monthNum.toString().padStart(2, '0')}/${year}`;
+  }
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

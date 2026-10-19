@@ -1,6 +1,7 @@
 'use client';
 
 import { CONSULTATION_DEPOSIT_AMOUNT, formatEuro } from '@/lib/payments';
+import { formatDateES } from '@/lib/constants';
 import { CheckCircle2, CreditCard, Mail, ExternalLink, ShieldCheck, ArrowRight, RefreshCw, Banknote, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,7 +63,7 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
               
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-navy)] opacity-40 mb-1">Fecha y hora</p>
-                <p className="text-lg font-bold text-[var(--pv-ink)] uppercase">{date} · {time}</p>
+                <p className="text-lg font-bold text-[var(--pv-ink)] uppercase">{formatDateES(date)} · {time}</p>
               </div>
            </div>
         </div>

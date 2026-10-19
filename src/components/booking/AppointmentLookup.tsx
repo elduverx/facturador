@@ -20,7 +20,9 @@ import {
   History,
   Briefcase,
   CalendarPlus,
-  Mail
+  Mail,
+  XCircle,
+  X
 } from 'lucide-react';
 
 type PublicNote = {
@@ -125,6 +127,11 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
   const [sessionLoading, setSessionLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'menu' | 'case' | 'documents' | 'payments' | 'appointments'>('menu');
 
+  const [cancellingAppt, setCancellingAppt] = useState<PublicAppointment | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+
   const fetchAppointments = async (query: { email: string; nie: string }, nextPage: number) => {
     setError('');
     setLoading(true);
@@ -191,6 +198,34 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
 
   const handlePayLink = async (paymentLinkId: string) => {
     window.location.href = `/api/payments/redsys?paymentLinkId=${paymentLinkId}`;
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!cancellingAppt) return;
+    setCancelling(true);
+    setCancelError('');
+    try {
+      const res = await fetch(`/api/portal/appointments/${cancellingAppt.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel', reason: cancelReason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Error al cancelar la cita');
+      }
+      setResults((prev) =>
+        prev.map((a) => (a.id === cancellingAppt.id ? { ...a, status: 'CANCELLED' } : a))
+      );
+      setCancellingAppt(null);
+      setCancelReason('');
+      setPortalNotice('Tu cita ha sido cancelada correctamente.');
+      setTimeout(() => setPortalNotice(''), 4000);
+    } catch (err: any) {
+      setCancelError(err?.message || 'Error al procesar la cancelación');
+    } finally {
+      setCancelling(false);
+    }
   };
 
   useEffect(() => {
@@ -624,8 +659,14 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                     <div className="w-12 h-12 rounded-full bg-[var(--pv-gold)]/20 border border-[var(--pv-gold)]/50 text-[var(--pv-gold)] flex items-center justify-center">
                       <Clock size={22} />
                     </div>
-                    Próximas Citas
+                    Tus Citas
                   </h3>
+                  <a
+                    href={matters.length > 0 ? existingMatterAppointmentUrl : newAppointmentUrl}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--pv-gold)] hover:bg-[#b8914b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg self-start sm:self-auto"
+                  >
+                    <CalendarPlus size={16} /> Agendar otra cita
+                  </a>
                 </div>
                 
                 {results.length === 0 ? (
@@ -636,22 +677,57 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {results.map((appt) => {
                       const dateStr = appt.date.split('T')[0];
+                      const isCancelled = appt.status === 'CANCELLED';
+                      const isPast = new Date(`${dateStr}T${appt.startTime}:00`) < new Date();
+
                       return (
-                        <div key={appt.id} className="rounded-2xl border-l-4 border-l-[var(--pv-gold)] bg-white/5 backdrop-blur-sm p-6 shadow-2xl border border-white/10 transition-transform hover:scale-[1.02]">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="font-roman text-sm sm:text-base font-bold uppercase text-white pr-4">{appt.serviceName}</div>
-                            <span className="shrink-0 text-[9px] font-black px-2 py-1.5 rounded-lg border border-white/20 uppercase tracking-widest bg-white/10 text-white">
-                              {STATUS_LABELS[appt.status] || appt.status}
-                            </span>
+                        <div
+                          key={appt.id}
+                          className={`rounded-2xl border-l-4 ${
+                            isCancelled ? 'border-l-red-500' : 'border-l-[var(--pv-gold)]'
+                          } bg-white/5 backdrop-blur-sm p-6 shadow-2xl border border-white/10 transition-transform hover:scale-[1.01] flex flex-col justify-between`}
+                        >
+                          <div>
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="font-roman text-sm sm:text-base font-bold uppercase text-white pr-4">
+                                {appt.serviceName}
+                              </div>
+                              <span className={`shrink-0 text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-widest ${
+                                isCancelled
+                                  ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                                  : appt.status === 'CONFIRMED'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                  : 'bg-white/10 text-white border-white/20'
+                              }`}>
+                                {STATUS_LABELS[appt.status] || appt.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-bold text-white/70 uppercase tracking-widest bg-black/20 p-3 rounded-xl border border-white/5">
+                              <Clock size={14} className={isCancelled ? 'text-red-400' : 'text-[var(--pv-gold)]'} />
+                              {formatDateShort(dateStr)} · {appt.startTime}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-xs font-bold text-white/70 uppercase tracking-widest bg-black/20 p-3 rounded-xl border border-white/5">
-                            <Clock size={14} className="text-[var(--pv-gold)]" />
-                            {formatDateShort(dateStr)} · {appt.startTime}
-                          </div>
-                          <div className="mt-4 pt-4 border-t border-white/10">
-                            <a href={`?appointmentId=${appt.id}`} className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--pv-gold)] font-bold text-[10px] uppercase tracking-widest transition-colors">
-                              Ver expediente de la cita <ChevronRight size={14} />
+
+                          <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center gap-2">
+                            <a
+                              href={`?appointmentId=${appt.id}`}
+                              className="flex-1 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--pv-gold)] font-bold text-[10px] uppercase tracking-widest transition-colors"
+                            >
+                              Ver expediente <ChevronRight size={14} />
                             </a>
+                            {!isCancelled && !isPast && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCancellingAppt(appt);
+                                  setCancelReason('');
+                                  setCancelError('');
+                                }}
+                                className="w-full sm:w-auto py-2.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-[10px] uppercase tracking-widest inline-flex items-center justify-center gap-1.5 transition-colors"
+                              >
+                                <XCircle size={14} /> Cancelar
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -663,6 +739,72 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
 
           </div>
           )}
+        </div>
+      )}
+
+      {/* Cancellation Confirmation Modal in AppointmentLookup */}
+      {cancellingAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f172a] border border-white/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative text-left">
+            <button
+              onClick={() => !cancelling && setCancellingAppt(null)}
+              disabled={cancelling}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors disabled:opacity-50"
+            >
+              <X size={18} />
+            </button>
+            <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={24} />
+            </div>
+            <h3 className="text-base font-roman uppercase tracking-widest font-bold text-white text-center mb-1">
+              ¿Cancelar esta cita?
+            </h3>
+            <p className="text-xs text-[var(--pv-gold)] font-bold text-center mb-2 uppercase tracking-wider">
+              {cancellingAppt.serviceName} · {formatDateShort(cancellingAppt.date.split('T')[0])} a las {cancellingAppt.startTime}
+            </p>
+            <p className="text-xs text-white/60 text-center mb-4 leading-relaxed">
+              El horario será liberado en el calendario y se enviará una notificación a tu correo confirmando la cancelación.
+            </p>
+
+            <div className="mb-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 block mb-1">
+                Motivo de la cancelación (opcional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Ej: Cambio de planes, indisposición, ya resolví la consulta..."
+                rows={3}
+                disabled={cancelling}
+                className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/30 text-xs focus:border-red-400 focus:ring-1 focus:ring-red-400 outline-none transition-all resize-none disabled:opacity-50"
+              />
+            </div>
+
+            {cancelError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
+                <AlertCircle size={16} /> {cancelError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setCancellingAppt(null)}
+                disabled={cancelling}
+                className="flex-1 py-3 rounded-xl border border-white/20 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelAppointment}
+                disabled={cancelling}
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelando...' : 'Sí, cancelar cita'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

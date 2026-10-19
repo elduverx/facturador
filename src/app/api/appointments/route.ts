@@ -78,22 +78,6 @@ export async function POST(request: Request) {
         throw new Error('CLOSED_DAY');
       }
 
-      if (normalizedNie) {
-        const startOfToday = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00.000Z');
-        const existingNie = await tx.appointment.findFirst({
-          where: {
-            clientNie: { equals: normalizedNie, mode: 'insensitive' },
-            date: { gte: startOfToday },
-            status: { in: ['PENDING', 'CONFIRMED'] },
-            ...(selectedStaff ? { staffUserId: selectedStaff.id } : {}),
-          },
-          select: { id: true },
-        });
-        if (existingNie) {
-          throw new Error('DUP_NIE');
-        }
-      }
-
       if (dayConfig.maxPerDay > 0) {
         const countForDay = await tx.appointment.count({
           where: {
@@ -219,12 +203,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error: unknown) {
-    if (error instanceof Error && error.message === 'DUP_NIE') {
-      return NextResponse.json(
-        { error: 'Ya existe una cita activa con ese NIE. Contacte con recepcion si necesita modificarla.' },
-        { status: 409 }
-      );
-    }
     if (error instanceof Error && error.message === 'OUT_OF_RANGE') {
       return NextResponse.json(
         { error: 'Horario fuera del rango configurado para ese dia.' },

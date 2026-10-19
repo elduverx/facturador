@@ -79,7 +79,7 @@ export function ClientAppointmentsPanel({ clientEmail }: ClientAppointmentsPanel
                       {appt.serviceTitle || 'Consulta Legal'}
                     </h4>
                     <div className="text-xs font-bold text-[var(--pv-navy)] opacity-60 uppercase tracking-widest flex flex-col gap-1">
-                      <span>{formatDateShort(appt.date.split('T')[0])} a las {appt.time}</span>
+                      <span>{formatDateShort(appt.date.split('T')[0])} a las {appt.startTime || appt.time}</span>
                       <span>{appt.modality === 'VIDEO_CALL' ? 'Videollamada' : 'Presencial'}</span>
                     </div>
                   </div>

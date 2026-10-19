@@ -307,6 +307,24 @@ export default function ConfiguracionPage() {
   const todayStr = today.toISOString().split('T')[0];
   const selectedSchedule = selectedDate ? getScheduleForDate(selectedDate) : null;
 
+  const goToPrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear((prev) => prev - 1);
+    } else {
+      setCurrentMonth((prev) => prev - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear((prev) => prev + 1);
+    } else {
+      setCurrentMonth((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -470,9 +488,9 @@ export default function ConfiguracionPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-6">
                     <div className="flex items-center justify-between mb-4">
-                      <button onClick={() => setCurrentMonth(prev => prev === 0 ? 11 : prev - 1)} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronLeft size={18} /></button>
+                      <button onClick={goToPrevMonth} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronLeft size={18} /></button>
                       <div className="font-roman font-bold uppercase tracking-widest text-[var(--pv-ink)] text-sm">{MONTHS[currentMonth]} {currentYear}</div>
-                      <button onClick={() => setCurrentMonth(prev => prev === 11 ? 0 : prev + 1)} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronRight size={18} /></button>
+                      <button onClick={goToNextMonth} className="p-2 rounded-xl bg-[var(--pv-marble)] hover:bg-stone-200 transition-all text-[var(--pv-gold)]"><ChevronRight size={18} /></button>
                     </div>
 
                     <div className="grid grid-cols-7 gap-2">
