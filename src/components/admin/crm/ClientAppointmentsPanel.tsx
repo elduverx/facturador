@@ -18,6 +18,10 @@ const STATUS_CONFIG: Record<string, { label: string, color: string, icon: any }>
 export function ClientAppointmentsPanel({ clientEmail }: ClientAppointmentsPanelProps) {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [rescheduling, setRescheduling] = useState(false);
 
   const loadAppointments = async () => {
     setLoading(true);
@@ -44,6 +48,29 @@ export function ClientAppointmentsPanel({ clientEmail }: ClientAppointmentsPanel
   useEffect(() => {
     if (clientEmail) loadAppointments();
   }, [clientEmail]);
+
+  const handleSaveReschedule = async (id: string) => {
+    if (!rescheduleDate || !rescheduleTime) return;
+    setRescheduling(true);
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: rescheduleDate,
+          startTime: rescheduleTime,
+        }),
+      });
+      if (res.ok) {
+        setReschedulingId(null);
+        await loadAppointments();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRescheduling(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -94,8 +121,60 @@ export function ClientAppointmentsPanel({ clientEmail }: ClientAppointmentsPanel
                     ) : (
                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded-md">Pago Pendiente</span>
                     )}
+                    <button
+                      onClick={() => {
+                        if (reschedulingId === appt.id) {
+                          setReschedulingId(null);
+                        } else {
+                          setReschedulingId(appt.id);
+                          setRescheduleDate(appt.date.split('T')[0]);
+                          setRescheduleTime(appt.startTime || appt.time || '09:00');
+                        }
+                      }}
+                      className="text-[10px] font-bold text-[var(--pv-gold)] hover:underline uppercase tracking-widest flex items-center gap-1 mt-1"
+                    >
+                      <CalendarIcon size={11} /> Reagendar
+                    </button>
                   </div>
                 </div>
+
+                {reschedulingId === appt.id && (
+                  <div className="mt-4 pt-3 border-t border-[var(--pv-marble)] grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                    <div>
+                      <label className="text-[9px] font-bold uppercase text-stone-400">Nueva Fecha</label>
+                      <input
+                        type="date"
+                        className="neo-input !py-1.5 !px-2 !bg-stone-50 !text-xs w-full"
+                        value={rescheduleDate}
+                        onChange={(e) => setRescheduleDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase text-stone-400">Nueva Hora</label>
+                      <input
+                        type="time"
+                        className="neo-input !py-1.5 !px-2 !bg-stone-50 !text-xs w-full"
+                        value={rescheduleTime}
+                        onChange={(e) => setRescheduleTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveReschedule(appt.id)}
+                        disabled={rescheduling}
+                        className="flex-1 py-2 rounded-xl bg-[var(--pv-gold)] text-white text-[10px] font-bold uppercase tracking-widest hover:opacity-90"
+                      >
+                        {rescheduling ? '...' : 'Guardar'}
+                      </button>
+                      <button
+                        onClick={() => setReschedulingId(null)}
+                        className="px-3 py-2 rounded-xl bg-stone-100 text-stone-600 text-[10px] font-bold uppercase"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
              );
           })}

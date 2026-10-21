@@ -208,28 +208,32 @@ const TESTIMONIALS = [
 
 const FAQS = [
   {
-    q: 'Cuanto cuesta la primera consulta?',
-    a: 'Ofrecemos una primera consulta a precio reducido donde evaluamos tu caso en detalle. Contactanos para conocer las tarifas actuales. Nuestro compromiso es la transparencia total en costes.',
+    q: '¿Qué incluye tu consulta?',
+    a: '• Evaluación jurídica completa de tu caso individual. • Revisión de los documentos que aportes a la cita. • Viabilidad legal, requisitos exactos y hoja de ruta. • Presupuesto cerrado si decides iniciar el trámite. (No incluye la presentación de trámites ni recursos, que se presupuestan aparte).',
   },
   {
-    q: 'Necesito pedir cita previa?',
-    a: 'Si, trabajamos exclusivamente con cita previa para dedicar a cada cliente el tiempo y atencion que merece. Puedes reservar tu cita facilmente desde esta pagina web.',
+    q: 'Importante sobre otros casos o familiares',
+    a: '• Cada consulta es para una sola persona / expediente. • Consultar por el caso de un familiar, pareja o amigo requiere abonar una consulta adicional. • Si ya eres cliente, el seguimiento de tu expediente activo es gratuito, pero un caso nuevo o de otra persona se abona aparte.',
   },
   {
-    q: 'Que documentos debo llevar a la consulta?',
-    a: 'Generalmente necesitaras: pasaporte vigente, NIE/TIE si lo tienes, empadronamiento y documentacion relacionada con tu tramite. Te enviaremos un listado personalizado al confirmar tu cita.',
+    q: 'Ya soy cliente, ¿tiene coste agendar otra cita?',
+    a: 'Si se trata del seguimiento del expediente que ya tienes activo y contratado con nosotras, la cita es completamente gratuita. Sin embargo, si deseas consultar sobre un trámite nuevo o diferente al contratado, o consultar por el caso de un familiar, dicha asesoría sí debe abonarse.',
   },
   {
-    q: 'Atienden en otros idiomas?',
-    a: 'Si, nuestro equipo habla espanol, ingles y frances. Ademas, contamos con colaboradores que asisten en arabe, chino mandarin y portugues.',
+    q: 'Si mi trámite involucra a mi familia (ej. Reagrupación o Divorcio), ¿se cobra por cada uno?',
+    a: 'No cuando se trata de un mismo procedimiento legal conjunto donde tú eres el titular o solicitante principal (como una reagrupación familiar o un convenio de divorcio con hijos en común). Sí se abona por separado cuando son trámites o autorizaciones independientes para cada persona.',
   },
   {
-    q: 'Cuanto tarda un tramite de extranjeria?',
-    a: 'Los plazos varian: arraigo entre 3-6 meses, renovacion entre 1-3 meses, nacionalidad hasta 2-3 anos. Te informaremos de los plazos reales de tu caso concreto.',
+    q: '¿Puedo acudir acompañado a la consulta?',
+    a: 'Por supuesto, puedes venir acompañado si lo deseas. No obstante, la sesión se dedicará exclusivamente a resolver tu caso. Si tu acompañante desea consultar sobre su propia situación legal, deberá contratar su correspondiente asesoría.',
   },
   {
-    q: 'Pueden ayudarme con una orden de expulsion?',
-    a: 'Si, actuamos con urgencia en ordenes de expulsion. Contactanos inmediatamente. Analizaremos tu situacion y buscaremos la mejor via legal para proteger tus derechos.',
+    q: '¿Necesito pedir cita previa y qué ocurre si llego tarde?',
+    a: 'Sí, trabajamos exclusivamente con cita previa para garantizar una atención rigurosa y sin prisas. Rogamos puntualidad: en caso de retraso, la consulta se ajustará al tiempo restante asignado para no perjudicar a los siguientes clientes.',
+  },
+  {
+    q: '¿Puedo hacer la consulta por videollamada o presencial?',
+    a: 'Sí, al reservar podrás elegir libremente entre atención presencial en nuestro despacho de Valencia o consulta online por videollamada, con el mismo rigor y dedicación profesional.',
   },
 ];
 

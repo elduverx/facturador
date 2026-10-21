@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 import { confirmationEmail, adminNewBookingEmail } from '@/lib/email-templates';
 import { formatDateES } from '@/lib/constants';
-import { getDayConfig } from '@/lib/slots';
+import { getDayConfig, parseBlockedRange } from '@/lib/slots';
 import { isValidEmail, isValidPhone, normalizeEmail, normalizeNie, normalizePhone } from '@/lib/validation';
 import { isAdminAuthenticated } from '@/lib/auth';
 
@@ -71,11 +71,21 @@ export async function POST(request: Request) {
         throw new Error('CLOSED_DAY');
       }
 
-      const blocked = await tx.blockedDate.findFirst({
+      const blockedRecords = await tx.blockedDate.findMany({
         where: { date: { gte: startOfDay, lte: endOfDay } },
       });
-      if (blocked) {
+      const parsedBlocks = blockedRecords.map((b) => parseBlockedRange(b.reason));
+      if (parsedBlocks.some((b) => b.isFullDay)) {
         throw new Error('CLOSED_DAY');
+      }
+      const hasBlockedRangeConflict = parsedBlocks.some((b) => {
+        if (b.isFullDay || !b.startTime || !b.endTime) return false;
+        const blockStart = timeToMinutes(b.startTime);
+        const blockEnd = timeToMinutes(b.endTime);
+        return startMinutes < blockEnd && endMinutes > blockStart;
+      });
+      if (hasBlockedRangeConflict) {
+        throw new Error('SLOT_TAKEN');
       }
 
       if (dayConfig.maxPerDay > 0) {
@@ -138,7 +148,7 @@ export async function POST(request: Request) {
           modality: date.split('-')[1] === '08' ? 'VIDEO_CALL' : (body.modality || 'OFFICE'),
           notes: [
             selectedStaff ? `Abogada asignada: ${selectedStaff.name}` : null,
-            method === 'CASH' ? '💵 Método de pago a concretar en oficina' : '💳 Pago Online (Bizum)',
+            method === 'CASH' ? '💵 Método de pago a concretar en consulta' : '💳 Pago Online (Bizum)',
             notes || null,
           ].filter(Boolean).join('\n\n') || null,
           status: method === 'CASH' ? 'CONFIRMED' : 'PENDING',
@@ -169,7 +179,7 @@ export async function POST(request: Request) {
       const { cashReservationEmail } = await import('@/lib/email-templates');
       sendEmail({
         to: normalizedEmail,
-        subject: `Reserva Confirmada (Pago en Oficina) - ${firmName}`,
+        subject: `Cita Confirmada - ${firmName}`,
         html: cashReservationEmail(emailData),
       }).catch(console.error);
     }

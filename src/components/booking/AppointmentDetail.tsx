@@ -124,9 +124,15 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
   if (!data?.appointment) return <div className="p-4 bg-red-50 text-red-700 rounded-xl m-4">Cita no encontrada</div>;
 
   const { appointment, pendingAppointments } = data;
-  const isPast = new Date(`${appointment.date.split('T')[0]}T${appointment.startTime}:00`) < new Date();
-  const isAugust = appointment.date.split('T')[0].split('-')[1] === '08';
+  const dateStr = String(appointment.date).split('T')[0];
+  const timeStr = appointment.startTime && /^\d{2}:\d{2}$/.test(appointment.startTime) ? appointment.startTime : '00:00';
+  const apptDateTime = new Date(`${dateStr}T${timeStr}:00`);
+  const hoursUntilAppt = (apptDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
+  const isPast = isNaN(apptDateTime.getTime()) || apptDateTime.getTime() <= Date.now();
+  const isAugust = dateStr.split('-')[1] === '08';
   const isCancelled = appointment.status === 'CANCELLED';
+  // Ocultar la opción de cancelar si faltan menos de 24 horas, si ya pasó la fecha/hora o si ya está cancelada
+  const canCancel = !isCancelled && !isPast && !isNaN(hoursUntilAppt) && hoursUntilAppt >= 24;
   const bookAnotherUrl = `/reservar?portalBooking=1&email=${encodeURIComponent(appointment.clientEmail || '')}&name=${encodeURIComponent(appointment.clientName || '')}&nie=${encodeURIComponent(appointment.clientNie || '')}&type=new`;
 
   return (
@@ -248,16 +254,18 @@ export function AppointmentDetail({ appointmentId, paymentSuccess }: { appointme
               >
                 <CalendarPlus size={14} className="text-[var(--pv-gold)]" /> Agendar otra cita
               </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setCancelError('');
-                  setShowCancelModal(true);
-                }}
-                className="w-full sm:w-auto py-2.5 px-3 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-widest inline-flex items-center justify-center gap-2 transition-all"
-              >
-                <XCircle size={14} /> Cancelar cita
-              </button>
+              {canCancel && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCancelError('');
+                    setShowCancelModal(true);
+                  }}
+                  className="w-full sm:w-auto py-2.5 px-3 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-widest inline-flex items-center justify-center gap-2 transition-all"
+                >
+                  <XCircle size={14} /> Cancelar cita
+                </button>
+              )}
             </div>
           </div>
         ) : (

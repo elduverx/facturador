@@ -337,6 +337,9 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
     : '/reservar';
   const newAppointmentUrl = lastQuery ? `${basePath}&type=new` : '/reservar';
   const existingMatterAppointmentUrl = lastQuery ? `${basePath}&type=existing` : '/reservar';
+  const hasActiveLegalMatter = matters.some(
+    (m) => m.procedureType !== 'REGISTRO_PORTAL' && m.title !== 'Alta de Cliente'
+  );
 
   const hasAnyData = results.length > 0 || documents.length > 0 || matters.length > 0 || paymentLinks.length > 0;
 
@@ -510,7 +513,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
               </button>
 
               <div className="mt-8">
-                <a href={matters.length > 0 ? existingMatterAppointmentUrl : newAppointmentUrl} className="w-full py-5 rounded-2xl bg-[#cba358] hover:bg-[#b8914b] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-colors shadow-lg">
+                <a href={hasActiveLegalMatter ? existingMatterAppointmentUrl : newAppointmentUrl} className="w-full py-5 rounded-2xl bg-[#cba358] hover:bg-[#b8914b] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-colors shadow-lg">
                   Nueva Cita <ChevronRight size={20} />
                 </a>
               </div>
@@ -664,7 +667,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                     Tus Citas
                   </h3>
                   <a
-                    href={matters.length > 0 ? existingMatterAppointmentUrl : newAppointmentUrl}
+                    href={hasActiveLegalMatter ? existingMatterAppointmentUrl : newAppointmentUrl}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--pv-gold)] hover:bg-[#b8914b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg self-start sm:self-auto"
                   >
                     <CalendarPlus size={16} /> Agendar otra cita
@@ -678,9 +681,14 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {results.map((appt) => {
-                      const dateStr = appt.date.split('T')[0];
+                      const dateStr = String(appt.date).split('T')[0];
                       const isCancelled = appt.status === 'CANCELLED';
-                      const isPast = new Date(`${dateStr}T${appt.startTime}:00`) < new Date();
+                      const timeStr = appt.startTime && /^\d{2}:\d{2}$/.test(appt.startTime) ? appt.startTime : '00:00';
+                      const apptDateTime = new Date(`${dateStr}T${timeStr}:00`);
+                      const hoursUntilAppt = (apptDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
+                      const isPast = isNaN(apptDateTime.getTime()) || apptDateTime.getTime() <= Date.now();
+                      // Ocultar la opción de cancelar si faltan menos de 24 horas o ya pasó
+                      const canCancel = !isCancelled && !isPast && !isNaN(hoursUntilAppt) && hoursUntilAppt >= 24;
 
                       return (
                         <div
@@ -717,7 +725,7 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                             >
                               Ver expediente <ChevronRight size={14} />
                             </a>
-                            {!isCancelled && !isPast && (
+                            {canCancel && (
                               <button
                                 type="button"
                                 onClick={() => {

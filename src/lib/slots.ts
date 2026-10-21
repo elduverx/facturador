@@ -16,6 +16,34 @@ function safeTimeToMinutes(time: string | null | undefined): number | null {
   return timeToMinutes(time);
 }
 
+export function parseBlockedRange(reason: string | null | undefined): {
+  isFullDay: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  label: string;
+} {
+  if (!reason) {
+    return { isFullDay: true, startTime: null, endTime: null, label: 'Día completo cerrado' };
+  }
+  const match = reason.match(/^\[(\d{2}:\d{2})-(\d{2}:\d{2})\]\s*(.*)$/);
+  if (match) {
+    return {
+      isFullDay: false,
+      startTime: match[1],
+      endTime: match[2],
+      label: match[3] || `Cerrado de ${match[1]} a ${match[2]}`,
+    };
+  }
+  return { isFullDay: true, startTime: null, endTime: null, label: reason };
+}
+
+export function formatBlockedRangeReason(startTime?: string | null, endTime?: string | null, reason?: string | null): string | null {
+  if (startTime && endTime) {
+    return `[${startTime}-${endTime}]${reason ? ` ${reason.trim()}` : ''}`;
+  }
+  return reason?.trim() || null;
+}
+
 export async function getDayConfig(dateStr: string) {
   const settings = await prisma.officeSettings.findUnique({ where: { id: 'default' } });
   if (!settings) return null;
@@ -84,16 +112,17 @@ export async function getAvailableSlots(
 
   if (!dayConfig.override && !dayConfig.isWorkDay) return [];
 
-  // Check if date is blocked
+  // Check if date is blocked (full day or partial time ranges)
   const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
   const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
 
-  const blocked = await prisma.blockedDate.findFirst({
+  const blockedRecords = await prisma.blockedDate.findMany({
     where: {
       date: { gte: startOfDay, lte: endOfDay },
     },
   });
-  if (blocked) return [];
+  const parsedBlocks = blockedRecords.map((b) => parseBlockedRange(b.reason));
+  if (parsedBlocks.some((b) => b.isFullDay)) return [];
 
   if (dayConfig.maxPerDay > 0) {
     const countForDay = await prisma.appointment.count({
@@ -119,11 +148,17 @@ export async function getAvailableSlots(
     : service.durationMin;
 
   const allSlots: string[] = [];
-  for (let t = startMinutes; t + serviceDuration <= endMinutes; t += slotDuration) {
-    // Skip lunch overlap
-    const slotEnd = t + serviceDuration;
-    if (lunchStart !== null && lunchEnd !== null && t < lunchEnd && slotEnd > lunchStart) continue;
-    allSlots.push(minutesToTime(t));
+  if (lunchStart !== null && lunchEnd !== null && lunchEnd > lunchStart) {
+    for (let t = startMinutes; t + serviceDuration <= lunchStart; t += slotDuration) {
+      allSlots.push(minutesToTime(t));
+    }
+    for (let t = lunchEnd; t + serviceDuration <= endMinutes; t += slotDuration) {
+      allSlots.push(minutesToTime(t));
+    }
+  } else {
+    for (let t = startMinutes; t + serviceDuration <= endMinutes; t += slotDuration) {
+      allSlots.push(minutesToTime(t));
+    }
   }
 
   // Get existing appointments for this date
@@ -148,6 +183,17 @@ export async function getAvailableSlots(
 
     // Past time check
     if (isToday && slotStart <= currentMinutes + 30) {
+      return { time, available: false };
+    }
+
+    // Overlap check with partial blocked time ranges
+    const isBlockedRange = parsedBlocks.some((b) => {
+      if (b.isFullDay || !b.startTime || !b.endTime) return false;
+      const blockStart = timeToMinutes(b.startTime);
+      const blockEnd = timeToMinutes(b.endTime);
+      return slotStart < blockEnd && slotEnd > blockStart;
+    });
+    if (isBlockedRange) {
       return { time, available: false };
     }
 

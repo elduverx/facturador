@@ -33,8 +33,8 @@ export async function POST(request: Request) {
     const date = typeof body?.date === 'string' ? body.date : '';
     const startTime = typeof body?.startTime === 'string' ? body.startTime : '';
     const endTime = typeof body?.endTime === 'string' ? body.endTime : '';
-    const lunchStartTime = typeof body?.lunchStartTime === 'string' ? body.lunchStartTime : null;
-    const lunchEndTime = typeof body?.lunchEndTime === 'string' ? body.lunchEndTime : null;
+    const lunchStartTime = typeof body?.lunchStartTime === 'string' && body.lunchStartTime.trim() !== '' ? body.lunchStartTime.trim() : null;
+    const lunchEndTime = typeof body?.lunchEndTime === 'string' && body.lunchEndTime.trim() !== '' ? body.lunchEndTime.trim() : null;
 
     const maxAppointmentsPerDay = body?.maxAppointmentsPerDay ?? null;
     const slotDurationMin = body?.slotDurationMin ?? null;

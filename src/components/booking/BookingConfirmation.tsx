@@ -34,7 +34,7 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
         </h2>
         <p className="text-sm sm:text-lg text-[var(--pv-navy)] opacity-60 max-w-xl font-medium">
           {paymentMethod === 'CASH'
-            ? `Gracias, ${clientName}. Tu cita queda confirmada. Recuerda traer el pago en efectivo el día de la consulta.`
+            ? `Gracias, ${clientName}. Tu cita queda confirmada. Recuerda que el pago se realizará el día de la consulta.`
             : `Gracias, ${clientName}. Tu solicitud de cita se ha registrado correctamente.`}
         </p>
       </div>
@@ -76,13 +76,13 @@ export function BookingConfirmation({ appointmentId, clientName, serviceName, la
             </div>
 
             <div className="relative z-10 h-full flex flex-col">
-              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-emerald-300 mb-4">Pago en Efectivo</h3>
+              <h3 className="font-roman text-sm font-bold uppercase tracking-[0.2em] text-emerald-300 mb-4">Pago en Consulta</h3>
               <p className="text-sm font-medium text-white/70 leading-relaxed mb-8">
-                Tu cita está confirmada. Abona el anticipo directamente en la oficina el día de tu consulta.
+                Tu cita está confirmada. Abona el anticipo directamente en la consulta el día de tu cita.
               </p>
               
               <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300 mb-2">Importe a abonar en oficina</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300 mb-2">Importe a abonar en consulta</p>
                  <div className="text-3xl sm:text-5xl font-black text-white font-roman">{formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</div>
                  
                  {price > 0 && (

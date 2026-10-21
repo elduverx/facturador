@@ -87,65 +87,75 @@ import Link from 'next/link';
 
 const FAQS = [
   {
-    q: '¿Cuánto cuesta la primera asesoría?',
+    q: '¿Qué incluye tu consulta?',
+    a: (
+      <div className="space-y-1">
+        <p>• Evaluación jurídica completa de tu caso individual.</p>
+        <p>• Revisión de los documentos que aportes a la cita.</p>
+        <p>• Viabilidad legal, requisitos exactos y hoja de ruta.</p>
+        <p>• Presupuesto cerrado si decides iniciar el trámite.</p>
+        <p className="text-xs opacity-70 pt-1">(No incluye la presentación de trámites ni recursos, que se presupuestan aparte).</p>
+      </div>
+    ),
+  },
+  {
+    q: 'Importante sobre otros casos o familiares',
+    a: (
+      <div className="space-y-1">
+        <p>• Cada consulta es para <strong>una sola persona / expediente</strong>.</p>
+        <p>• Consultar por el caso de un familiar, pareja o amigo requiere abonar una consulta adicional.</p>
+        <p>• Si ya eres cliente, el seguimiento de tu expediente activo es gratuito, pero un caso nuevo o de otra persona se abona aparte.</p>
+      </div>
+    ),
+  },
+  {
+    q: 'Ya soy cliente con un expediente abierto, ¿tiene coste hacer otra consulta?',
     a: (
       <>
-        Ofrecemos una primera asesoría donde evaluamos tu caso en detalle (ya sea de Extranjería, Laboral o Familia). Contáctanos para conocer las tarifas actuales. Nuestro compromiso es la transparencia total en costes. Puedes <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reservar tu cita inicial aquí</Link>.
+        Si ya eres cliente con un trámite en curso, la <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">cita de seguimiento sobre tu expediente activo es gratuita</Link>. Sin embargo, si quieres consultar sobre <strong>un caso nuevo y distinto</strong> al contratado o preguntar por la situación de un <strong>familiar o conocido</strong>, sí deberá abonarse como una consulta nueva.
       </>
     ),
   },
   {
-    q: '¿Necesito pedir cita previa?',
+    q: 'Si mi trámite incluye a mi familia (ej. Reagrupación Familiar o Divorcio), ¿se paga una consulta por cada uno?',
     a: (
       <>
-        Sí, trabajamos exclusivamente con cita previa para dedicar a cada cliente el tiempo y atención que merece. Puedes <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">agendar tu cita</Link> fácilmente desde el flujo interactivo de esta web.
+        <strong>No</strong> cuando se trata de un único procedimiento legal conjunto donde tú eres el solicitante (como reagrupar a tu cónyuge/hijos o un convenio de divorcio). <strong>Sí se abona por separado</strong> cuando son trámites independientes para cada persona (por ejemplo, dos hermanos o amigos que desean tramitar cada uno su propio arraigo o permiso).
       </>
     ),
   },
   {
-    q: '¿Qué áreas legales cubren exactamente?',
-    a: 'Somos especialistas en tres pilares fundamentales: Extranjería e Inmigración, Derecho Laboral (despidos, contratos) y Derecho de Familia (divorcios, convenios).',
-  },
-  {
-    q: '¿Dónde está ubicada la oficina?',
+    q: '¿Puedo acudir acompañado a la consulta?',
     a: (
       <>
-        Nos encontramos en Valencia: <a href="https://www.google.com/maps/search/?api=1&query=C/+de+Sant+Ignasi+de+Loiola,+21,+46008+Valencia" target="_blank" rel="noopener noreferrer" className="text-[var(--pv-gold)] font-bold hover:underline">C/ de Sant Ignasi de Loiola, 21, Entresuelo, Extramurs, 46008 València</a>.
+        Sí, puedes venir con un acompañante de confianza. No obstante, la sesión estará dedicada exclusivamente a evaluar <strong>tu caso</strong>; si tu acompañante desea consultar sobre su propia situación legal, deberá abonar su propia consulta.
       </>
     ),
   },
   {
-    q: '¿Puedo hacer la consulta online (videollamada)?',
+    q: '¿Necesito pedir cita previa y qué pasa si llego tarde?',
     a: (
       <>
-        Sí. Durante el proceso de <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reserva de cita</Link> podrás elegir la modalidad: Presencial en nuestro despacho o de forma Online mediante videollamada.
+        Sí, trabajamos exclusivamente con <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">cita previa</Link>. Te rogamos puntualidad: si llegas tarde, la sesión se ajustará al tiempo restante de tu cita para no perjudicar al siguiente cliente.
       </>
     ),
   },
   {
-    q: 'Ya soy cliente, ¿cómo puedo ver el estado de mi expediente?',
+    q: '¿Puedo hacer la consulta online (videollamada) o presencial?',
     a: (
       <>
-        Si ya eres cliente, puedes acceder a nuestro <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Portal de Cliente</Link>. Desde allí podrás ver el estado de tus casos en proceso, descargar documentos y subir documentación que te hayamos solicitado.
+        Sí. Durante el proceso de <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reserva de cita</Link> podrás elegir entre modalidad Presencial en nuestro despacho de Valencia u Online mediante videollamada.
       </>
     ),
   },
   {
-    q: '¿Tiene algún coste agendar una cita sobre un expediente que ya está abierto?',
+    q: 'Ya soy cliente, ¿cómo puedo ver el estado de mi expediente o subir documentos?',
     a: (
       <>
-        No, si ya eres cliente y tienes un caso activo con nosotras, la <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">cita de seguimiento sobre tu expediente es completamente gratuita</Link>. Solo tendrás que pagar si quieres consultar sobre un caso nuevo y diferente.
+        Accede a nuestro <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Portal de Cliente</Link> con tu email y NIE/DNI para ver el estado de tu expediente y subir documentación de forma segura.
       </>
     ),
   },
-  {
-    q: '¿Cómo subo documentos a mi portal si me lo piden?',
-    a: (
-      <>
-        Es muy sencillo. Inicia sesión en <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Mi Portal</Link> introduciendo tu email y NIE. En tu área privada verás una sección de documentos donde podrás subir los archivos de forma segura desde tu ordenador o móvil.
-      </>
-    ),
-  }
 ];
 
 export function HomeShell() {

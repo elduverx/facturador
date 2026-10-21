@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
-import { cancellationEmail, statusChangeEmail } from '@/lib/email-templates';
+import { cancellationEmail, statusChangeEmail, rescheduledEmail } from '@/lib/email-templates';
 import { formatDateES } from '@/lib/constants';
 import { isAdminAuthenticated } from '@/lib/auth';
 import { getAdminAppointmentScope } from '@/lib/admin-scope';
+import { getDayConfig } from '@/lib/slots';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -39,9 +40,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (status) updateData.status = status;
     if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
 
+    const existingDateStr = existing.date.toISOString().split('T')[0];
+    const isRescheduled = Boolean(
+      (date && date !== existingDateStr) || (startTime && startTime !== existing.startTime)
+    );
+
     if (date && startTime) {
+      const dayConfig = await getDayConfig(date);
+      const durationForBooking = dayConfig && (dayConfig.maxPerDay > 0 || dayConfig.override?.slotDurationMin)
+        ? Math.max(1, dayConfig.slotDurationMin)
+        : existing.service.durationMin;
+
       const [h, m] = startTime.split(':').map(Number);
-      const endMinutes = h * 60 + m + existing.service.durationMin;
+      const endMinutes = h * 60 + m + durationForBooking;
       const endTime = `${Math.floor(endMinutes / 60).toString().padStart(2, '0')}:${(endMinutes % 60).toString().padStart(2, '0')}`;
       updateData.date = new Date(date + 'T00:00:00.000Z');
       updateData.startTime = startTime;
@@ -54,8 +65,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       include: { service: true },
     });
 
-    // Send email on status change
-    if (status && status !== existing.status) {
+    // Send email on status change or reschedule
+    const statusChanged = Boolean(status && status !== existing.status);
+    if (statusChanged || isRescheduled) {
       const settings = await prisma.officeSettings.findUnique({ where: { id: 'default' } });
       const dateStr = updated.date.toISOString().split('T')[0];
       const emailData = {
@@ -69,13 +81,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         firmEmail: settings?.firmEmail || '',
       };
 
-      if (status === 'CANCELLED') {
+      if (statusChanged && status === 'CANCELLED') {
         sendEmail({
           to: updated.clientEmail,
           subject: `Cita cancelada - ${emailData.firmName}`,
           html: cancellationEmail(emailData),
         }).catch(console.error);
-      } else if (['CONFIRMED', 'COMPLETED', 'NO_SHOW'].includes(status)) {
+      } else if (isRescheduled) {
+        sendEmail({
+          to: updated.clientEmail,
+          subject: `Cita reprogramada - ${emailData.firmName}`,
+          html: rescheduledEmail(emailData),
+        }).catch(console.error);
+      } else if (statusChanged && ['CONFIRMED', 'COMPLETED', 'NO_SHOW'].includes(status)) {
         sendEmail({
           to: updated.clientEmail,
           subject: `Actualizacion de cita - ${emailData.firmName}`,

@@ -33,13 +33,14 @@ function baseTemplate(title: string, body: string, firmName: string): string {
 </html>`;
 }
 
-function appointmentDetails(data: AppointmentEmailData): string {
+function appointmentDetails(data: AppointmentEmailData, paymentNote?: string): string {
   return `<div style="background:#fafafa;border:1px solid #eaeaea;border-radius:12px;padding:25px;margin:25px 0;">
-    <h3 style="margin:0 0 15px;color:#0b1f2d;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Detalles de la Cita</h3>
+    <h3 style="margin:0 0 15px;color:#0b1f2d;font-size:14px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Detalles de la Cita</h3>
     <table style="width:100%;border-collapse:collapse;">
       <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Servicio:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">${data.serviceName}</td></tr>
       <tr><td style="padding:10px 0;color:#666666;font-size:14px;border-bottom:1px solid #eeeeee;">Fecha:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;border-bottom:1px solid #eeeeee;">${data.date}</td></tr>
-      <tr><td style="padding:10px 0;color:#666666;font-size:14px;">Hora:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;">${data.time}</td></tr>
+      <tr><td style="padding:10px 0;color:#666666;font-size:14px;${paymentNote ? 'border-bottom:1px solid #eeeeee;' : ''}">Hora:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;${paymentNote ? 'border-bottom:1px solid #eeeeee;' : ''}">${data.time}</td></tr>
+      ${paymentNote ? `<tr><td style="padding:10px 0;color:#666666;font-size:14px;">Abono:</td><td style="padding:10px 0;font-weight:600;color:#0b1f2d;text-align:right;">${paymentNote}</td></tr>` : ''}
     </table>
   </div>`;
 }
@@ -61,11 +62,12 @@ function formatNewsletterContent(content: string): string {
 export function confirmationEmail(data: AppointmentEmailData): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>
-    <p>Su cita ha sido registrada correctamente. A continuacion los detalles:</p>
+    <p>Le confirmamos que su cita ha quedado agendada con éxito. A continuación los detalles:</p>
     ${appointmentDetails(data)}
-    ${data.firmAddress ? `<p style="font-size:14px;color:#57534E;"><strong>Direccion:</strong> ${data.firmAddress}</p>` : ''}
-    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Si necesita cancelar o modificar su cita, contactenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
-    <p style="font-size:14px;color:#57534E;">Le recomendamos traer toda la documentacion relacionada con su caso.</p>
+    <p style="font-size:14px;color:#57534E;">Le recomendamos tener a mano la documentación relacionada con su caso.</p>
+    ${data.firmAddress ? `<p style="font-size:14px;color:#57534E;"><strong>Dirección:</strong> ${data.firmAddress}</p>` : ''}
+    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Si necesita realizar cualquier cambio o consulta sobre su cita, contáctenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
+    <p style="font-size:14px;color:#0b1f2d;font-weight:600;margin-top:20px;">Quedamos a su entera disposición.</p>
   `;
   return baseTemplate('Cita Confirmada', body, data.firmName);
 }
@@ -91,17 +93,14 @@ export function paymentConfirmationEmail(data: AppointmentEmailData & { amount: 
 export function cashReservationEmail(data: AppointmentEmailData): string {
   const body = `
     <p>Estimado/a <strong>${data.clientName}</strong>,</p>
-    <p>Su cita ha sido <strong style="color:#16a34a;">confirmada</strong>. El método de pago se concretará en la oficina el día de su cita.</p>
-    ${appointmentDetails(data)}
-    <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:20px;margin:25px 0;">
-      <p style="margin:0 0 8px;font-weight:700;color:#C2410C;font-size:15px;">💵 Pago A Concretar en Oficina</p>
-      <p style="margin:0;font-size:14px;color:#57534E;">Recuerde que el pago del anticipo de la consulta se acordará o abonará directamente en el despacho antes de la consulta presencial.</p>
-    </div>
+    <p>Le confirmamos que su cita ha quedado agendada con éxito.</p>
+    ${appointmentDetails(data, 'Al inicio de la consulta')}
+    <p style="font-size:14px;color:#57534E;">Le recomendamos tener a mano la documentación relacionada con su caso para evaluar su situación con la mayor precisión.</p>
     ${data.firmAddress ? `<p style="font-size:14px;color:#57534E;"><strong>Dirección:</strong> ${data.firmAddress}</p>` : ''}
-    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Si necesita cancelar o modificar su cita, contáctenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
-    <p style="font-size:14px;color:#57534E;">Le recomendamos traer toda la documentación relacionada con su caso.</p>
+    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Si necesita realizar cualquier consulta o modificación en su cita, puede contactarnos al <strong>${data.firmPhone}</strong>.</p>` : ''}
+    <p style="font-size:14px;color:#0b1f2d;font-weight:600;margin-top:20px;">Quedamos a su entera disposición.</p>
   `;
-  return baseTemplate('Reserva Confirmada', body, data.firmName);
+  return baseTemplate('Cita Confirmada', body, data.firmName);
 }
 
 export function cancellationEmail(data: AppointmentEmailData): string {
@@ -141,6 +140,17 @@ export function statusChangeEmail(data: AppointmentEmailData, newStatus: string)
     ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Para cualquier consulta, contactenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
   `;
   return baseTemplate('Actualizacion de Cita', body, data.firmName);
+}
+
+export function rescheduledEmail(data: AppointmentEmailData): string {
+  const body = `
+    <p>Estimado/a <strong>${data.clientName}</strong>,</p>
+    <p>Le informamos que su cita ha sido <strong>reprogramada</strong> con la siguiente fecha y horario:</p>
+    ${appointmentDetails(data)}
+    ${data.firmAddress ? `<p style="font-size:14px;color:#57534E;"><strong>Dirección:</strong> ${data.firmAddress}</p>` : ''}
+    ${data.firmPhone ? `<p style="font-size:14px;color:#57534E;">Para cualquier consulta, contáctenos al <strong>${data.firmPhone}</strong>.</p>` : ''}
+  `;
+  return baseTemplate('Cita Reprogramada', body, data.firmName);
 }
 
 export function adminAppointmentCancelledEmail(data: AppointmentEmailData & { clientEmail: string; clientPhone: string; clientNie?: string; reason?: string }): string {

@@ -59,7 +59,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isExistingMatterConsultation, setIsExistingMatterConsultation] = useState(false);
   const [allowedModality, setAllowedModality] = useState<string | null>(null);
-  const [selectedModality, setSelectedModality] = useState<'OFFICE' | 'VIDEO_CALL'>('VIDEO_CALL');
+  const [selectedModality, setSelectedModality] = useState<'OFFICE' | 'VIDEO_CALL'>('OFFICE');
 
   useEffect(() => {
     if (allowedModality === 'VIDEO_CALL') setSelectedModality('VIDEO_CALL');
@@ -114,7 +114,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
       clientEmail: normalizeEmail(params.get('email') || ''),
       clientPhone: normalizePhone(params.get('phone') || ''),
       clientNie: normalizeNie(params.get('nie') || ''),
-      notes: params.get('type') === 'existing' ? 'Cita sobre expediente en curso (gratuita)' : 'Nueva cita solicitada desde Mi Portal.',
+      notes: '',
     };
 
     setClientData((current) => ({
@@ -124,11 +124,7 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   }, []);
 
   useEffect(() => {
-    if (selectedModality === 'VIDEO_CALL') {
-      setPaymentMethod('CARD');
-    } else if (selectedModality === 'OFFICE') {
-      setPaymentMethod('CASH');
-    }
+    setPaymentMethod('CASH');
   }, [selectedModality]);
 
   const selectedService = services.find((s) => s.id === selectedServiceId);
@@ -196,7 +192,8 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           modality: selectedModality,
           notes: [
             selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
-            clientData.notes || null,
+            isExistingMatterConsultation ? 'Cita sobre expediente en curso' : null,
+            clientData.notes ? clientData.notes.trim() : null,
           ].filter(Boolean).join('\n\n') || undefined,
         }),
       });
@@ -454,23 +451,19 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 ) : (
                   <>
                     <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
-                      {selectedModality === 'VIDEO_CALL' 
-                        ? 'El pago de la cita online se realizará mediante Bizum o Transferencia.'
-                        : 'El pago del anticipo de la consulta presencial se concretará en la oficina.'}
+                      El pago del anticipo se concretará en la consulta.
                     </p>
 
                     <div className="rounded-2xl border-2 border-[var(--pv-marble)] bg-white p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-sm">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
-                        {selectedModality === 'VIDEO_CALL' ? <CreditCard size={22} /> : <Banknote size={22} />}
+                        <Banknote size={22} />
                       </div>
                       <div>
                         <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">
-                          {selectedModality === 'VIDEO_CALL' ? 'Pago Online (Bizum)' : 'A Concretar'}
+                          Pago en consulta
                         </p>
                         <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
-                          {selectedModality === 'VIDEO_CALL'
-                            ? 'Al confirmar, tu cita quedará agendada y nos pondremos en contacto contigo para realizar el Bizum.'
-                            : 'El método de pago se acordará tras confirmar la reserva o al acudir al despacho. Al confirmar, tu cita quedará agendada.'}
+                          El pago se realizará en la consulta. Al confirmar, tu cita quedará agendada.
                         </p>
                       </div>
                     </div>
@@ -568,17 +561,17 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                   <div className="pt-4 sm:pt-0 xl:pt-6 sm:border-t-0 xl:border-t border-[var(--pv-marble)] sm:col-span-3 xl:col-span-1">
                     <div className="p-4 rounded-2xl bg-[var(--pv-marble)] border border-white shadow-inner">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--pv-gold)] mb-2">Anticipo de la consulta</p>
-                      <p className="text-2xl font-black text-[var(--pv-navy)]">{isExistingMatterConsultation ? 'Gratis' : formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</p>
+                      <p className="text-2xl font-black text-[var(--pv-navy)]">{isExistingMatterConsultation ? 'Incluido' : formatEuro(CONSULTATION_DEPOSIT_AMOUNT)}</p>
                       {!isExistingMatterConsultation && (
                         <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <Banknote size={12} />
-                          Efectivo
+                          En Consulta
                         </div>
                       )}
                       <p className="text-[10px] font-medium text-[var(--pv-navy)] opacity-40 mt-2 leading-relaxed">
                         {isExistingMatterConsultation
                           ? 'Incluido como seguimiento de tu expediente actual.'
-                          : 'Pagarás directamente en la oficina el día de tu cita.'}
+                          : 'Pagarás directamente en la consulta el día de tu cita.'}
                       </p>
                     </div>
                   </div>

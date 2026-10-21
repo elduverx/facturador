@@ -6,24 +6,105 @@ import Link from 'next/link';
 
 const FAQS = [
   {
-    q: '¿Cuánto cuesta la primera asesoría?',
+    q: '¿Qué incluye tu consulta?',
+    a: (
+      <div className="space-y-2">
+        <ul className="space-y-1.5">
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Evaluación jurídica completa de tu caso individual.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Revisión de los documentos que aportes a la cita.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Viabilidad legal, requisitos exactos y hoja de ruta.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Presupuesto cerrado si decides iniciar el trámite.</span>
+          </li>
+        </ul>
+        <p className="text-xs italic opacity-75 pt-2">
+          (La consulta cubre el asesoramiento y diagnóstico durante la sesión; no incluye la presentación de trámites ni recursos, que se presupuestan aparte).
+        </p>
+      </div>
+    ),
+  },
+  {
+    q: 'Importante sobre otros casos o familiares',
+    a: (
+      <div className="space-y-2">
+        <ul className="space-y-1.5">
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Cada consulta es para <strong>una sola persona / expediente</strong>.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Consultar por el caso de un familiar, pareja o amigo requiere abonar una consulta adicional.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--pv-gold)] font-black leading-none">•</span>
+            <span>Si ya eres cliente, el seguimiento de tu expediente activo es gratuito, pero un caso nuevo o de otra persona se abona aparte.</span>
+          </li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    q: 'Si mi trámite incluye a mi familia (ej. Reagrupación Familiar o Divorcio), ¿se paga una consulta por cada uno?',
     a: (
       <>
-        Ofrecemos una primera asesoría donde evaluamos tu caso en detalle (ya sea de Extranjería, Laboral o Familia). Contáctanos para conocer las tarifas actuales. Nuestro compromiso es la transparencia total en costes. Puedes <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reservar tu cita inicial aquí</Link>.
+        <strong>No</strong> cuando se trata de <strong>un único procedimiento legal conjunto</strong> en el que tú eres el solicitante principal (por ejemplo, si vas a reagrupar a tu cónyuge e hijos, o en un convenio de divorcio con medidas sobre los hijos en común). En cambio, <strong>sí se abona una consulta por cada persona</strong> cuando se trata de <strong>expedientes individuales e independientes</strong> (por ejemplo, dos familiares o amigos que quieren evaluar cada uno su propio permiso de residencia, arraigo o despido).
       </>
     ),
   },
   {
-    q: '¿Necesito pedir cita previa?',
+    q: '¿Puedo acudir acompañado a la consulta?',
     a: (
       <>
-        Sí, trabajamos exclusivamente con cita previa para dedicar a cada cliente el tiempo y atención que merece. Puedes <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">agendar tu cita</Link> fácilmente desde el flujo interactivo de esta web.
+        Sí, puedes venir con un acompañante de confianza si lo deseas para sentirte más cómodo. Sin embargo, toda la sesión estará dedicada exclusivamente a evaluar <strong>tu caso</strong>. Si la persona que te acompaña desea aprovechar para hacer preguntas sobre su propia situación legal, deberá abonar su correspondiente consulta.
+      </>
+    ),
+  },
+  {
+    q: '¿Qué pasa si tengo dos problemas legales distintos a la vez (por ejemplo, Extranjería y un Despido Laboral)?',
+    a: (
+      <>
+        Cada área legal requiere un análisis normativo y documental específico. Si necesitas evaluar dos casos de distinta naturaleza (por ejemplo, un expediente de extranjería y paralelamente una demanda por despido o un divorcio), al tratarse de dos estudios jurídicos independientes se requiere reservar tiempo y tarifa para dos consultas.
+      </>
+    ),
+  },
+  {
+    q: '¿Cuánto cuesta la consulta y cómo se realiza el pago?',
+    a: (
+      <>
+        Durante el proceso de reserva podrás ver el importe exacto según el tipo de asesoría seleccionada. Actualmente el pago se realiza directamente en la consulta. Nuestro compromiso es la transparencia total desde el primer minuto. Puedes <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reservar tu cita inicial aquí</Link>.
+      </>
+    ),
+  },
+  {
+    q: '¿Necesito pedir cita previa y qué pasa si llego tarde?',
+    a: (
+      <>
+        Sí, trabajamos exclusivamente con <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">cita previa</Link> para dedicar a cada cliente el tiempo que merece. Te rogamos puntualidad: si llegas tarde, la consulta deberá ajustarse al tiempo restante de tu franja horaria para no retrasar a los siguientes clientes. Si necesitas cambiar o cancelar tu cita, avísanos con al menos 24 horas de antelación.
+      </>
+    ),
+  },
+  {
+    q: '¿Puedo hacer la consulta online (videollamada) o presencial?',
+    a: (
+      <>
+        Sí. Durante el proceso de <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reserva de cita</Link> podrás elegir la modalidad que prefieras: <strong>Presencial en nuestro despacho</strong> o <strong>Online mediante videollamada</strong>, con exactamente las mismas condiciones y rigor profesional.
       </>
     ),
   },
   {
     q: '¿Qué áreas legales cubren exactamente?',
-    a: 'Somos especialistas en tres pilares fundamentales: Extranjería e Inmigración, Derecho Laboral (despidos, contratos) y Derecho de Familia (divorcios, convenios).',
+    a: 'Somos especialistas en tres pilares fundamentales: Extranjería e Inmigración (arraigos, nacionalidad, visados, renovaciones, familiares de comunitarios), Derecho Laboral (despidos, reclamación de salarios, sanciones) y Derecho de Familia (divorcios, guarda y custodia, convenios reguladores).',
   },
   {
     q: '¿Dónde está ubicada la oficina?',
@@ -34,37 +115,13 @@ const FAQS = [
     ),
   },
   {
-    q: '¿Puedo hacer la consulta online (videollamada)?',
+    q: 'Ya soy cliente, ¿cómo puedo ver el estado de mi expediente o subir documentos?',
     a: (
       <>
-        Sí. Durante el proceso de <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">reserva de cita</Link> podrás elegir la modalidad: Presencial en nuestro despacho o de forma Online mediante videollamada.
+        Puedes acceder en cualquier momento a nuestro <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Portal de Cliente</Link> introduciendo tu email y NIE/DNI. Desde tu área privada podrás consultar el estado de tus expedientes en tiempo real y subir de forma segura cualquier documento que te hayamos solicitado.
       </>
     ),
   },
-  {
-    q: 'Ya soy cliente, ¿cómo puedo ver el estado de mi expediente?',
-    a: (
-      <>
-        Si ya eres cliente, puedes acceder a nuestro <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Portal de Cliente</Link>. Desde allí podrás ver el estado de tus casos en proceso, descargar documentos y subir documentación que te hayamos solicitado.
-      </>
-    ),
-  },
-  {
-    q: '¿Tiene algún coste agendar una cita sobre un expediente que ya está abierto?',
-    a: (
-      <>
-        No, si ya eres cliente y tienes un caso activo con nosotras, la <Link href="/reservar" className="text-[var(--pv-gold)] font-bold hover:underline">cita de seguimiento sobre tu expediente es completamente gratuita</Link>. Solo tendrás que pagar si quieres consultar sobre un caso nuevo y diferente.
-      </>
-    ),
-  },
-  {
-    q: '¿Cómo subo documentos a mi portal si me lo piden?',
-    a: (
-      <>
-        Es muy sencillo. Inicia sesión en <Link href="/portal" className="text-[var(--pv-gold)] font-bold hover:underline">Mi Portal</Link> introduciendo tu email y NIE. En tu área privada verás una sección de documentos donde podrás subir los archivos de forma segura desde tu ordenador o móvil.
-      </>
-    ),
-  }
 ];
 
 export default function FAQPage() {
@@ -79,7 +136,9 @@ export default function FAQPage() {
              Dudas Comunes
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold font-roman uppercase text-[var(--pv-navy)] tracking-tight mb-4">Preguntas Frecuentes</h1>
-          <p className="text-sm sm:text-base text-[var(--pv-navy)] opacity-60">Encuentra respuestas rápidas a las consultas más habituales de nuestros clientes.</p>
+          <p className="text-sm sm:text-base text-[var(--pv-navy)] opacity-60 max-w-2xl mx-auto">
+            Encuentra respuestas rápidas y transparentes a las dudas más habituales sobre nuestras consultas y servicios legales.
+          </p>
         </div>
 
         <div className="space-y-3 sm:space-y-4">
@@ -91,7 +150,7 @@ export default function FAQPage() {
                      <ChevronRight size={16} className="sm:w-5 sm:h-5" />
                   </span>
                </summary>
-               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[var(--glass-border)] text-xs sm:text-base text-[var(--pv-navy)] opacity-70 leading-relaxed">
+               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[var(--glass-border)] text-xs sm:text-base text-[var(--pv-navy)] opacity-75 leading-relaxed">
                   {faq.a}
                </div>
             </details>

@@ -74,6 +74,19 @@ async function handleCancelAppointment(id: string, reason?: string) {
     return NextResponse.json({ error: 'No es posible cancelar una cita que ya fue completada' }, { status: 400 });
   }
 
+  const dateStr = existing.date instanceof Date 
+    ? existing.date.toISOString().split('T')[0] 
+    : String(existing.date).split('T')[0];
+  const timeStr = existing.startTime && /^\d{2}:\d{2}$/.test(existing.startTime) ? existing.startTime : '00:00';
+  const apptDateTime = new Date(`${dateStr}T${timeStr}:00`);
+  const hoursUntil = (apptDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
+
+  if (hoursUntil < 24) {
+    return NextResponse.json({ 
+      error: 'Solo es posible cancelar la cita con al menos 24 horas de antelación.' 
+    }, { status: 400 });
+  }
+
   const cancelReasonText = reason && reason.trim() ? `Motivo: ${reason.trim()}` : 'Cancelada por el cliente desde el portal';
   const updatedNotes = existing.notes ? `${existing.notes}\n\n[${cancelReasonText}]` : `[${cancelReasonText}]`;
 
