@@ -131,6 +131,8 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
   const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
+  const [showMatterBookingModal, setShowMatterBookingModal] = useState(false);
+  const [selectedMatterForBooking, setSelectedMatterForBooking] = useState('');
 
   const fetchAppointments = async (query: { email: string; nie: string }, nextPage: number) => {
     setError('');
@@ -337,9 +339,19 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
     : '/reservar';
   const newAppointmentUrl = lastQuery ? `${basePath}&type=new` : '/reservar';
   const existingMatterAppointmentUrl = lastQuery ? `${basePath}&type=existing` : '/reservar';
-  const hasActiveLegalMatter = matters.some(
+  const realMatters = matters.filter(
     (m) => m.procedureType !== 'REGISTRO_PORTAL' && m.title !== 'Alta de Cliente'
   );
+  const hasActiveLegalMatter = realMatters.length > 0;
+
+  const handleStartBooking = () => {
+    if (realMatters.length > 0) {
+      setSelectedMatterForBooking(realMatters[0].id);
+      setShowMatterBookingModal(true);
+    } else {
+      window.location.href = newAppointmentUrl;
+    }
+  };
 
   const hasAnyData = results.length > 0 || documents.length > 0 || matters.length > 0 || paymentLinks.length > 0;
 
@@ -513,9 +525,13 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
               </button>
 
               <div className="mt-8">
-                <a href={hasActiveLegalMatter ? existingMatterAppointmentUrl : newAppointmentUrl} className="w-full py-5 rounded-2xl bg-[#cba358] hover:bg-[#b8914b] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-colors shadow-lg">
+                <button
+                  type="button"
+                  onClick={handleStartBooking}
+                  className="w-full py-5 rounded-2xl bg-[#cba358] hover:bg-[#b8914b] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-colors shadow-lg cursor-pointer"
+                >
                   Nueva Cita <ChevronRight size={20} />
-                </a>
+                </button>
               </div>
                 
               <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/10 pt-8">
@@ -666,12 +682,13 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
                     </div>
                     Tus Citas
                   </h3>
-                  <a
-                    href={hasActiveLegalMatter ? existingMatterAppointmentUrl : newAppointmentUrl}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--pv-gold)] hover:bg-[#b8914b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg self-start sm:self-auto"
+                  <button
+                    type="button"
+                    onClick={handleStartBooking}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--pv-gold)] hover:bg-[#b8914b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg self-start sm:self-auto cursor-pointer"
                   >
                     <CalendarPlus size={16} /> Agendar otra cita
-                  </a>
+                  </button>
                 </div>
                 
                 {results.length === 0 ? (
@@ -813,6 +830,105 @@ export function AppointmentLookup({ compact = false, glass = false, appointmentI
               >
                 {cancelling ? 'Cancelando...' : 'Sí, cancelar cita'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Matter Check Modal for Booking */}
+      {showMatterBookingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f172a] border border-white/20 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative text-left space-y-5">
+            <button
+              onClick={() => setShowMatterBookingModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--pv-gold)]/20 border border-[var(--pv-gold)]/40 text-[var(--pv-gold)] flex items-center justify-center shrink-0">
+                <Briefcase size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-roman uppercase tracking-wider font-bold text-white">
+                  ¿Para qué necesitas tu cita?
+                </h3>
+                <p className="text-xs text-white/60 mt-0.5">
+                  ¿Es sobre un expediente ya presentado con nuestro despacho?
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              {/* Option 1: Sí, sobre expediente en curso */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 hover:border-[var(--pv-gold)]/40 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] bg-[var(--pv-gold)]/20 px-2 py-0.5 rounded border border-[var(--pv-gold)]/30">
+                      Consulta Incluida
+                    </span>
+                    <span className="text-xs font-bold text-white">
+                      Sí, es sobre un expediente en curso
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-white/60 leading-snug">
+                  Selecciona a cuál de tus expedientes corresponde esta cita:
+                </p>
+
+                <select
+                  value={selectedMatterForBooking}
+                  onChange={(e) => setSelectedMatterForBooking(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/20 text-white text-xs outline-none focus:border-[var(--pv-gold)] font-medium"
+                >
+                  {realMatters.map((m) => (
+                    <option key={m.id} value={m.id} className="bg-[#0f172a] text-white">
+                      Ref: {m.reference} · {m.title} ({statusLabels[m.status] || m.status})
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const chosen = realMatters.find((m) => m.id === selectedMatterForBooking) || realMatters[0];
+                    setShowMatterBookingModal(false);
+                    window.location.href = `${basePath}&type=existing&matterRef=${encodeURIComponent(chosen.reference)}&matterTitle=${encodeURIComponent(chosen.title)}`;
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[var(--pv-gold)] hover:bg-[#b8914b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <CheckCircle2 size={15} /> Continuar con este expediente (Incluido)
+                </button>
+              </div>
+
+              {/* Option 2: No, es una nueva consulta / otro trámite */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2.5 hover:border-emerald-500/40 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
+                    Pago en Consulta
+                  </span>
+                  <span className="text-xs font-bold text-white">
+                    No, es una consulta nueva o diferente
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-white/60 leading-snug">
+                  Para iniciar un trámite nuevo, un caso distinto al contratado o una consulta sobre un familiar. Esta cita se cobrará en consulta.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMatterBookingModal(false);
+                    window.location.href = newAppointmentUrl;
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-colors border border-white/20 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Agendar nueva consulta (Se cobrará en consulta)
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import { ServiceSelector } from './ServiceSelector';
 import { DateTimePicker } from './DateTimePicker';
 import { ClientForm } from './ClientForm';
 import { BookingConfirmation } from './BookingConfirmation';
-import { ShieldCheck, UserCheck, Calendar, FileText, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, AlertCircle, CreditCard, Banknote } from 'lucide-react';
+import { ShieldCheck, UserCheck, Calendar, FileText, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, AlertCircle, CreditCard, Banknote, Check } from 'lucide-react';
 
 const LAWYERS = [
   {
@@ -58,6 +58,8 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH'>('CASH');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isExistingMatterConsultation, setIsExistingMatterConsultation] = useState(false);
+  const [matterRef, setMatterRef] = useState<string | null>(null);
+  const [matterTitle, setMatterTitle] = useState<string | null>(null);
   const [allowedModality, setAllowedModality] = useState<string | null>(null);
   const [selectedModality, setSelectedModality] = useState<'OFFICE' | 'VIDEO_CALL'>('OFFICE');
 
@@ -104,9 +106,15 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
     const params = new URLSearchParams(window.location.search);
     if (params.get('portalBooking') !== '1') return;
 
+    if (params.get('matterRef')) setMatterRef(params.get('matterRef'));
+    if (params.get('matterTitle')) setMatterTitle(params.get('matterTitle'));
+
     if (params.get('type') === 'existing') {
       setIsExistingMatterConsultation(true);
-      setPaymentMethod('CASH'); // Internally represented as CASH so it doesn't trigger Redsys
+      setPaymentMethod('CASH');
+    } else {
+      setIsExistingMatterConsultation(false);
+      setPaymentMethod('CASH');
     }
 
     const nextClientData = {
@@ -192,7 +200,13 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
           modality: selectedModality,
           notes: [
             selectedLawyer ? `Abogada seleccionada: ${selectedLawyer.name}` : null,
-            isExistingMatterConsultation ? 'Cita sobre expediente en curso' : null,
+            isExistingMatterConsultation
+              ? (matterRef
+                  ? `Cita sobre expediente en curso: ${matterRef}${matterTitle ? ` (${matterTitle})` : ''}`
+                  : 'Cita sobre expediente en curso')
+              : (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('portalBooking') === '1'
+                  ? 'Nueva cita solicitada desde Mi Portal'
+                  : null),
             clientData.notes ? clientData.notes.trim() : null,
           ].filter(Boolean).join('\n\n') || undefined,
         }),
@@ -430,44 +444,118 @@ export function BookingWizard({ initialServiceName }: { initialServiceName?: str
                 )}
               </div>
 
-              {/* Payment Method Selection */}
+              {/* Payment Method / Matter Selection */}
               <div className="mt-6 sm:mt-10">
-                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-2 tracking-tighter">
-                  {isExistingMatterConsultation ? 'Cita sobre tu expediente' : 'Método de pago'}
+                <h3 className="text-lg sm:text-xl font-bold font-roman uppercase text-[var(--pv-ink)] mb-1.5 tracking-tighter">
+                  Tipo de Consulta y Pago
                 </h3>
-                
-                {isExistingMatterConsultation ? (
-                  <div className="rounded-2xl border-2 border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-lg">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--pv-gold)] flex items-center justify-center text-white shrink-0">
-                      <CheckCircle2 size={22} />
+                <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-70 mb-4 font-medium">
+                  ¿Esta cita es sobre un expediente ya presentado con nuestro despacho?
+                </p>
+
+                {/* Interactive Two-Option Selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  {/* Option NO: Nueva Consulta */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsExistingMatterConsultation(false);
+                      setPaymentMethod('CASH');
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 cursor-pointer ${
+                      !isExistingMatterConsultation
+                        ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-md ring-1 ring-[var(--pv-gold)]/30'
+                        : 'border-stone-200 bg-white hover:border-stone-300 opacity-75'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        Pago en Consulta
+                      </span>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                        !isExistingMatterConsultation ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)] text-white' : 'border-stone-300'
+                      }`}>
+                        {!isExistingMatterConsultation && <Check size={12} />}
+                      </div>
                     </div>
                     <div>
-                      <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-[var(--pv-gold)]">Consulta Incluida</p>
-                      <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-80 mt-1 leading-relaxed font-medium">
-                        Esta cita está vinculada a tu expediente en curso y no tiene coste adicional. Haz clic en "Confirmar reserva" para terminar.
+                      <p className="font-bold text-sm text-[var(--pv-ink)]">
+                        No, es una consulta nueva
+                      </p>
+                      <p className="text-[11px] text-[var(--pv-navy)] opacity-60 mt-1 leading-snug">
+                        Para trámites nuevos, casos diferentes o consultas sobre familiares. Esta consulta se cobrará en consulta.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Option YES: Expediente en curso */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsExistingMatterConsultation(true);
+                      setPaymentMethod('CASH');
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 cursor-pointer ${
+                      isExistingMatterConsultation
+                        ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 shadow-md ring-1 ring-[var(--pv-gold)]/30'
+                        : 'border-stone-200 bg-white hover:border-stone-300 opacity-75'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--pv-gold)] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                        Consulta Incluida
+                      </span>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                        isExistingMatterConsultation ? 'border-[var(--pv-gold)] bg-[var(--pv-gold)] text-white' : 'border-stone-300'
+                      }`}>
+                        {isExistingMatterConsultation && <Check size={12} />}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-[var(--pv-ink)]">
+                        Sí, sobre expediente en curso
+                      </p>
+                      <p className="text-[11px] text-[var(--pv-navy)] opacity-60 mt-1 leading-snug">
+                        Vinculada al seguimiento de un expediente que ya tienes presentado y contratado con nosotras.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Details Banner according to selection */}
+                {isExistingMatterConsultation ? (
+                  <div className="rounded-2xl border-2 border-[var(--pv-gold)] bg-[var(--pv-gold)]/5 p-4 sm:p-5 flex items-start gap-3 sm:gap-4 shadow-sm animate-fade-in">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[var(--pv-gold)] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-md">
+                      <CheckCircle2 size={22} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-[var(--pv-gold)]">
+                        Seguimiento de Expediente (Consulta Incluida)
+                      </p>
+                      {matterRef && (
+                        <p className="text-xs text-[var(--pv-navy)] font-bold mt-1 bg-white/70 py-1 px-2.5 rounded-lg border border-[var(--pv-gold)]/30 inline-block">
+                          Expediente vinculado: Ref. {matterRef} {matterTitle ? `· ${matterTitle}` : ''}
+                        </p>
+                      )}
+                      <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-70 mt-1.5 leading-relaxed font-medium">
+                        Esta cita está vinculada al seguimiento de tu expediente y no requiere pago previo. Haz clic en "Confirmar reserva" para terminar.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <p className="text-xs sm:text-sm text-[var(--pv-navy)] opacity-60 mb-4 sm:mb-6 leading-relaxed font-medium">
-                      El pago del anticipo se concretará en la consulta.
-                    </p>
-
-                    <div className="rounded-2xl border-2 border-[var(--pv-marble)] bg-white p-4 sm:p-6 flex items-start gap-3 sm:gap-4 shadow-sm">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
-                        <Banknote size={22} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">
-                          Pago en consulta
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
-                          El pago se realizará en la consulta. Al confirmar, tu cita quedará agendada.
-                        </p>
-                      </div>
+                  <div className="rounded-2xl border-2 border-[var(--pv-marble)] bg-white p-4 sm:p-5 flex items-start gap-3 sm:gap-4 shadow-sm animate-fade-in">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
+                      <Banknote size={22} />
                     </div>
-                  </>
+                    <div>
+                      <p className="font-bold text-sm sm:text-base uppercase tracking-tight text-emerald-600">
+                        Pago en consulta ({formatEuro(selectedService?.price || CONSULTATION_DEPOSIT_AMOUNT)})
+                      </p>
+                      <p className="text-[10px] sm:text-xs text-[var(--pv-navy)] opacity-60 mt-1 leading-relaxed">
+                        Esta consulta no forma parte de un expediente previo. El pago se realizará directamente en la consulta el día de tu cita.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
